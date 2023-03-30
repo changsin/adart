@@ -2,7 +2,7 @@
 This is a new data reviewing tool written in Python using Streamlit for UI.
 
 To run:
-1. streamlit main.py
+1. streamlit run main.py
 
 # streamlit_app example
 How to make a standalone executable from a streamlit app.
