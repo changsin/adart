@@ -1,0 +1,28 @@
+{
+  "name": "dare_stlite",
+  "version": "0.1.0",
+  "main": "./build/electron/main.js",
+  "scripts": {
+    "dump": "dump-stlite-desktop-artifacts",
+    "serve": "NODE_ENV=production electron .",
+    "servewindows": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "files": ["build/**/*"],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "target": "portable"
+    }
+  },
+  "devDependencies": {
+    "@stlite/desktop": "^0.25.0",
+    "cross-env": "^7.0.3",
+    "electron": "23.1.1",
+    "electron-builder": "^23.6.0"
+  }
+}
