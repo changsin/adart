@@ -17,7 +17,7 @@ SUPPORTED_FORMATS = ["CVAT XML", "PASCAL VOC XML", "COCO JSON"]
 SUPPORTED_IMAGE_FILE_EXTENSIONS = ["*.jpg", "*.png", "*.tiff", "*.gif"]
 
 def home():
-    st.write("DaReT")
+    st.write("DaRT")
 
 
 def from_file(str_default, folder, filename):

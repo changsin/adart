@@ -1,4 +1,4 @@
-# DaReT (Data Reviewer Tool)
+# DaRT (Data Reviewer Tool)
 This is a new data reviewing tool written in Python using Streamlit for UI.
 
 To run:

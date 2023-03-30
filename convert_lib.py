@@ -1,8 +1,11 @@
 #-*- coding:utf-8 -*-
-import os
 import json
-import xml.etree.ElementTree as ET
+import os
 import shutil
+import xml.etree.ElementTree as ET
+
+import streamlit as st
+
 
 # function name : collect_org_annofile_as_list
 #
@@ -150,7 +153,7 @@ def convert_CVAT_to_Form(img_annof_relation, data_directory, annotation_fmt, des
         with open(os.path.join(destination_folder, fname + '.json'), 'w', encoding='utf-8') as jf:
             json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
-        print("Converted {}".format(anno_file_list[id]))
+        st.write("Converted {}".format(anno_file_list[id]))
 
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
