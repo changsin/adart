@@ -1,8 +1,10 @@
+import datetime
 import fnmatch
 import json
 import os
 import shutil
 from pathlib import Path
+from projects import Project
 
 import pandas as pd
 import streamlit as st
@@ -37,6 +39,14 @@ def from_file(str_default, folder, filename):
         return json.load(file)
 
     return json.loads(str_default)
+
+def to_file(data, folder, filename):
+    """
+    save data to path
+    """
+    full_path = os.path.join(folder, filename)
+    with open(full_path,  'w', encoding="utf-8") as json_file:
+        json_file.write(data)
 
 
 def dashboard():
@@ -114,6 +124,14 @@ def generate_file_tree(folder_path, patterns):
     return file_tree_to_return
 
 
+def get_next_project_id(projects):
+    project_idx = []
+    for project in projects:
+        project_idx.append(project["id"])
+
+    return max(project_idx) + 1
+
+
 def create_projects():
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
@@ -140,8 +158,14 @@ def create_projects():
 
             label_files = generate_file_tree(labels_folder, patterns)
 
-            project_id = "1"
-            destination_folder = os.path.join(ADQ_WORKING_FOLDER, project_id)
+            json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
+                                      ADQ_WORKING_FOLDER,
+                                      PROJECTS + JSON_EXT)
+            projects = json_projects[PROJECTS]
+            project_id = get_next_project_id(projects)
+
+            # from_file()
+            destination_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
             if not os.path.exists(destination_folder):
                 os.mkdir(destination_folder)
 
@@ -156,10 +180,11 @@ def create_projects():
                     shutil.copy(anno_file,
                                 os.path.join(ori_folder, os.path.basename(anno_file)))
 
-            # json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
-            #                           ADQ_WORKING_FOLDER,
-            #                           PROJECTS + JSON_EXT)
-            # from_file()
+            # TODO: need to deserialize and serialize projects
+            # new_project = Project(project_id, name, images_folder, labels_folder, 1, 1, str(datetime.datetime.now()))
+            # projects.append(json.dumps(new_project))
+            #
+            # to_file(projects, ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
 
 
 def create_tasks():
