@@ -10,7 +10,7 @@
       "created_at": null,
       "task_total_count": 0,
       "task_done_count": 0,
-      "Total_count": 300,
+      "total_count": 300,
       "sample_count": 30,
       "per_task_count": 10,
       "dir_name": "D:\\data\\AI-Hub\\adq_test_small",

@@ -82,7 +82,7 @@ def dashboard():
     df_projects = pd.DataFrame(columns=PROJECT_COLUMNS)
     if len(json_projects[PROJECTS]) > 0:
         df_projects = pd.DataFrame(json_projects[PROJECTS])
-        df_projects = df_projects[df_projects.columns]
+        df_projects = df_projects[PROJECT_COLUMNS]
 
     AgGrid(df_projects)
 
@@ -111,7 +111,7 @@ def dashboard():
     df_tasks = pd.DataFrame(columns=TASK_COLUMNS)
     if len(json_tasks[TASKS]) > 0:
         df_tasks = pd.DataFrame(json_tasks[TASKS])
-        df_tasks = df_tasks[json_tasks.columns]
+        df_tasks = df_tasks[TASK_COLUMNS]
 
     AgGrid(df_tasks)
 
