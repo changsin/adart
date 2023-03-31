@@ -3,14 +3,13 @@ import fnmatch
 import json
 import os
 import shutil
-from pathlib import Path
-from projects import Project
 
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
+from projects import Project
 
 ADQ_WORKING_FOLDER = ".adq"
 PROJECTS = "projects"
@@ -33,6 +32,12 @@ TASK_COLUMNS = ['id', 'name', "project_id"]
 dart = None
 
 
+def default(obj):
+    if hasattr(obj, 'to_json'):
+        return obj.to_json()
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+
+
 def home():
     st.write("DaRT")
 
@@ -44,6 +49,7 @@ def from_file(str_default, folder, filename):
         return json.load(file)
 
     return json.loads(str_default)
+
 
 def to_file(data, folder, filename):
     """
@@ -122,12 +128,12 @@ def generate_file_tree(folder_path, patterns):
     file_tree_to_return = []
     for root, dirs, files in os.walk(folder_path):
         level = root.replace(folder_path, '').count(os.sep)
-        indent = '-' * 4 * (level)
+        indent = '-' * (level)
 
         for pattern in patterns:
             matched = fnmatch.filter([filename.lower() for filename in files], pattern.lower())
             if matched:
-                st.markdown('{}📁{}({})/'.format(indent, root.replace(folder_path, ''), len(matched)))
+                st.markdown('{}📁({}) {}/'.format(indent, len(matched), root.replace(folder_path, '')))
                 for filename in matched:
                     if not os.path.isdir(filename):
                         file_tree_to_return.append(os.path.join(root, filename))
@@ -166,7 +172,6 @@ def create_projects():
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
-            print(images_format_type)
             generate_file_tree(images_folder, images_format_type.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
@@ -199,11 +204,13 @@ def create_projects():
                     shutil.copy(anno_file,
                                 os.path.join(ori_folder, os.path.basename(anno_file)))
 
-            # TODO: need to deserialize and serialize projects
-            # new_project = Project(project_id, name, images_folder, labels_folder, 1, 1, str(datetime.datetime.now()))
-            # projects.append(json.dumps(new_project))
-            #
-            # to_file(projects, ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
+            new_project = Project(project_id, name, images_folder, labels_folder, 1, 1, str(datetime.datetime.now()))
+            projects.append(new_project.to_json())
+
+            projects_info = dict()
+            projects_info['num'] = len(projects)
+            projects_info[PROJECTS] = projects
+            to_file(json.dumps(projects_info), ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
 
 
 def create_tasks():
