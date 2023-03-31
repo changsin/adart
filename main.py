@@ -97,115 +97,6 @@ def dashboard():
 
     # dart = Dart()
 
-def generate_file_tree(startpath):
-    """
-    Recursively generates a dictionary of the file tree starting at the specified path.
-    """
-    file_tree = {}
-    for root, dirs, files in os.walk(startpath):
-        # remove hidden files/directories
-        dirs = [d for d in dirs if not d.startswith('.')]
-        files = [f for f in files if not f.startswith('.')]
-        if files or dirs:
-            current_level = file_tree
-            # split the current path into components and add them to the file tree
-            for component in os.path.relpath(root, startpath).split(os.path.sep):
-                print("current_level before: {} startpath:{}".format(current_level, startpath))
-                current_level = current_level.setdefault(component, {})
-                print("current_level after: {} component:{}".format(current_level, component))
-            # add the files at this level
-            # for file in files:
-            #     current_level[file] = None
-    return file_tree
-
-
-def display_file_tree(file_tree, indent=0):
-    """
-    Recursively displays the file tree in a formatted way using Streamlit's st.write function.
-    """
-    print(file_tree)
-    count = 0
-    for key, value in file_tree.items():
-        if value is None:
-            # st.write('-' * indent + '- ' + key)
-            count += 1
-        else:
-            file_count = display_file_tree(value, indent + 2)
-            st.write('-' * indent + '+ ' + key + '/' + "({})".format(file_count))
-
-    return count
-
-
-tee = '\u251C'  # ├
-last = '\u2514'  # └
-branch = '\u2502'  # │
-space = ' '  # space character
-
-
-def tree(dir_path: Path, prefix: str = ''):
-    """A recursive generator, given a directory Path object
-    will yield a visual tree structure line by line
-    with each line prefixed by the same characters
-    """
-    contents = list(dir_path.iterdir())
-    # contents each get pointers that are ├── with a final └── :
-    pointers = [tee] * (len(contents) - 1) + [last]
-    for pointer, path in zip(pointers, contents):
-        yield prefix + pointer + path.name
-        if path.is_dir():  # extend the prefix and recurse:
-            extension = branch if pointer == tee else space
-            # i.e. space because last, └── , above so no more |
-            yield from tree(path, prefix=prefix + extension)
-
-
-# def get_dirs_inside_dir(folder):
-#     return [my_dir for my_dir in list(map(lambda x:os.path.basename(x), sorted(Path(folder).iterdir(), key=os.path.getmtime, reverse=True))) if os.path.isdir(os.path.join(folder, my_dir))
-#             and my_dir != '__pycache__' and my_dir != '.ipynb_checkpoints' and my_dir != 'API']
-
-
-# def list_folders_in_folder(folder):
-#     return [file for file in os.listdir(folder) if os.path.isdir(os.path.join(folder, file))]
-
-
-def show_dir_tree(folder):
-    with st.expander(f"Show {os.path.basename(folder)} folder tree"):
-        # for line in tree(Path.home() / folder):
-        for line in tree(folder):
-            st.write(line)
-
-
-def get_folder_info(root, patterns):
-    root_level = root.count(os.path.sep)
-
-    folders_with_matches = {}
-    for folder, sub_folders, filenames in os.walk(root):
-        # st.write("{} has ({}) sub-folders with ({} files)".format(folder, len(sub_folders), len(filenames)))
-
-        for pattern in patterns:
-            matched = fnmatch.filter([filename.lower() for filename in filenames], pattern.lower())
-            if matched:
-                parent_folder = os.path.dirname(folder)
-                if folders_with_matches.get(parent_folder):
-                    # folders_with_matches.pop(parent_folder)
-                    folders_with_matches[parent_folder] = 0
-
-                folders_with_matches[folder] = len(matched)
-
-    for folder, count in folders_with_matches.items():
-        current_level = folder.count(os.path.sep)
-        level = current_level - root_level
-
-        icon = "📁"
-        if count > 0:
-            icon = "📄"
-
-        folder = folder.removeprefix(root)
-
-        st.markdown("{} {} {} ({})".format(" " * level, icon, folder, count))
-
-    return list(folders_with_matches.keys())
-
-
 def generate_file_tree(folder_path, patterns):
     file_tree_to_return = []
     for root, dirs, files in os.walk(folder_path):
@@ -219,33 +110,30 @@ def generate_file_tree(folder_path, patterns):
                 for filename in matched:
                     if not os.path.isdir(filename):
                         file_tree_to_return.append(os.path.join(root, filename))
-        # sub_indent = '-' * 4 * (level + 1)
-        # file_tree.append('{}{}'.format(sub_indent, len(files)))
-        # for file in files:
-        #     file_tree.append('{}{}'.format(sub_indent, file))
 
     return file_tree_to_return
 
 
 def create_projects():
     with st.form("Create A Project"):
-        name = st.text_input("Name")
-        images_folder = st.text_input("Images folder")
-        labels_folder = st.text_input("Labels folder")
-        format_type = st.selectbox("Choose format", SUPPORTED_FORMATS)
+        name = st.text_input("**Name:**")
+        images_folder = st.text_input("**Images folder:**")
+        format_type = st.selectbox("**Image file types**", ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif", "*.wav"])
+        labels_folder = st.text_input("**Labels folder:**")
+        format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
         submitted = st.form_submit_button("Create project")
 
         if submitted:
             # Do something with the user's inputs
-            st.write(f"Name: {name}")
-            st.markdown(f"**Images folder: {images_folder}**")
+            st.markdown(f"**Name:** {name}")
+            st.markdown(f"**Images folder:** {images_folder}")
             # get_folder_info(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
             generate_file_tree(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
 
-            st.markdown(f"**Labels folder: {labels_folder}**")
+            st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
             if format_type.endswith("JSON"):
                 patterns = ["*.json"]
