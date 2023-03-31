@@ -25,8 +25,13 @@ ADQ_JSON = "ADQ JSON"
 SUPPORTED_FORMATS = [CVAT_XML, PASCAL_VOC_XML, COCO_JSON, ADQ_JSON]
 SUPPORTED_IMAGE_FILE_EXTENSIONS = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff", "*.gif"]
 
+PROJECT_COLUMNS = ['id', 'name', 'file_format_id',
+                   'total_count', 'task_total_count', 'task_done_count']
+
+TASK_COLUMNS = ['id', 'name', "project_id"]
 
 dart = None
+
 
 def home():
     st.write("DaRT")
@@ -74,11 +79,12 @@ def dashboard():
                               # os.path.join(os.getcwd(), "data"),
                               ADQ_WORKING_FOLDER,
                               PROJECTS + JSON_EXT)
-    df_projects = pd.DataFrame(json_projects[PROJECTS])
-    df_project_table = df_projects[['id', 'name', 'file_format_id', 'total_count', 'task_total_count', 'task_done_count']]
-    table_project = st.table(df_project_table)
+    df_projects = pd.DataFrame(columns=PROJECT_COLUMNS)
+    if len(json_projects[PROJECTS]) > 0:
+        df_projects = pd.DataFrame(json_projects[PROJECTS])
+        df_projects = df_projects[df_projects.columns]
 
-    AgGrid(df_project_table)
+    AgGrid(df_projects)
 
     # # function to handle row clicks
     # # Add a callback function to handle clicks on the rows
@@ -102,10 +108,15 @@ def dashboard():
                            ADQ_WORKING_FOLDER,
                            TASKS + JSON_EXT)
 
-    df_tasks = pd.DataFrame(json_tasks[TASKS])
-    st.table(df_tasks[['id', 'name', "project_id"]])
+    df_tasks = pd.DataFrame(columns=TASK_COLUMNS)
+    if len(json_tasks[TASKS]) > 0:
+        df_tasks = pd.DataFrame(json_tasks[TASKS])
+        df_tasks = df_tasks[json_tasks.columns]
+
+    AgGrid(df_tasks)
 
     # dart = Dart()
+
 
 def generate_file_tree(folder_path, patterns):
     file_tree_to_return = []
@@ -125,6 +136,9 @@ def generate_file_tree(folder_path, patterns):
 
 
 def get_next_project_id(projects):
+    if len(projects) == 0:
+        return 0
+
     project_idx = []
     for project in projects:
         project_idx.append(project["id"])
@@ -136,9 +150,12 @@ def create_projects():
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
-        format_type = st.selectbox("**Image file types**", ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif", "*.wav"])
+        images_format_type = st.selectbox("**Image file types**",
+                                   ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif",
+                                    "*.wav",
+                                    "*"])
         labels_folder = st.text_input("**Labels folder:**")
-        format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
+        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
         submitted = st.form_submit_button("Create project")
 
         if submitted:
@@ -149,11 +166,12 @@ def create_projects():
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
-            generate_file_tree(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
+            print(images_format_type)
+            generate_file_tree(images_folder, images_format_type.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
-            if format_type.endswith("JSON"):
+            if labels_format_type.endswith("JSON"):
                 patterns = ["*.json"]
 
             label_files = generate_file_tree(labels_folder, patterns)
@@ -170,9 +188,10 @@ def create_projects():
                 os.mkdir(destination_folder)
 
             for anno_file in label_files:
-                if format_type == CVAT_XML:
-                    convert_CVAT_to_Form("NN", anno_file, str(format_type).lower(), destination_folder)
-                elif format_type == ADQ_JSON:
+                if labels_format_type == CVAT_XML:
+                    convert_CVAT_to_Form("NN", anno_file,
+                                         str(labels_format_type).lower(), destination_folder)
+                elif labels_format_type == ADQ_JSON:
                     ori_folder = os.path.join(destination_folder, "origin")
                     if not os.path.exists(ori_folder):
                         os.mkdir(ori_folder)
