@@ -83,7 +83,6 @@ def dashboard(menu_dart: MenuDart):
     if menu_dart.projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
         df_projects = pd.DataFrame(menu_dart.projects_info.projects)
-        print(df_projects)
         df_projects = df_projects[PROJECT_COLUMNS]
 
     AgGrid(df_projects)
@@ -202,12 +201,24 @@ def create_tasks(menu_dart : MenuDart):
 
 
 def show_statistics(menu_dart : MenuDart):
+    selected = None
+
     if menu_dart.projects_info.num_count > 0:
-        df_projects = pd.DataFrame(menu_dart.projects_info)
-        df_project_names = df_projects["name"]
-        st.selectbox("Select project", df_project_names)
+        df_projects = pd.DataFrame(menu_dart.projects_info.projects)
+        df_project_id_names = df_projects[["id", "name"]]
+        print(type(df_project_id_names[["id", "name"]]))
+
+        selected = st.selectbox("Select project",
+                     ["{}-{}".format(id, name) for id, name in
+                      df_project_id_names[["id", "name"]].values.tolist()])
     else:
         st.markdown("**No project is created!**")
+
+    if selected:
+        id, name = selected.split('-')
+        project_selected = menu_dart.projects_info.get_project_by_id(int(id))
+        print(project_selected)
+        st.markdown(project_selected)
 
 
 def start_st():

@@ -40,6 +40,19 @@ class ProjectsInfo:
 
         return max(project_idx) + 1
 
+    def get_project_by_id(self, id):
+        if len(self.projects) == 0:
+            return 0
+
+        project_to_return = None
+        for project in self.projects:
+            print(project)
+            if project['id'] == id:
+                project_to_return = project
+                break
+
+        return project_to_return
+
     @staticmethod
     def from_json(json_dict):
         return ProjectsInfo(num_count=json_dict['num_count'],
@@ -64,10 +77,10 @@ class Project:
 
     progress = attr.ib(default=1, validator=attr.validators.instance_of(int))
     task_total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    task_done_count = attr.ib(default=1, validator=attr.validators.instance_of(int))
-    total_count = attr.ib(default=1, validator=attr.validators.instance_of(int))
-    sample_count = attr.ib(default=1, validator=attr.validators.instance_of(int))
-    per_task_count = attr.ib(default=1, validator=attr.validators.instance_of(int))
+    task_done_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    sample_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    per_task_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
     # TODO: for backward-compatibility
     dir_name = attr.ib(default=None)
