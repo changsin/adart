@@ -3,11 +3,12 @@ import fnmatch
 import json
 import shutil
 
+import altair_saver
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
-from menu_dart import MenuDart
 from projects_info import Project, ProjectsInfo
+from session_state import SessionState
 from statistics import *
 
 ADQ_WORKING_FOLDER = ".adq"
@@ -35,7 +36,7 @@ def default(obj):
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 
-def home(menu_dart: MenuDart):
+def home(menu_dart: SessionState):
     st.write("DaRT")
 
 
@@ -57,7 +58,7 @@ def to_file(data, folder, filename):
         json_file.write(data)
 
 
-def dashboard(menu_dart: MenuDart):
+def dashboard(menu_dart: SessionState):
     st.write("Dashboard")
 
     # This works
@@ -145,7 +146,7 @@ def generate_file_tree(folder_path, patterns):
     return file_tree_to_return
 
 
-def create_projects(menu_dart: MenuDart):
+def create_projects(menu_dart: SessionState):
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
@@ -207,18 +208,18 @@ def create_projects(menu_dart: MenuDart):
             dashboard(menu_dart)
 
 
-def create_tasks(menu_dart: MenuDart):
+def create_tasks(menu_dart: SessionState):
     with st.form("Create Tasks"):
         sample_percent = st.text_input("% of samples")
 
         st.form_submit_button("Create tasks")
 
 
-def show_statistics(menu_dart: MenuDart):
+def show_statistics(session_state: SessionState):
     selected = None
 
-    if menu_dart.projects_info.num_count > 0:
-        df_projects = pd.DataFrame(menu_dart.projects_info.projects)
+    if session_state.projects_info.num_count > 0:
+        df_projects = pd.DataFrame(session_state.projects_info.projects)
         df_project_id_names = df_projects[["id", "name"]]
 
         selected = st.selectbox("Select project",
@@ -229,15 +230,33 @@ def show_statistics(menu_dart: MenuDart):
 
     if selected:
         id, name = selected.split('-')
-        project_selected = menu_dart.projects_info.get_project_by_id(int(id))
+        project_selected = session_state.projects_info.get_project_by_id(int(id))
         st.markdown("# Image Files Info")
         plot_datetime("### Created date time", project_selected["image_files"])
-        plot_file_sizes("### File sizes", project_selected["image_files"])
-        plot_aspect_ratios("### Aspect ratios", project_selected["image_files"])
+
+        chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
+        if chart_images_file_sizes:
+            session_state.display_chart(chart_images_file_sizes)
+
+        chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
+                                                                              project_selected["image_files"])
+        # Display the histogram in Streamlit
+        if chart_aspect_ratios:
+            session_state.display_chart(chart_aspect_ratios)
+        if chart_brightness:
+            session_state.display_chart(chart_brightness)
 
         st.markdown("# Label Files Info")
         plot_datetime("### Created date time", project_selected["label_files"])
-        plot_file_sizes("### Label file sizes", project_selected["label_files"])
+        chart_label_file_sizes = plot_file_sizes("### Label file sizes", project_selected["label_files"])
+        if chart_label_file_sizes:
+            session_state.display_chart(chart_label_file_sizes)
+
+        # # Add a button to download the chart as an image file
+        # if st.button('Download Chart'):
+        #     session_state.save_charts('chart.png')
+        #     st.success('Chart saved as chart.png')
+        # session_state.download_charts()
 
 
 def start_st():
@@ -252,14 +271,14 @@ def start_st():
                               PROJECTS + JSON_EXT)
     projects_info = ProjectsInfo.from_json(json_projects)
 
-    menu_dart = MenuDart(projects_info=projects_info)
+    session_state = SessionState(projects_info=projects_info)
 
     menu = {
-        "Home": lambda: home(menu_dart),
-        "Dashboard": lambda: dashboard(menu_dart),
-        "Create Projects": lambda: create_projects(menu_dart),
-        "Create Tasks": lambda: create_tasks(menu_dart),
-        "Show Statistics": lambda: show_statistics(menu_dart),
+        "Home": lambda: home(session_state),
+        "Dashboard": lambda: dashboard(session_state),
+        "Create Projects": lambda: create_projects(session_state),
+        "Create Tasks": lambda: create_tasks(session_state),
+        "Show Statistics": lambda: show_statistics(session_state),
     }
 
     # Create a sidebar with menu options

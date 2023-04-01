@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 
 
-def plot_aspect_ratios(title: str, files_dict: dict):
+def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     st.markdown(title)
 
     if files_dict is None or len(files_dict.items()) == 0:
@@ -48,8 +48,8 @@ def plot_aspect_ratios(title: str, files_dict: dict):
             else:
                 brightness_values[brightness] = 1
 
-    print(aspect_ratios)
-    print(brightness_values)
+    # print(aspect_ratios)
+    # print(brightness_values)
     # # Create a Pandas DataFrame from the aspect ratios
     # df_aspect_ratios = pd.DataFrame({
     #     'aspect_ratio': aspect_ratios.keys(),
@@ -85,8 +85,6 @@ def plot_aspect_ratios(title: str, files_dict: dict):
     ).properties(
         title='Aspect Ratios of Images'
     )
-    # Display the histogram in Streamlit
-    st.altair_chart(chart_aspect_ratios, use_container_width=True)
 
     brightness_values_list = [(k, v) for k, v in brightness_values.items()]
     # Create a Pandas DataFrame from the brightness
@@ -100,7 +98,8 @@ def plot_aspect_ratios(title: str, files_dict: dict):
     ).properties(
         title='Brightness of Images'
     )
-    st.altair_chart(chart_brightness, use_container_width=True)
+
+    return chart_aspect_ratios, chart_brightness
 
 
 def plot_file_sizes(title: str, files_dict: dict):
@@ -129,8 +128,7 @@ def plot_file_sizes(title: str, files_dict: dict):
         x='x',
         y='y'
     )
-
-    st.altair_chart(chart, use_container_width=True)
+    return chart
 
 
 def plot_datetime(title: str, files_dict: dict):
