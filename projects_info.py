@@ -64,8 +64,8 @@ class Project:
     id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
     # new attributes
-    images_paths = attr.ib(validator=attr.validators.instance_of(list))
-    labels_paths = attr.ib(validator=attr.validators.instance_of(list))
+    image_files = attr.ib(validator=attr.validators.instance_of(dict))
+    label_files = attr.ib(validator=attr.validators.instance_of(dict))
 
     annotation_type_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
     file_format_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
@@ -99,8 +99,8 @@ class Project:
             "id": self.id,
             "name": self.name,
 
-            "images_paths": self.images_paths,
-            "labels_paths": self.labels_paths,
+            "image_files": self.image_files,
+            "label_files": self.label_files,
 
             "annotation_type_id": self.annotation_type_id,
             "file_format_id": self.file_format_id,
@@ -138,8 +138,8 @@ class Project:
             "id": self.id,
             "name": self.name,
 
-            "images_paths": self.images_paths,
-            "labels_paths": self.labels_paths,
+            "image_files": self.image_files,
+            "label_files": self.label_files,
 
             "annotation_type_id": self.annotation_type_id,
             "file_format_id": self.file_format_id,
@@ -175,8 +175,8 @@ class Project:
             id=json_dict["id"],
             name=json_dict["name"],
 
-            images_paths=json_dict["images_paths"],
-            labels_paths=json_dict["labels_paths"],
+            image_files=json_dict["image_files"],
+            label_files=json_dict["label_files"],
 
             annotation_type_id=json_dict["annotation_type_id"],
             file_format_id=json_dict["file_format_id"],

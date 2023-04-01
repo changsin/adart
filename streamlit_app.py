@@ -1,16 +1,19 @@
 import datetime
+import datetime as dt
 import fnmatch
 import json
 import os
 import shutil
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
-from projects_info import Project, ProjectsInfo
 from menu_dart import MenuDart
+from projects_info import Project, ProjectsInfo
 
 ADQ_WORKING_FOLDER = ".adq"
 PROJECTS = "projects"
@@ -55,7 +58,7 @@ def to_file(data, folder, filename):
     save data to path
     """
     full_path = os.path.join(folder, filename)
-    with open(full_path,  'w', encoding="utf-8") as json_file:
+    with open(full_path, 'w', encoding="utf-8") as json_file:
         json_file.write(data)
 
 
@@ -118,18 +121,31 @@ def dashboard(menu_dart: MenuDart):
 
 
 def generate_file_tree(folder_path, patterns):
-    file_tree_to_return = []
+    file_tree_to_return = {}
     for root, dirs, files in os.walk(folder_path):
         level = root.replace(folder_path, '').count(os.sep)
         indent = '-' * (level)
 
+        file_info_to_display = dict()
         for pattern in patterns:
             matched = fnmatch.filter([filename.lower() for filename in files], pattern.lower())
             if matched:
-                st.markdown('{}📁({}) {}/'.format(indent, len(matched), root.replace(folder_path, '')))
-                for filename in matched:
-                    if not os.path.isdir(filename):
-                        file_tree_to_return.append(os.path.join(root, filename))
+                sub_folder = root.replace(folder_path, '')
+                if file_info_to_display.get(sub_folder):
+                    file_info_to_display[sub_folder] = file_info_to_display[sub_folder] + len(matched)
+                else:
+                    file_info_to_display[sub_folder] = len(matched)
+
+                if file_tree_to_return.get(root):
+                    file_tree_to_return[root].extend(matched)
+                else:
+                    file_tree_to_return[root] = matched
+                # for filename in matched:
+                #     if not os.path.isdir(filename):
+                #         file_tree_to_return.append(os.path.join(root, filename))
+
+        for folder, count in file_info_to_display.items():
+            st.markdown('{}📁({}) {}/'.format(indent, count, folder))
 
     return file_tree_to_return
 
@@ -139,9 +155,9 @@ def create_projects(menu_dart: MenuDart):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
         images_format_type = st.selectbox("**Image file types**",
-                                   ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif",
-                                    "*.wav",
-                                    "*"])
+                                          ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif",
+                                           "*.wav",
+                                           "*"])
         labels_folder = st.text_input("**Labels folder:**")
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
         submitted = st.form_submit_button("Create project")
@@ -170,19 +186,22 @@ def create_projects(menu_dart: MenuDart):
             if not os.path.exists(destination_folder):
                 os.mkdir(destination_folder)
 
-            for anno_file in label_files:
-                if labels_format_type == CVAT_XML:
-                    convert_CVAT_to_Form("NN", anno_file,
-                                         str(labels_format_type).lower(), destination_folder)
-                elif labels_format_type == ADQ_JSON:
-                    ori_folder = os.path.join(destination_folder, "origin")
-                    if not os.path.exists(ori_folder):
-                        os.mkdir(ori_folder)
+            for folder, files in label_files.items():
+                for file in files:
+                    anno_file = os.path.join(folder, file)
+                    if labels_format_type == CVAT_XML:
+                        convert_CVAT_to_Form("NN", anno_file,
+                                             str(labels_format_type).lower(), destination_folder)
+                    elif labels_format_type == ADQ_JSON:
+                        ori_folder = os.path.join(destination_folder, "origin")
+                        if not os.path.exists(ori_folder):
+                            os.mkdir(ori_folder)
 
-                    shutil.copy(anno_file,
-                                os.path.join(ori_folder, os.path.basename(anno_file)))
+                        shutil.copy(anno_file,
+                                    os.path.join(ori_folder, os.path.basename(anno_file)))
 
-            new_project = Project(project_id, name, image_files, label_files, 1, 1, str(datetime.datetime.now()))
+            new_project = Project(project_id, name, image_files, label_files,
+                                  1, 1, str(datetime.datetime.now()))
             # NB: add as a json dict to make manipulating in pandas dataframe easier
             menu_dart.projects_info.add(new_project.to_json())
 
@@ -193,14 +212,14 @@ def create_projects(menu_dart: MenuDart):
             dashboard(menu_dart)
 
 
-def create_tasks(menu_dart : MenuDart):
+def create_tasks(menu_dart: MenuDart):
     with st.form("Create Tasks"):
         sample_percent = st.text_input("% of samples")
 
         st.form_submit_button("Create tasks")
 
 
-def show_statistics(menu_dart : MenuDart):
+def show_statistics(menu_dart: MenuDart):
     selected = None
 
     if menu_dart.projects_info.num_count > 0:
@@ -209,16 +228,77 @@ def show_statistics(menu_dart : MenuDart):
         print(type(df_project_id_names[["id", "name"]]))
 
         selected = st.selectbox("Select project",
-                     ["{}-{}".format(id, name) for id, name in
-                      df_project_id_names[["id", "name"]].values.tolist()])
+                                ["{}-{}".format(id, name) for id, name in
+                                 df_project_id_names[["id", "name"]].values.tolist()])
     else:
         st.markdown("**No project is created!**")
 
     if selected:
         id, name = selected.split('-')
         project_selected = menu_dart.projects_info.get_project_by_id(int(id))
-        print(project_selected)
-        st.markdown(project_selected)
+        plot_datetime("**Image files info**", project_selected["image_files"])
+        plot_datetime("**Label files info**", project_selected["label_files"])
+
+
+def plot_datetime(title: str, files_dict: dict):
+    st.markdown(title)
+
+    if files_dict is None or len(files_dict.items()) == 0:
+        return
+
+    x_data = []
+    y_data = []
+    for folder, files in files_dict.items():
+        level = folder.count(os.sep)
+        indent = '-' * level
+        # st.markdown('{}📁({}) {}/'.format(indent, len(files), folder))
+        with st.expander('{}📁({}) {}/'.format(indent, len(files), folder)):
+            for file in files:
+                file_stat = os.stat(os.path.join(folder, file))
+                dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
+                st.markdown("📄{} ({}B)(@{})".format(file, file_stat.st_size, dt_datetime))
+                date_object = dt_datetime.date()
+                time_object = dt_datetime.time()
+
+                # Append date and time to x and y data lists
+                x_data.append(date_object)
+                y_data.append(float(time_object.strftime('%H.%M')))
+
+    # Define the range of dot sizes
+    min_size = 10
+    max_size = 100
+
+    # Calculate the size of each dot based on the number of data points
+    sizes = np.linspace(min_size, max_size, len(x_data)) * 10
+
+    # Plot data as a scatter plot
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.scatter(x_data, y_data, s=sizes, marker='o')
+
+    # Set X-axis label
+    ax.set_xlabel('Date')
+    plt.xticks(rotation=45)
+
+    # Set Y-axis label
+    ax.set_ylabel('Time of the Day')
+
+    # Set X-axis range
+    start_date = min(x_data)
+    end_date = max(x_data)
+    # start_date = datetime.date(2023, 2, 1)
+    # end_date = datetime.date(2023, 3, 1)
+    ax.set_xlim(start_date, end_date)
+
+    # # Add labels to the dots
+    # for i, (x, y) in enumerate(zip(x_data, y_data)):
+    #     ax.text(x, y, "*", fontsize=20)
+
+    # Add legend and title to the plot
+    # ax.legend(['File Creation Time'])
+    ax.set_title('File Creation Time Scatter Plot')
+
+    # Display plot
+    st.pyplot(fig)
 
 
 def start_st():
