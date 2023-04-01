@@ -2,11 +2,11 @@ import datetime as dt
 import os
 
 import altair as alt
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-import cv2
 
 
 def plot_aspect_ratios(title: str, files_dict: dict):
@@ -16,8 +16,8 @@ def plot_aspect_ratios(title: str, files_dict: dict):
         return
 
     # Initialize a list to store the aspect ratios
-    aspect_ratios = []
-    brightness_values = []
+    aspect_ratios = {}
+    brightness_values = {}
 
     # Loop through all the files in the folder and calculate their aspect ratios
     for folder, files in files_dict.items():
@@ -31,41 +31,72 @@ def plot_aspect_ratios(title: str, files_dict: dict):
 
             # Calculate the aspect ratio
             aspect_ratio = width / height
-            aspect_ratios.append(aspect_ratio)
+            if aspect_ratios.get(aspect_ratio):
+                aspect_ratios[aspect_ratio] = aspect_ratios[aspect_ratio] + 1
+            else:
+                aspect_ratios[aspect_ratio] = 1
 
             # Convert the image to grayscale
             gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Calculate the average brightness of the image
             brightness = gray_img.mean()
-            brightness_values.append(brightness)
+            if brightness_values.get(brightness):
+                brightness_values[brightness] = brightness_values[brightness] + 1
+            else:
+                brightness_values[brightness] = 1
 
+    print(aspect_ratios)
+    print(brightness_values)
+    # # Create a Pandas DataFrame from the aspect ratios
+    # df_aspect_ratios = pd.DataFrame({
+    #     'aspect_ratio': aspect_ratios.keys(),
+    #     'count()': aspect_ratios.values()
+    # })
+    #
+    # # Create a histogram of the aspect ratios using Altair
+    # chart_aspect_ratios = alt.Chart(df_aspect_ratios).mark_bar().encode(
+    #     x=alt.X('aspect_ratio'),
+    #     y=alt.Y('count():Q', title='Count'),
+    #     tooltip=['aspect_ratio', 'count()']
+    # ).properties(
+    #     title='Aspect Ratios of Images'
+    # )
+    aspect_ratios_list = [(k, v) for k, v in aspect_ratios.items()]
+
+    # Done with the help of ChatGPT:
     # Create a Pandas DataFrame from the aspect ratios
-    df_aspect_ratios = pd.DataFrame({'aspect_ratio': aspect_ratios})
+    # Passing the keys and values of the dictionary directly to the Pandas DataFrame results in a problem.
+    # It is possible that the values are being coerced to a non-numeric data type,
+    # which could cause issues with the count() aggregation function.
+    #
+    # To resolve this issue, you can try converting the aspect_ratios dictionary into a list of tuples,
+    # where each tuple contains the aspect ratio value and the count of images with that aspect ratio.
+    # You can then pass this list to the Pandas DataFrame.
+    df_aspect_ratios = pd.DataFrame(aspect_ratios_list, columns=['aspect_ratio', 'count'])
 
     # Create a histogram of the aspect ratios using Altair
     chart_aspect_ratios = alt.Chart(df_aspect_ratios).mark_bar().encode(
-        x=alt.X('aspect_ratio', bin=True),
-        y='count()',
-        tooltip=['aspect_ratio', 'count()']
+        x=alt.X('aspect_ratio'),
+        y=alt.Y('count:Q', title='Count'),
+        tooltip=['aspect_ratio', 'count:Q']
     ).properties(
         title='Aspect Ratios of Images'
     )
-
     # Display the histogram in Streamlit
     st.altair_chart(chart_aspect_ratios, use_container_width=True)
 
-    df_brightness = pd.DataFrame({'brightness': brightness_values})
+    brightness_values_list = [(k, v) for k, v in brightness_values.items()]
+    # Create a Pandas DataFrame from the brightness
+    df_brightness = pd.DataFrame(brightness_values_list, columns=['brightness', 'count'])
 
-    # Create a histogram of the aspect ratios using Altair
+    # Create a histogram of the brightness using Altair
     chart_brightness = alt.Chart(df_brightness).mark_bar().encode(
-        x=alt.X('brightness', bin=True),
-        y='count()',
-        tooltip=['brightness', 'count()']
+        x=alt.X('brightness', bin=alt.Bin(step=10)),
+        y=alt.Y('count:Q', title='Count'),
+        tooltip=['brightness', 'count:Q']
     ).properties(
         title='Brightness of Images'
     )
-
-    # Plot the brightness values using Matplotlib
     st.altair_chart(chart_brightness, use_container_width=True)
 
 
