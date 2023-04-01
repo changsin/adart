@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
+import altair as alt
 
 from convert_lib import convert_CVAT_to_Form
 from menu_dart import MenuDart
@@ -236,8 +237,41 @@ def show_statistics(menu_dart: MenuDart):
     if selected:
         id, name = selected.split('-')
         project_selected = menu_dart.projects_info.get_project_by_id(int(id))
-        plot_datetime("**Image files info**", project_selected["image_files"])
-        plot_datetime("**Label files info**", project_selected["label_files"])
+        plot_datetime("# Image files info", project_selected["image_files"])
+        plot_file_sizes("**Image file sizes**", project_selected["image_files"])
+
+        plot_datetime("# Label files info", project_selected["label_files"])
+        plot_file_sizes("**Label file sizes**", project_selected["label_files"])
+
+
+def plot_file_sizes(title: str, files_dict: dict):
+    st.markdown(title)
+
+    if files_dict is None or len(files_dict.items()) == 0:
+        return
+
+    file_sizes = dict()
+    for folder, files in files_dict.items():
+        for file in files:
+            file_stat = os.stat(os.path.join(folder, file))
+            if file_sizes.get(file_stat.st_size):
+                file_sizes[file_stat.st_size] = file_sizes[file_stat.st_size] + 1
+            else:
+                file_sizes[file_stat.st_size] = 1
+
+    # # Create some example data
+    data = pd.DataFrame({
+        'x': file_sizes.keys(),
+        'y': file_sizes.values()
+    })
+
+    # Draw the line graph
+    chart = alt.Chart(data).mark_line().encode(
+        x='x',
+        y='y'
+    )
+
+    st.altair_chart(chart, use_container_width=True)
 
 
 def plot_datetime(title: str, files_dict: dict):
@@ -273,6 +307,9 @@ def plot_datetime(title: str, files_dict: dict):
 
     # Plot data as a scatter plot
     fig, ax = plt.subplots(figsize=(10, 5))
+    # Add legend and title to the plot
+    # ax.legend(['File Creation Time'])
+    ax.set_title("File Creation Time")
     ax.scatter(x_data, y_data, s=sizes, marker='o')
 
     # Set X-axis label
@@ -292,11 +329,6 @@ def plot_datetime(title: str, files_dict: dict):
     # # Add labels to the dots
     # for i, (x, y) in enumerate(zip(x_data, y_data)):
     #     ax.text(x, y, "*", fontsize=20)
-
-    # Add legend and title to the plot
-    # ax.legend(['File Creation Time'])
-    ax.set_title('File Creation Time Scatter Plot')
-
     # Display plot
     st.pyplot(fig)
 
