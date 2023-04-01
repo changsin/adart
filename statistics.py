@@ -26,6 +26,9 @@ def plot_aspect_ratios(title: str, files_dict: dict):
             # Read the image using opencv-python
             img = cv2.imread(image_path)
 
+            if img is None:
+                continue
+
             # Get the width and height of the image
             height, width, _ = img.shape
 
