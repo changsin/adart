@@ -2,14 +2,48 @@ import attr
 import json
 
 
-@attr.s(slots=True, frozen=True)
-class Projects:
-    num = attr.ib(validator=attr.validators.instance_of(int))
+@attr.s(slots=True, frozen=False)
+class ProjectsInfo:
+    num_count = attr.ib(validator=attr.validators.instance_of(int))
+    # NB: add as a json dict to make manipulating in pandas dataframe easier
     projects = attr.ib(validator=attr.validators.instance_of(list))
+
+    def __iter__(self):
+        yield from {
+            "num_count": self.num_count,
+            "projects": self.projects
+        }.items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def add(self, project):
+        self.projects.append(project)
+        self.num_count = len(self.projects)
+
+    def to_json(self):
+        return {
+            "num_count": self.num_count,
+            "projects": self.projects
+        }
+
+    def __dict__(self):
+        return vars(self)
+
+    def get_next_project_id(self):
+        if len(self.projects) == 0:
+            return 0
+
+        project_idx = []
+        for project in self.projects:
+            project_idx.append(project["id"])
+
+        return max(project_idx) + 1
 
     @staticmethod
     def from_json(json_dict):
-        return Projects(json_dict['num'], json_dict['projects'])
+        return ProjectsInfo(num_count=json_dict['num_count'],
+                            projects=json_dict['projects'])
 
 
 @attr.s(slots=True, frozen=True)
@@ -17,8 +51,8 @@ class Project:
     id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
     # new attributes
-    images_folder = attr.ib(validator=attr.validators.instance_of(str))
-    labels_folder = attr.ib(validator=attr.validators.instance_of(str))
+    images_paths = attr.ib(validator=attr.validators.instance_of(list))
+    labels_paths = attr.ib(validator=attr.validators.instance_of(list))
 
     annotation_type_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
     file_format_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
@@ -52,8 +86,8 @@ class Project:
             "id": self.id,
             "name": self.name,
 
-            "images_folder": self.images_folder,
-            "labels_folder": self.labels_folder,
+            "images_paths": self.images_paths,
+            "labels_paths": self.labels_paths,
 
             "annotation_type_id": self.annotation_type_id,
             "file_format_id": self.file_format_id,
@@ -91,8 +125,8 @@ class Project:
             "id": self.id,
             "name": self.name,
 
-            "images_folder": self.images_folder,
-            "labels_folder": self.labels_folder,
+            "images_paths": self.images_paths,
+            "labels_paths": self.labels_paths,
 
             "annotation_type_id": self.annotation_type_id,
             "file_format_id": self.file_format_id,
@@ -121,3 +155,43 @@ class Project:
             "dataset_name": self.dataset_name,
             "domain_id": self.domain_id
         }
+
+    @staticmethod
+    def from_json(json_dict):
+        return Project(
+            id=json_dict["id"],
+            name=json_dict["name"],
+
+            images_paths=json_dict["images_paths"],
+            labels_paths=json_dict["labels_paths"],
+
+            annotation_type_id=json_dict["annotation_type_id"],
+            file_format_id=json_dict["file_format_id"],
+
+            created_at=json_dict["created_at"],
+            updated_at=json_dict["updated_at"],
+
+            description=json_dict["description"],
+
+            progress=json_dict["progress"],
+            task_total_count=json_dict["task_total_count"],
+            task_done_count=json_dict["task_done_count"],
+            total_count=json_dict["total_count"],
+            sample_count=json_dict["sample_count"],
+
+            # TODO: for backward-compatibility
+            per_task_count=json_dict["per_task_count"],
+            dir_name=json_dict["dir_name"],
+
+            annotation_classes=json_dict["annotation_classes"],
+            customer_company=json_dict["customer_company"],
+            customer_name=json_dict["customer_name"],
+            customer_phone=json_dict["customer_phone"],
+            customer_email=json_dict["customer_email"],
+            annotation_errors=json_dict["annotation_errors"],
+            dataset_name=json_dict["dataset_name"],
+            domain_id=json_dict["domain_id"]
+        )
+
+    def __dict__(self):
+        return vars(self)

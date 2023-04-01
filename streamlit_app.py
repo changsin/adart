@@ -9,7 +9,8 @@ import streamlit as st
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
-from projects import Project
+from projects_info import Project, ProjectsInfo
+from menu_dart import MenuDart
 
 ADQ_WORKING_FOLDER = ".adq"
 PROJECTS = "projects"
@@ -29,8 +30,6 @@ PROJECT_COLUMNS = ['id', 'name', 'file_format_id',
 
 TASK_COLUMNS = ['id', 'name', "project_id"]
 
-dart = None
-
 
 def default(obj):
     if hasattr(obj, 'to_json'):
@@ -38,13 +37,13 @@ def default(obj):
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 
-def home():
+def home(menu_dart: MenuDart):
     st.write("DaRT")
 
 
 def from_file(str_default, folder, filename):
     full_path = os.path.join(folder, filename)
-    if os.path.exists(full_path):
+    if os.path.exists(full_path) and os.path.getsize(full_path) > 0:
         file = open(full_path, 'r', encoding='utf-8')
         return json.load(file)
 
@@ -60,7 +59,7 @@ def to_file(data, folder, filename):
         json_file.write(data)
 
 
-def dashboard():
+def dashboard(menu_dart: MenuDart):
     st.write("Dashboard")
 
     # This works
@@ -79,15 +78,12 @@ def dashboard():
     # for index, row in df.iterrows():
     #     st.write(row_template.format(row['Name'], row['Age']), unsafe_allow_html=True)
 
-    st.subheader("Projects")
-    # load_projects("{\"num_count\":0,\"projects\":[]}", ADQ_WORKING_FOLDER, PROJECTS + ".json")
-    json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
-                              # os.path.join(os.getcwd(), "data"),
-                              ADQ_WORKING_FOLDER,
-                              PROJECTS + JSON_EXT)
+    st.subheader("**Projects**")
     df_projects = pd.DataFrame(columns=PROJECT_COLUMNS)
-    if len(json_projects[PROJECTS]) > 0:
-        df_projects = pd.DataFrame(json_projects[PROJECTS])
+    if menu_dart.projects_info.num_count > 0:
+        # turn a class object to json dictionary to be processed by pandas dataframe
+        df_projects = pd.DataFrame(menu_dart.projects_info.projects)
+        print(df_projects)
         df_projects = df_projects[PROJECT_COLUMNS]
 
     AgGrid(df_projects)
@@ -108,7 +104,7 @@ def dashboard():
     # table_project.add_rows(on_table_click)
     # st.dataframe(df_project_table)
 
-    st.subheader("Tasks")
+    st.subheader("**Tasks**")
     json_tasks = from_file("{\"num_count\":0,\"tasks\":[]}",
                            # os.path.join(os.getcwd(), "data"),
                            ADQ_WORKING_FOLDER,
@@ -120,8 +116,6 @@ def dashboard():
         df_tasks = df_tasks[TASK_COLUMNS]
 
     AgGrid(df_tasks)
-
-    # dart = Dart()
 
 
 def generate_file_tree(folder_path, patterns):
@@ -141,18 +135,7 @@ def generate_file_tree(folder_path, patterns):
     return file_tree_to_return
 
 
-def get_next_project_id(projects):
-    if len(projects) == 0:
-        return 0
-
-    project_idx = []
-    for project in projects:
-        project_idx.append(project["id"])
-
-    return max(project_idx) + 1
-
-
-def create_projects():
+def create_projects(menu_dart: MenuDart):
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
@@ -172,7 +155,7 @@ def create_projects():
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
-            generate_file_tree(images_folder, images_format_type.split())
+            image_files = generate_file_tree(images_folder, images_format_type.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
@@ -181,11 +164,7 @@ def create_projects():
 
             label_files = generate_file_tree(labels_folder, patterns)
 
-            json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
-                                      ADQ_WORKING_FOLDER,
-                                      PROJECTS + JSON_EXT)
-            projects = json_projects[PROJECTS]
-            project_id = get_next_project_id(projects)
+            project_id = menu_dart.projects_info.get_next_project_id()
 
             # from_file()
             destination_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
@@ -204,40 +183,61 @@ def create_projects():
                     shutil.copy(anno_file,
                                 os.path.join(ori_folder, os.path.basename(anno_file)))
 
-            new_project = Project(project_id, name, images_folder, labels_folder, 1, 1, str(datetime.datetime.now()))
-            projects.append(new_project.to_json())
+            new_project = Project(project_id, name, image_files, label_files, 1, 1, str(datetime.datetime.now()))
+            # NB: add as a json dict to make manipulating in pandas dataframe easier
+            menu_dart.projects_info.add(new_project.to_json())
 
-            projects_info = dict()
-            projects_info['num'] = len(projects)
-            projects_info[PROJECTS] = projects
-            to_file(json.dumps(projects_info), ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
+            to_file(json.dumps(menu_dart.projects_info, default=default, indent=2),
+                    ADQ_WORKING_FOLDER,
+                    PROJECTS + JSON_EXT)
+
+            dashboard(menu_dart)
 
 
-def create_tasks():
+def create_tasks(menu_dart : MenuDart):
     with st.form("Create Tasks"):
         sample_percent = st.text_input("% of samples")
 
         st.form_submit_button("Create tasks")
 
 
+def show_statistics(menu_dart : MenuDart):
+    if menu_dart.projects_info.num_count > 0:
+        df_projects = pd.DataFrame(menu_dart.projects_info)
+        df_project_names = df_projects["name"]
+        st.selectbox("Select project", df_project_names)
+    else:
+        st.markdown("**No project is created!**")
+
+
 def start_st():
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
 
-    st.sidebar.header("Data Reviewer")
+    st.sidebar.header("**DaRT** - Data Reviewing Tool")
+
+    json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
+                              # os.path.join(os.getcwd(), "data"),
+                              ADQ_WORKING_FOLDER,
+                              PROJECTS + JSON_EXT)
+    projects_info = ProjectsInfo.from_json(json_projects)
+
+    menu_dart = MenuDart(projects_info=projects_info)
 
     menu = {
-        "Home": dashboard,
-        "Dashboard": dashboard,
-        "Create Projects": create_projects,
-        "Create Tasks": create_tasks
+        "Home": lambda: home(menu_dart),
+        "Dashboard": lambda: dashboard(menu_dart),
+        "Create Projects": lambda: create_projects(menu_dart),
+        "Create Tasks": lambda: create_tasks(menu_dart),
+        "Show Statistics": lambda: show_statistics(menu_dart),
     }
 
     # Create a sidebar with menu options
     selected = st.sidebar.selectbox("Select an option", list(menu.keys()))
 
-    # Call the selected method based on the user's selection
-    menu[selected]()
+    if selected:
+        # Call the selected method based on the user's selection
+        menu[selected]()
 
 
 if __name__ == '__main__':
