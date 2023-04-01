@@ -46,7 +46,6 @@ class ProjectsInfo:
 
         project_to_return = None
         for project in self.projects:
-            print(project)
             if project['id'] == id:
                 project_to_return = project
                 break

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-from PIL import Image
+import cv2
 
 
 def plot_aspect_ratios(title: str, files_dict: dict):
@@ -17,19 +17,33 @@ def plot_aspect_ratios(title: str, files_dict: dict):
 
     # Initialize a list to store the aspect ratios
     aspect_ratios = []
+    brightness_values = []
 
     # Loop through all the files in the folder and calculate their aspect ratios
     for folder, files in files_dict.items():
         for file in files:
-            with Image.open(os.path.join(folder, file)) as img:
-                aspect_ratio = img.width / img.height
-                aspect_ratios.append(aspect_ratio)
+            image_path = os.path.join(folder, file)
+            # Read the image using opencv-python
+            img = cv2.imread(image_path)
+
+            # Get the width and height of the image
+            height, width, _ = img.shape
+
+            # Calculate the aspect ratio
+            aspect_ratio = width / height
+            aspect_ratios.append(aspect_ratio)
+
+            # Convert the image to grayscale
+            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Calculate the average brightness of the image
+            brightness = gray_img.mean()
+            brightness_values.append(brightness)
 
     # Create a Pandas DataFrame from the aspect ratios
-    df = pd.DataFrame({'aspect_ratio': aspect_ratios})
+    df_aspect_ratios = pd.DataFrame({'aspect_ratio': aspect_ratios})
 
     # Create a histogram of the aspect ratios using Altair
-    chart = alt.Chart(df).mark_bar().encode(
+    chart_aspect_ratios = alt.Chart(df_aspect_ratios).mark_bar().encode(
         x=alt.X('aspect_ratio', bin=True),
         y='count()',
         tooltip=['aspect_ratio', 'count()']
@@ -38,7 +52,21 @@ def plot_aspect_ratios(title: str, files_dict: dict):
     )
 
     # Display the histogram in Streamlit
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart_aspect_ratios, use_container_width=True)
+
+    df_brightness = pd.DataFrame({'brightness': brightness_values})
+
+    # Create a histogram of the aspect ratios using Altair
+    chart_brightness = alt.Chart(df_brightness).mark_bar().encode(
+        x=alt.X('brightness', bin=True),
+        y='count()',
+        tooltip=['brightness', 'count()']
+    ).properties(
+        title='Brightness of Images'
+    )
+
+    # Plot the brightness values using Matplotlib
+    st.altair_chart(chart_brightness, use_container_width=True)
 
 
 def plot_file_sizes(title: str, files_dict: dict):

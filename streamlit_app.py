@@ -231,13 +231,13 @@ def show_statistics(menu_dart: MenuDart):
         id, name = selected.split('-')
         project_selected = menu_dart.projects_info.get_project_by_id(int(id))
         st.markdown("# Image Files Info")
-        plot_datetime("## Created date time", project_selected["image_files"])
-        plot_file_sizes("## File sizes", project_selected["image_files"])
-        plot_aspect_ratios("## Aspect ratios", project_selected["image_files"])
+        plot_datetime("### Created date time", project_selected["image_files"])
+        plot_file_sizes("### File sizes", project_selected["image_files"])
+        plot_aspect_ratios("### Aspect ratios", project_selected["image_files"])
 
         st.markdown("# Label Files Info")
-        plot_datetime("## Created date time", project_selected["label_files"])
-        plot_file_sizes("## Label file sizes", project_selected["label_files"])
+        plot_datetime("### Created date time", project_selected["label_files"])
+        plot_file_sizes("### Label file sizes", project_selected["label_files"])
 
 
 def start_st():
