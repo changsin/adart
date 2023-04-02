@@ -234,7 +234,9 @@ def show_file_info(session_state: SessionState):
         id, name = selected.split('-')
         project_selected = session_state.projects_info.get_project_by_id(int(id))
         st.markdown("# Image Files Info")
-        plot_datetime("### Created date time", project_selected["image_files"])
+        chart_datetime = plot_datetime("### Created date time", project_selected["image_files"])
+        if chart_datetime:
+            session_state.display_chart(chart_datetime)
 
         chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
         if chart_images_file_sizes:

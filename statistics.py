@@ -117,7 +117,6 @@ def plot_file_sizes(title: str, files_dict: dict):
             else:
                 file_sizes[file_stat.st_size] = 1
 
-    # # Create some example data
     data = pd.DataFrame({
         'x': file_sizes.keys(),
         'y': file_sizes.values()
@@ -128,6 +127,18 @@ def plot_file_sizes(title: str, files_dict: dict):
         x='x',
         y='y'
     )
+
+    chart = chart.interactive()  # make the chart interactive
+
+    chart = chart.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+    )
+
     return chart
 
 
@@ -146,8 +157,10 @@ def plot_datetime(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
-    x_data = []
-    y_data = []
+    x_data_ctime = []
+    y_data_ctime = []
+    x_data_utime = []
+    y_data_utime = []
     for folder, files in files_dict.items():
         level = folder.count(os.sep)
         indent = '-' * level
@@ -155,16 +168,20 @@ def plot_datetime(title: str, files_dict: dict):
         with st.expander('{}📁({}) {}/'.format(indent, len(files), folder)):
             for file in files:
                 file_stat = os.stat(os.path.join(folder, file))
-                dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
+                dt_cdatetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
                 st.markdown("📄{} ({}) {}".format(file,
-                                               humanize_bytes(file_stat.st_size),
-                                               dt_datetime.date()))
-                date_object = dt_datetime.date()
-                time_object = dt_datetime.time()
+                                                 humanize_bytes(file_stat.st_size),
+                                                 dt_cdatetime.date()))
+                ctime_object = dt_cdatetime.time()
+                # # Append date and time to x and y data lists
+                x_data_ctime.append(dt_cdatetime.date())
+                y_data_ctime.append(float(ctime_object.strftime('%H.%M')))
 
-                # Append date and time to x and y data lists
-                x_data.append(date_object)
-                y_data.append(float(time_object.strftime('%H.%M')))
+                dt_udatetime = dt.datetime.fromtimestamp(file_stat.st_mtime)
+                utime_object = dt_udatetime.time()
+                # # Append date and time to x and y data lists
+                x_data_utime.append(dt_udatetime.date())
+                y_data_utime.append(float(utime_object.strftime('%H.%M')))
     # # Define the number of columns
     # num_columns = 5
     #
@@ -186,36 +203,79 @@ def plot_datetime(title: str, files_dict: dict):
     #
     # st.markdown("📄{} ({}B)(@{})".format(file, file_stat.st_size, dt_datetime))
 
-    # Define the range of dot sizes
-    min_size = 10
-    max_size = 100
+    data1 = pd.DataFrame({
+        'date': x_data_ctime,
+        'time': y_data_ctime,
+        'group': 'created'
+    })
 
-    # Calculate the size of each dot based on the number of data points
-    sizes = np.linspace(min_size, max_size, len(x_data)) * 10
+    data2 = pd.DataFrame({
+        'date': x_data_utime,
+        'time': y_data_utime,
+        'group': 'updated'
+    })
 
-    # Plot data as a scatter plot
-    fig, ax = plt.subplots(figsize=(10, 5))
-    # Add legend and title to the plot
-    # ax.legend(['File Creation Time'])
-    ax.set_title("File Creation Time")
-    ax.scatter(x_data, y_data, s=sizes, marker='o')
+    # Convert the date field to a datetime format
+    data1['date'] = pd.to_datetime(data1['date'])
+    data2['date'] = pd.to_datetime(data2['date'])
 
-    # Set X-axis label
-    ax.set_xlabel('Date')
-    plt.xticks(rotation=45)
+    # Combine the two datasets
+    data = pd.concat([data1, data2])
 
-    # Set Y-axis label
-    ax.set_ylabel('Time of the Day')
+    # Draw the line graph
+    chart = alt.Chart(data1).mark_circle(size=200).encode(
+        x=alt.X('date:T', title='Date'),  # Specify the data type for the date field as 'T' for datetime
+        y=alt.Y('time:Q', title='Time'),
+        color='group',
+        tooltip=['date', 'time:Q']
+    ).properties(
+        title='Created at'
+    )
+    chart = chart.interactive()  # make the chart interactive
 
-    # Set X-axis range
-    start_date = min(x_data)
-    end_date = max(x_data)
-    # start_date = datetime.date(2023, 2, 1)
-    # end_date = datetime.date(2023, 3, 1)
-    ax.set_xlim(start_date, end_date)
+    chart = chart.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+    )
 
-    # # Add labels to the dots
-    # for i, (x, y) in enumerate(zip(x_data, y_data)):
-    #     ax.text(x, y, "*", fontsize=20)
-    # Display plot
-    st.pyplot(fig)
+    return chart
+    #
+    # # return chart
+    #
+    # # Define the range of dot sizes
+    # min_size = 10
+    # max_size = 100
+    #
+    # # Calculate the size of each dot based on the number of data points
+    # sizes = np.linspace(min_size, max_size, len(x_data)) * 10
+    #
+    # # Plot data as a scatter plot
+    # fig, ax = plt.subplots(figsize=(10, 5))
+    # # Add legend and title to the plot
+    # # ax.legend(['File Creation Time'])
+    # ax.set_title("File Creation Time")
+    # ax.scatter(x_data, y_data, s=sizes, marker='o')
+    #
+    # # Set X-axis label
+    # ax.set_xlabel('Date')
+    # plt.xticks(rotation=45)
+    #
+    # # Set Y-axis label
+    # ax.set_ylabel('Time of the Day')
+    #
+    # # Set X-axis range
+    # start_date = min(x_data)
+    # end_date = max(x_data)
+    # # start_date = datetime.date(2023, 2, 1)
+    # # end_date = datetime.date(2023, 3, 1)
+    # ax.set_xlim(start_date, end_date)
+    #
+    # # # Add labels to the dots
+    # # for i, (x, y) in enumerate(zip(x_data, y_data)):
+    # #     ax.text(x, y, "*", fontsize=20)
+    # # Display plot
+    # st.pyplot(fig)
