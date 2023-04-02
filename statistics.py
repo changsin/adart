@@ -131,6 +131,15 @@ def plot_file_sizes(title: str, files_dict: dict):
     return chart
 
 
+def humanize_bytes(size):
+    # Convert bytes to a more human-readable format
+    one_k_bytes = 1024.0
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+        if abs(size) < one_k_bytes:
+            return "%3.1f %sB" % (size, unit)
+        size /= one_k_bytes
+
+
 def plot_datetime(title: str, files_dict: dict):
     st.markdown(title)
 
@@ -147,13 +156,35 @@ def plot_datetime(title: str, files_dict: dict):
             for file in files:
                 file_stat = os.stat(os.path.join(folder, file))
                 dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
-                st.markdown("📄{} ({}B)(@{})".format(file, file_stat.st_size, dt_datetime))
+                st.markdown("📄{} ({}) {}".format(file,
+                                               humanize_bytes(file_stat.st_size),
+                                               dt_datetime.date()))
                 date_object = dt_datetime.date()
                 time_object = dt_datetime.time()
 
                 # Append date and time to x and y data lists
                 x_data.append(date_object)
                 y_data.append(float(time_object.strftime('%H.%M')))
+    # # Define the number of columns
+    # num_columns = 5
+    #
+    # # # Calculate the number of rows needed based on the number of images and columns
+    # # num_rows = int(len(files) / num_columns) + (1 if len(files) % num_columns > 0 else 0)
+    #
+    # # Create a layout with the specified number of columns
+    # columns = st.columns(num_columns)
+    # for i, file in enumerate(files):
+    #     with columns[i % num_columns]:
+    #         full_path = os.path.join(folder, file)
+    #         file_stat = os.stat(full_path)
+    #         dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
+    #         st.image(full_path,
+    #                  caption="{} {} {}".format(file,
+    #                                            humanize_bytes(file_stat.st_size),
+    #                                            dt_datetime.date()),
+    #                  width=100)
+    #
+    # st.markdown("📄{} ({}B)(@{})".format(file, file_stat.st_size, dt_datetime))
 
     # Define the range of dot sizes
     min_size = 10
