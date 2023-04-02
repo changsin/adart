@@ -214,20 +214,23 @@ def create_tasks(menu_dart: SessionState):
         st.form_submit_button("Create tasks")
 
 
-def show_statistics(session_state: SessionState):
+def show_file_info(session_state: SessionState):
     selected = None
 
     if session_state.projects_info.num_count > 0:
         df_projects = pd.DataFrame(session_state.projects_info.projects)
         df_project_id_names = df_projects[["id", "name"]]
-
+        options = ["{}-{}".format(id, name)
+                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
+        # set an empty string as the default selection - no action
+        options.append("")
         selected = st.selectbox("Select project",
-                                ["{}-{}".format(id, name) for id, name in
-                                 df_project_id_names[["id", "name"]].values.tolist()])
+                                options=options,
+                                index=len(options) - 1)
     else:
         st.markdown("**No project is created!**")
 
-    if selected:
+    if selected and len(selected) > 0:
         id, name = selected.split('-')
         project_selected = session_state.projects_info.get_project_by_id(int(id))
         st.markdown("# Image Files Info")
@@ -237,6 +240,34 @@ def show_statistics(session_state: SessionState):
         if chart_images_file_sizes:
             session_state.display_chart(chart_images_file_sizes)
 
+        st.markdown("# Label Files Info")
+        plot_datetime("### Created date time", project_selected["label_files"])
+        chart_label_file_sizes = plot_file_sizes("### Label file sizes", project_selected["label_files"])
+        if chart_label_file_sizes:
+            session_state.display_chart(chart_label_file_sizes)
+
+        session_state.show_download_charts_button()
+
+
+def show_image_quality(session_state: SessionState):
+    selected = None
+
+    if session_state.projects_info.num_count > 0:
+        df_projects = pd.DataFrame(session_state.projects_info.projects)
+        df_project_id_names = df_projects[["id", "name"]]
+        options = ["{}-{}".format(id, name)
+                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
+        # set an empty string as the default selection - no action
+        options.append("")
+        selected = st.selectbox("Select project",
+                                options=options,
+                                index=len(options) - 1)
+    else:
+        st.markdown("**No project is created!**")
+
+    if selected and len(selected) > 0:
+        id, name = selected.split('-')
+        project_selected = session_state.projects_info.get_project_by_id(int(id))
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               project_selected["image_files"])
         # Display the histogram in Streamlit
@@ -244,12 +275,6 @@ def show_statistics(session_state: SessionState):
             session_state.display_chart(chart_aspect_ratios)
         if chart_brightness:
             session_state.display_chart(chart_brightness)
-
-        st.markdown("# Label Files Info")
-        plot_datetime("### Created date time", project_selected["label_files"])
-        chart_label_file_sizes = plot_file_sizes("### Label file sizes", project_selected["label_files"])
-        if chart_label_file_sizes:
-            session_state.display_chart(chart_label_file_sizes)
 
         session_state.show_download_charts_button()
 
@@ -273,15 +298,16 @@ def start_st():
         "Dashboard": lambda: dashboard(session_state),
         "Create Projects": lambda: create_projects(session_state),
         "Create Tasks": lambda: create_tasks(session_state),
-        "Show Statistics": lambda: show_statistics(session_state),
+        "Show file info": lambda: show_file_info(session_state),
+        "Show image quality": lambda: show_image_quality(session_state)
     }
 
     # Create a sidebar with menu options
-    selected = st.sidebar.selectbox("Select an option", list(menu.keys()))
+    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
 
-    if selected:
+    if selected_action:
         # Call the selected method based on the user's selection
-        menu[selected]()
+        menu[selected_action]()
 
 
 if __name__ == '__main__':
