@@ -3,7 +3,6 @@ import fnmatch
 import json
 import shutil
 
-import altair_saver
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
@@ -252,11 +251,7 @@ def show_statistics(session_state: SessionState):
         if chart_label_file_sizes:
             session_state.display_chart(chart_label_file_sizes)
 
-        # # Add a button to download the chart as an image file
-        # if st.button('Download Chart'):
-        #     session_state.save_charts('chart.png')
-        #     st.success('Chart saved as chart.png')
-        # session_state.download_charts()
+        session_state.show_download_charts_button()
 
 
 def start_st():
