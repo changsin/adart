@@ -235,8 +235,8 @@ def _select_project(session_state: SessionState):
     if session_state.projects_info.num_count > 0:
         df_projects = pd.DataFrame(session_state.projects_info.projects)
         df_project_id_names = df_projects[["id", "name"]]
-        options = ["{}-{}".format(id, name)
-                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
+        options = ["{}-{}".format(project_id, name)
+                   for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
         return st.selectbox("Select project",
@@ -251,7 +251,12 @@ def show_label_quality(session_state: SessionState):
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(project_id))
-        load_label_files("Label quality", project_selected["label_files"])
+        class_labels = load_label_files("Label quality", project_selected["label_files"])
+        print(class_labels)
+
+        chart_class_count = plot_bar_chart("Class Count", "class", "count", class_labels)
+        if chart_class_count:
+            session_state.display_chart(project_id, "class_count", chart_class_count)
 
 
 def start_st():

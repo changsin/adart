@@ -315,3 +315,33 @@ def plot_datetime(title: str, files_dict: dict):
     # #     ax.text(x, y, "*", fontsize=20)
     # # Display plot
     # st.pyplot(fig)
+
+
+def plot_bar_chart(title: str, x_label: str, y_label: str, data_dict: dict):
+    st.markdown(title)
+
+    if data_dict is None or len(data_dict.items()) == 0:
+        return
+
+    data = pd.DataFrame({
+        x_label: data_dict.keys(),
+        y_label: data_dict.values()
+    })
+
+    # Create a histogram using Altair
+    chart = alt.Chart(data).mark_bar().encode(
+        alt.X(x_label, title=title),
+        y=y_label
+    )
+
+    chart = chart.interactive()  # make the chart interactive
+    chart = chart.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+    )
+
+    return chart

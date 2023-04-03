@@ -2,9 +2,11 @@ import json
 
 import attr
 
+from adq_labels import AdqLabels
+
 
 @attr.s(slots=True, frozen=False)
-class AdqLabels:
+class DartLabels:
     twconverted = attr.ib(default=None, validator=attr.validators.instance_of(str))
     mode = attr.ib(default="annotation", validator=attr.validators.instance_of(str))
     template_version = attr.ib(default="0.1", validator=attr.validators.instance_of(str))
@@ -37,19 +39,28 @@ class AdqLabels:
 
     @staticmethod
     def from_json(json_dict):
-        return AdqLabels(
+        return DartLabels(
             twconverted=json_dict['twconverted'],
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
-            images=[AdqLabels.Image.from_json(json_image) for json_image in json_dict['images']]
+            images=json_dict['images']
+        )
+
+    @staticmethod
+    def from_adq_labels(adq_labels: AdqLabels):
+        return DartLabels(
+            twconverted=adq_labels.twconverted,
+            mode=adq_labels.mode,
+            template_version=adq_labels.template_version,
+            images=[DartLabels.Image.from_adq_image(image) for image in adq_labels.images]
         )
 
     @attr.s(slots=True, frozen=False)
     class Image:
         image_id = attr.ib(validator=attr.validators.instance_of(str))
         name = attr.ib(validator=attr.validators.instance_of(str))
-        width = attr.ib(validator=attr.validators.instance_of(str))
-        height = attr.ib(validator=attr.validators.instance_of(str))
+        width = attr.ib(validator=attr.validators.instance_of(int))
+        height = attr.ib(validator=attr.validators.instance_of(int))
         objects = attr.ib(default=[], validator=attr.validators.instance_of(list))
 
         # {
@@ -60,7 +71,7 @@ class AdqLabels:
         #     "objects": [
         #
         # {
-
+        #
         def __iter__(self):
             yield from {
                 "image_id": self.image_id,
@@ -84,13 +95,22 @@ class AdqLabels:
 
         @staticmethod
         def from_json(json_dict):
-            return AdqLabels.Image(
+            return DartLabels.Image(
                 image_id=json_dict['image_id'],
                 name=json_dict['name'],
                 width=json_dict['width'],
                 height=json_dict['height'],
-                objects=[AdqLabels.Object.from_json(json_obj) for json_obj in json_dict['objects']]
+                objects=json_dict['objects']
             )
+
+        @staticmethod
+        def from_adq_image(adq_image: AdqLabels.Image):
+            return DartLabels.Image(
+                image_id=adq_image.image_id,
+                name=adq_image.name,
+                width=int(adq_image.width),
+                height=int(adq_image.height),
+                objects=[DartLabels.Object.from_adq_object(obj) for obj in adq_image.objects])
 
     @attr.s(slots=True, frozen=False)
     class Object:
@@ -99,9 +119,9 @@ class AdqLabels:
         occluded = attr.ib(validator=attr.validators.instance_of(str))
         z_order = attr.ib(validator=attr.validators.instance_of(str))
         group_id = attr.ib(validator=attr.validators.instance_of(str))
-        position = attr.ib(validator=attr.validators.instance_of(str))
+        points = attr.ib(validator=attr.validators.instance_of(list))
         # a list of attribute_name and attribute_value pairs
-        attributes = attr.ib(default=[], validator=attr.validators.instance_of(list))
+        attributes = attr.ib(default=[], validator=attr.validators.instance_of(dict))
         verification_result = attr.ib(default=None)
 
         # {
@@ -136,7 +156,7 @@ class AdqLabels:
                 "occluded": self.occluded,
                 "z_order": self.z_order,
                 "group_id": self.group_id,
-                "position": self.position,
+                "points": self.points,
                 "attributes": self.attributes,
                 "verification_result": self.verification_result,
             }.items()
@@ -151,22 +171,38 @@ class AdqLabels:
                 "occluded": self.occluded,
                 "z_order": self.z_order,
                 "group_id": self.group_id,
-                "position": self.position,
+                "points": self.points,
                 "attributes": self.attributes,
                 "verification_result": self.verification_result,
             }
 
         @staticmethod
         def from_json(json_dict):
-            verification_result = None
-            if json_dict.get('verification_result'):
-                verification_result = ['verification_result']
+            return DartLabels.Object(label=json_dict['label'],
+                                     type=json_dict['type'],
+                                     occluded=json_dict['occluded'],
+                                     z_order=json_dict['z_order'],
+                                     group_id=json_dict['group_id'],
+                                     points=json_dict['points'],
+                                     attributes=json_dict['attributes'],
+                                     verification_result=json_dict['verification_result'])
 
-            return AdqLabels.Object(label=json_dict['label'],
-                                    type=json_dict['type'],
-                                    occluded=json_dict['occluded'],
-                                    z_order=json_dict['z_order'],
-                                    group_id=json_dict['group_id'],
-                                    position=json_dict['position'],
-                                    attributes=json_dict['attributes'],
-                                    verification_result=verification_result)
+        @staticmethod
+        def from_adq_object(adq_object: AdqLabels.Object):
+            points_str = adq_object.position.split()
+            points = [float(point.replace(",", "")) for point in points_str]
+
+            attributes = dict()
+            for attribute in adq_object.attributes:
+                key = attribute["attribute_name"]
+                value = attribute["attribute_value"]
+                attributes[key] = value
+
+            return DartLabels.Object(label=adq_object.label,
+                                     type=adq_object.type,
+                                     occluded=adq_object.occluded,
+                                     z_order=adq_object.z_order,
+                                     group_id=adq_object.group_id,
+                                     points=points,
+                                     attributes=attributes,
+                                     verification_result=adq_object.verification_result)

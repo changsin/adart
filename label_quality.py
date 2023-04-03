@@ -1,4 +1,39 @@
 import shapely
+import streamlit as st
+
+import utils
+from adq_labels import AdqLabels
+from dart_labels import DartLabels
+
+
+def load_label_files(title: str, files_dict: dict):
+    st.markdown(title)
+
+    if files_dict is None or len(files_dict.items()) == 0:
+        return
+
+    class_labels = {}
+    label_objects = []
+
+    for folder, files in files_dict.items():
+        for file in files:
+            json_labels = utils.from_file("{}",
+                                          folder,
+                                          file)
+            adq_labels = AdqLabels.from_json(json_labels)
+            # convert to dart label format for easier processing
+            dart_labels = DartLabels.from_adq_labels(adq_labels)
+            label_objects.append(dart_labels)
+
+    for labels in label_objects:
+        for image in labels.images:
+            for object in image.objects:
+                if class_labels.get(object.label):
+                    class_labels[object.label] += 1
+                else:
+                    class_labels[object.label] = 1
+
+    return class_labels
 
 
 def triangle_area(vertices):
