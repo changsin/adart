@@ -1,9 +1,13 @@
+from collections import namedtuple
+
 import shapely
 import streamlit as st
 
 import utils
 from adq_labels import AdqLabels
 from dart_labels import DartLabels
+
+Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
 def load_label_files(title: str, files_dict: dict):
@@ -12,7 +16,7 @@ def load_label_files(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
-    class_labels = {}
+    class_labels = dict()
     label_objects = []
 
     for folder, files in files_dict.items():
@@ -33,7 +37,35 @@ def load_label_files(title: str, files_dict: dict):
                 else:
                     class_labels[object.label] = 1
 
-    return class_labels
+    overlap_areas = dict()
+    areas = dict()
+    for labels in label_objects:
+        for image in labels.images:
+            count = len(image.objects)
+            for ob_id1 in range(count):
+                xtl1, ytl1, xbr1, ybr1 = image.objects[ob_id1].points
+                rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
+                area1 = (rect1.xmax - rect1.xmin) * (rect1.ymax - rect1.ymin)
+                area1 = format(area1, '.0f')
+                if overlap_areas.get(area1):
+                    areas[area1] += 1
+                else:
+                    areas[area1] = 1
+
+                for ob_id2 in range(ob_id1 + 1, count):
+                    xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
+                    rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
+
+                    overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
+
+                    if overlap_area > 0:
+                        overlap_percent = format(overlap_area/max_area, '.2f')
+                        if overlap_areas.get(overlap_percent):
+                            overlap_areas[overlap_percent] += 1
+                        else:
+                            overlap_areas[overlap_percent] = 1
+
+    return class_labels, overlap_areas, areas
 
 
 def triangle_area(vertices):
@@ -73,3 +105,19 @@ def overlapping_area(poly1, poly2):
             contained_triangles.append(triangle)
     overlapping_area = sum(triangle_area(triangle) for triangle in triangles) - sum(triangle_area(triangle) for triangle in contained_triangles)
     return overlapping_area
+
+
+def calculate_overlapping_rect(a, b):
+    overlapping_area = 0.0
+    max_area = 0.0
+
+    dx = min(a.xmax, b.xmax) - max(a.xmin, b.xmin)
+    dy = min(a.ymax, b.ymax) - max(a.ymin, b.ymin)
+    if (dx >= 0) and (dy >= 0):
+        area1 = (a.xmax - a.xmin) * (a.ymax - a.ymin)
+        area2 = (b.xmax - b.xmin) * (b.ymax - b.ymin)
+
+        max_area = max(area1, area2)
+        overlapping_area = dx*dy
+
+    return overlapping_area, max_area

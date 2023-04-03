@@ -251,13 +251,24 @@ def show_label_quality(session_state: SessionState):
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(project_id))
-        class_labels = load_label_files("Label quality", project_selected["label_files"])
-        print(class_labels)
+        class_labels, overlap_areas, areas = load_label_files("Label quality", project_selected["label_files"])
 
         chart_class_count = plot_bar_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
             session_state.display_chart(project_id, "class_count", chart_class_count)
 
+        print(areas)
+        chart_overlap_areas = plot_bar_chart("Overlap Areas",
+                                             x_label="overlap %", y_label="count",
+                                             data_dict=overlap_areas)
+        if chart_overlap_areas:
+            session_state.display_chart(project_id, "overlap_areas", chart_overlap_areas)
+
+        chart_areas = plot_bar_chart("Areas",
+                                     x_label="overlap %", y_label="count",
+                                     data_dict=areas)
+        if chart_areas:
+            session_state.display_chart(project_id, "areas", chart_areas)
 
 def start_st():
     if not os.path.exists(ADQ_WORKING_FOLDER):
