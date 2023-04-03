@@ -8,6 +8,7 @@ from charts import *
 from convert_lib import convert_CVAT_to_Form
 from label_quality import *
 from projects_info import Project
+from review_images import show_images
 from session_state import *
 
 
@@ -248,6 +249,15 @@ def show_label_quality(session_state: SessionState):
             session_state.display_chart(project_id, "dimensions", chart_dimensions)
 
 
+def review_images(session_state: SessionState):
+    selected_project = _select_project(session_state)
+    if selected_project and len(selected_project) > 0:
+        project_id, name = selected_project.split('-', maxsplit=1)
+        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+
+        show_images(project_selected["image_files"])
+
+
 def start_st():
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
@@ -269,7 +279,8 @@ def start_st():
         "Create Tasks": lambda: create_tasks(session_state),
         "Show file info": lambda: show_file_info(session_state),
         "Show image quality": lambda: show_image_quality(session_state),
-        "Show label quality": lambda: show_label_quality(session_state)
+        "Show label quality": lambda: show_label_quality(session_state),
+        "Review images": lambda: review_images(session_state)
     }
 
     # Create a sidebar with menu options

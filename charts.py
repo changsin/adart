@@ -6,9 +6,6 @@ import cv2
 import pandas as pd
 import streamlit as st
 
-# Convert bytes to a more human-readable format
-ONE_K_BYTES = 1024.0
-
 
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     st.markdown(title)
@@ -178,13 +175,6 @@ def plot_file_sizes(title: str, files_dict: dict):
     return chart
 
 
-def humanize_bytes(size):
-    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-        if abs(size) < ONE_K_BYTES:
-            return "%3.1f %sB" % (size, unit)
-        size /= ONE_K_BYTES
-
-
 def plot_datetime(title: str, files_dict: dict):
     st.markdown(title)
 
@@ -208,27 +198,6 @@ def plot_datetime(title: str, files_dict: dict):
                 # Append date and time to x and y data lists
                 x_data_ctime.append(dt_cdatetime.date())
                 y_data_ctime.append(float(ctime_object.strftime('%H.%M')))
-
-    # # Define the number of columns
-    # num_columns = 5
-    #
-    # # # Calculate the number of rows needed based on the number of images and columns
-    # # num_rows = int(len(files) / num_columns) + (1 if len(files) % num_columns > 0 else 0)
-    #
-    # # Create a layout with the specified number of columns
-    # columns = st.columns(num_columns)
-    # for i, file in enumerate(files):
-    #     with columns[i % num_columns]:
-    #         full_path = os.path.join(folder, file)
-    #         file_stat = os.stat(full_path)
-    #         dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
-    #         st.image(full_path,
-    #                  caption="{} {} {}".format(file,
-    #                                            humanize_bytes(file_stat.st_size),
-    #                                            dt_datetime.date()),
-    #                  width=100)
-    #
-    # st.markdown("📄{} ({}B)(@{})".format(file, file_stat.st_size, dt_datetime))
 
     data1 = pd.DataFrame({
         'date': x_data_ctime,

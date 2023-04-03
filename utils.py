@@ -4,6 +4,17 @@ import os
 
 import streamlit as st
 
+# Convert bytes to a more human-readable format
+ONE_K_BYTES = 1024.0
+
+
+def humanize_bytes(size):
+
+    for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
+        if abs(size) < ONE_K_BYTES:
+            return "%3.1f %sB" % (size, unit)
+        size /= ONE_K_BYTES
+
 
 def from_file(str_default, folder, filename):
     full_path = os.path.join(folder, filename)
