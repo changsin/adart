@@ -7,9 +7,9 @@ from st_aggrid import AgGrid
 from charts import *
 from convert_lib import convert_CVAT_to_Form
 from label_quality import *
-from projects_info import Project
+from projects_info import ProjectsInfo, Project
 from review_images import show_images
-from session_state import *
+from constants import *
 
 
 def default(obj):
@@ -18,11 +18,11 @@ def default(obj):
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 
-def home(menu_dart: SessionState):
+def home():
     st.write("DaRT")
 
 
-def dashboard(menu_dart: SessionState):
+def dashboard():
     st.write("Dashboard")
 
     # This works
@@ -43,9 +43,10 @@ def dashboard(menu_dart: SessionState):
 
     st.subheader("**Projects**")
     df_projects = pd.DataFrame(columns=PROJECT_COLUMNS)
-    if menu_dart.projects_info.num_count > 0:
+    projects_info = st.session_state[PROJECTS]
+    if projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
-        df_projects = pd.DataFrame(menu_dart.projects_info.projects)
+        df_projects = pd.DataFrame(projects_info.projects)
         df_projects = df_projects[PROJECT_COLUMNS]
 
     AgGrid(df_projects)
@@ -80,7 +81,7 @@ def dashboard(menu_dart: SessionState):
     AgGrid(df_tasks)
 
 
-def create_projects(menu_dart: SessionState):
+def create_projects():
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
@@ -108,7 +109,8 @@ def create_projects(menu_dart: SessionState):
 
             label_files = utils.generate_file_tree(labels_folder, patterns)
 
-            project_id = menu_dart.projects_info.get_next_project_id()
+            projects_info = st.session_state[PROJECTS]
+            project_id = projects_info.get_next_project_id()
 
             target_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
             if not os.path.exists(target_folder):
@@ -137,73 +139,75 @@ def create_projects(menu_dart: SessionState):
             new_project = Project(project_id, name, image_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
             # NB: add as a json dict to make manipulating in pandas dataframe easier
-            menu_dart.projects_info.add(new_project.to_json())
+            projects_info.add(new_project.to_json())
 
-            utils.to_file(json.dumps(menu_dart.projects_info,
+            utils.to_file(json.dumps(projects_info,
                                      default=default, indent=2),
                           ADQ_WORKING_FOLDER,
                           PROJECTS + JSON_EXT)
 
-            dashboard(menu_dart)
+            dashboard()
 
 
-def create_tasks(menu_dart: SessionState):
+def create_tasks():
     with st.form("Create Tasks"):
         sample_percent = st.text_input("% of samples")
 
         st.form_submit_button("Create tasks")
 
 
-def show_file_info(session_state: SessionState):
-    selected_project = _select_project(session_state)
+def show_file_info():
+    projects_info = st.session_state[PROJECTS]
+    selected_project = _select_project(projects_info)
 
     if selected_project and len(selected_project) > 0:
         project_id, name, = selected_project.split('-', maxsplit=1)
-        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+        project_selected = projects_info.get_project_by_id(int(project_id))
 
         if project_selected.get("image_files"):
             st.markdown("# Image Files Info")
             chart_images_ctime = plot_datetime("### Created date time", project_selected["image_files"])
             if chart_images_ctime:
-                session_state.display_chart(project_id, "image_files_ctime", chart_images_ctime)
+                display_chart(project_id, "image_files_ctime", chart_images_ctime)
 
             chart_images_file_sizes = plot_file_sizes("### File size", project_selected["image_files"])
             if chart_images_file_sizes:
-                session_state.display_chart(project_id, "image_file_sizes", chart_images_file_sizes)
+                display_chart(project_id, "image_file_sizes", chart_images_file_sizes)
 
         if project_selected.get("label_files"):
             st.markdown("# Label Files Info")
             chart_labels_ctime = plot_datetime("### Created date time", project_selected["label_files"])
             if chart_labels_ctime:
-                session_state.display_chart(project_id, "label_files_ctime", chart_labels_ctime)
+                display_chart(project_id, "label_files_ctime", chart_labels_ctime)
 
             chart_label_file_sizes = plot_file_sizes("### File size", project_selected["label_files"])
             if chart_label_file_sizes:
-                session_state.display_chart(project_id, "label_file_sizes", chart_label_file_sizes)
+                display_chart(project_id, "label_file_sizes", chart_label_file_sizes)
 
-        session_state.show_download_charts_button(project_id)
+        show_download_charts_button(project_id)
 
 
-def show_image_quality(session_state: SessionState):
-    selected_project = _select_project(session_state)
+def show_image_quality():
+    projects_info = st.session_state[PROJECTS]
+    selected_project = _select_project(projects_info)
 
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+        project_selected = projects_info.get_project_by_id(int(project_id))
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               project_selected["image_files"])
         # Display the histogram in Streamlit
         if chart_aspect_ratios:
-            session_state.display_chart(project_id, "aspect_ratios", chart_aspect_ratios)
+            display_chart(project_id, "aspect_ratios", chart_aspect_ratios)
         if chart_brightness:
-            session_state.display_chart(project_id, "brightness", chart_brightness)
+            display_chart(project_id, "brightness", chart_brightness)
 
-        session_state.show_download_charts_button(project_id)
+        show_download_charts_button(project_id)
 
 
-def _select_project(session_state: SessionState):
-    if session_state.projects_info.num_count > 0:
-        df_projects = pd.DataFrame(session_state.projects_info.projects)
+def _select_project(projects_info: ProjectsInfo):
+    if projects_info.num_count > 0:
+        df_projects = pd.DataFrame(projects_info.projects)
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
@@ -216,22 +220,23 @@ def _select_project(session_state: SessionState):
         st.markdown("**No project is created!**")
 
 
-def show_label_quality(session_state: SessionState):
-    selected_project = _select_project(session_state)
+def show_label_quality():
+    projects_info = st.session_state[PROJECTS]
+    selected_project = _select_project(projects_info)
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+        project_selected = projects_info.get_project_by_id(int(project_id))
         class_labels, overlap_areas, dimensions = load_label_files("Label quality", project_selected["label_files"])
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
-            session_state.display_chart(project_id, "class_count", chart_class_count)
+            display_chart(project_id, "class_count", chart_class_count)
 
         chart_overlap_areas = plot_chart("Overlap Areas",
                                          x_label="overlap %", y_label="count",
                                          data_dict=overlap_areas)
         if chart_overlap_areas:
-            session_state.display_chart(project_id, "overlap_areas", chart_overlap_areas)
+            display_chart(project_id, "overlap_areas", chart_overlap_areas)
 
         # create DataFrame from dictionary
         df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
@@ -246,14 +251,15 @@ def show_label_quality(session_state: SessionState):
                                       x_label="width", y_label="height",
                                       data_dict=dimension_dict, chart_type="circle")
         if chart_dimensions:
-            session_state.display_chart(project_id, "dimensions", chart_dimensions)
+            display_chart(project_id, "dimensions", chart_dimensions)
 
 
-def review_images(session_state: SessionState):
-    selected_project = _select_project(session_state)
+def review_images():
+    projects_info = st.session_state[PROJECTS]
+    selected_project = _select_project(projects_info)
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+        project_selected = projects_info.get_project_by_id(int(project_id))
 
         show_images(project_selected["image_files"])
 
@@ -270,17 +276,18 @@ def start_st():
                                     PROJECTS + JSON_EXT)
     projects_info = ProjectsInfo.from_json(json_projects)
 
-    session_state = SessionState(projects_info=projects_info)
+    st.session_state[PROJECTS] = projects_info
+    # session_state = SessionState(projects_info=projects_info)
 
     menu = {
-        "Home": lambda: home(session_state),
-        "Dashboard": lambda: dashboard(session_state),
-        "Create Projects": lambda: create_projects(session_state),
-        "Create Tasks": lambda: create_tasks(session_state),
-        "Show file info": lambda: show_file_info(session_state),
-        "Show image quality": lambda: show_image_quality(session_state),
-        "Show label quality": lambda: show_label_quality(session_state),
-        "Review images": lambda: review_images(session_state)
+        "Home": lambda: home(),
+        "Dashboard": lambda: dashboard(),
+        "Create Projects": lambda: create_projects(),
+        "Create Tasks": lambda: create_tasks(),
+        "Show file info": lambda: show_file_info(),
+        "Show image quality": lambda: show_image_quality(),
+        "Show label quality": lambda: show_label_quality(),
+        "Review images": lambda: review_images()
     }
 
     # Create a sidebar with menu options

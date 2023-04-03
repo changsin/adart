@@ -5,7 +5,10 @@ import altair as alt
 import cv2
 import pandas as pd
 import streamlit as st
+import utils
+import constants
 
+CHARTS = "charts"
 
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     st.markdown(title)
@@ -151,6 +154,8 @@ def plot_file_sizes(title: str, files_dict: dict):
     chart = alt.Chart(data).mark_bar().encode(
         alt.X('size', bin=alt.Bin(maxbins=50), title='File Size (bytes)'),
         y='count()'
+    ).properties(
+        title='File Size Distribution'
     )
 
     # # Create a KDE plot using Altair
@@ -192,8 +197,8 @@ def plot_datetime(title: str, files_dict: dict):
                 file_stat = os.stat(os.path.join(folder, file))
                 dt_cdatetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
                 st.markdown("📄{} ({}) {}".format(file,
-                                                 humanize_bytes(file_stat.st_size),
-                                                 dt_cdatetime.date()))
+                                                  utils.humanize_bytes(file_stat.st_size),
+                                                  dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
                 # Append date and time to x and y data lists
                 x_data_ctime.append(dt_cdatetime.date())
@@ -280,3 +285,49 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     )
 
     return chart
+
+
+def display_chart(project_id, name, chart):
+    st.altair_chart(chart, use_container_width=True)
+
+    # save to the session_state for later use
+    charts = dict()
+    if st.session_state.get(CHARTS):
+        charts = st.session_state[CHARTS]
+    else:
+        st.session_state[CHARTS] = charts
+
+    if charts.get(project_id):
+        charts[project_id][name] = chart
+    else:
+        charts.setdefault(project_id, {})[name] = chart
+
+
+# Create a function to save all charts in the SessionState object
+def show_download_charts_button(project_id):
+    charts = st.session_state[CHARTS]
+    if not charts.get(project_id):
+        st.text("Nothing here")
+        return
+
+    combined_chart = alt.concat(*charts[project_id].values(), columns=len(charts[project_id]))
+    # Create a temporary file
+    combined_filename = "{}.{}.{}".format(project_id, "combined_charts", "html")
+    full_path = os.path.join(constants.ADQ_WORKING_FOLDER, project_id, combined_filename)
+    # # Save chart as HTML file
+    combined_chart.save(full_path, format='html')
+
+    download_disabled = True
+    if os.path.exists(full_path):
+        download_disabled = False
+
+    # Add download button
+    with open(full_path, 'rb') as f:
+        file_bytes = f.read()
+        st.download_button(
+            label='Download combined chart',
+            data=file_bytes,
+            file_name=combined_filename,
+            mime='text/html',
+            disabled=download_disabled
+        )
