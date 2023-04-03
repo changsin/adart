@@ -6,27 +6,9 @@ import shutil
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
-from projects_info import Project, ProjectsInfo
-from session_state import SessionState
+from projects_info import Project
+from session_state import *
 from statistics import *
-
-ADQ_WORKING_FOLDER = ".adq"
-PROJECTS = "projects"
-TASKS = "tasks"
-JSON_EXT = ".json"
-
-CVAT_XML = "CVAT XML"
-PASCAL_VOC_XML = "PASCAL VOC XML"
-COCO_JSON = "COCO JSON"
-ADQ_JSON = "ADQ JSON"
-
-SUPPORTED_FORMATS = [CVAT_XML, PASCAL_VOC_XML, COCO_JSON, ADQ_JSON]
-SUPPORTED_IMAGE_FILE_EXTENSIONS = ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff", "*.gif"]
-
-PROJECT_COLUMNS = ['id', 'name', 'file_format_id',
-                   'total_count', 'task_total_count', 'task_done_count']
-
-TASK_COLUMNS = ['id', 'name', "project_id"]
 
 
 def default(obj):
@@ -231,27 +213,30 @@ def show_file_info(session_state: SessionState):
         st.markdown("**No project is created!**")
 
     if selected and len(selected) > 0:
-        id, name, = selected.split('-', maxsplit=1)
-        project_selected = session_state.projects_info.get_project_by_id(int(id))
-        st.markdown("# Image Files Info")
-        chart_images_ctime = plot_datetime("### Created date time", project_selected["image_files"])
-        if chart_images_ctime:
-            session_state.display_chart("{}.image_files_ctime".format(id), chart_images_ctime)
+        project_id, name, = selected.split('-', maxsplit=1)
+        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
 
-        chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
-        if chart_images_file_sizes:
-            session_state.display_chart("{}.image_file_sizes".format(id), chart_images_file_sizes)
+        if project_selected.get("image_files"):
+            st.markdown("# Image Files Info")
+            chart_images_ctime = plot_datetime("### Created date time", project_selected["image_files"])
+            if chart_images_ctime:
+                session_state.display_chart(project_id, "image_files_ctime", chart_images_ctime)
 
-        st.markdown("# Label Files Info")
-        chart_labels_ctime = plot_datetime("### Created date time", project_selected["label_files"])
-        if chart_labels_ctime:
-            session_state.display_chart("{}.label_files_ctime".format(id), chart_images_ctime)
+            chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
+            if chart_images_file_sizes:
+                session_state.display_chart(project_id, "image_file_sizes", chart_images_file_sizes)
 
-        chart_label_file_sizes = plot_file_sizes("### File sizes", project_selected["label_files"])
-        if chart_label_file_sizes:
-            session_state.display_chart("{}.label_file_sizes".format(id), chart_label_file_sizes)
+        if project_selected.get("label_files"):
+            st.markdown("# Label Files Info")
+            chart_labels_ctime = plot_datetime("### Created date time", project_selected["label_files"])
+            if chart_labels_ctime:
+                session_state.display_chart(project_id, "label_files_ctime", chart_labels_ctime)
 
-        session_state.show_download_charts_button(id)
+            chart_label_file_sizes = plot_file_sizes("### File sizes", project_selected["label_files"])
+            if chart_label_file_sizes:
+                session_state.display_chart(project_id, "label_file_sizes", chart_label_file_sizes)
+
+        session_state.show_download_charts_button(project_id)
 
 
 def show_image_quality(session_state: SessionState):
@@ -277,9 +262,9 @@ def show_image_quality(session_state: SessionState):
                                                                               project_selected["image_files"])
         # Display the histogram in Streamlit
         if chart_aspect_ratios:
-            session_state.display_chart("{}.aspect_ratios".format(project_id), chart_aspect_ratios)
+            session_state.display_chart(project_id, "aspect_ratios", chart_aspect_ratios)
         if chart_brightness:
-            session_state.display_chart("{}.brightness".format(project_id), chart_brightness)
+            session_state.display_chart(project_id, "brightness", chart_brightness)
 
         session_state.show_download_charts_button(project_id)
 
