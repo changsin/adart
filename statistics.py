@@ -3,10 +3,11 @@ import os
 
 import altair as alt
 import cv2
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import streamlit as st
+
+# Convert bytes to a more human-readable format
+ONE_K_BYTES = 1024.0
 
 
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
@@ -85,6 +86,15 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     ).properties(
         title='Aspect Ratios of Images'
     )
+    chart_aspect_ratios = chart_aspect_ratios.interactive()  # make the chart interactive
+    chart_aspect_ratios = chart_aspect_ratios.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+    )
 
     brightness_values_list = [(k, v) for k, v in brightness_values.items()]
     # Create a Pandas DataFrame from the brightness
@@ -97,6 +107,15 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
         tooltip=['brightness', 'count:Q']
     ).properties(
         title='Brightness of Images'
+    )
+    chart_brightness = chart_brightness.interactive()  # make the chart interactive
+    chart_brightness = chart_brightness.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
     )
 
     return chart_aspect_ratios, chart_brightness
@@ -118,18 +137,37 @@ def plot_file_sizes(title: str, files_dict: dict):
                 file_sizes[file_stat.st_size] = 1
 
     data = pd.DataFrame({
-        'x': file_sizes.keys(),
-        'y': file_sizes.values()
+        'size': file_sizes.keys(),
+        'count': file_sizes.values()
     })
 
-    # Draw the line graph
-    chart = alt.Chart(data).mark_line().encode(
-        x='x',
-        y='y'
+    data['size'] = data['size'].astype(int)
+
+    # # Draw a line graph
+    # chart = alt.Chart(data).mark_line().encode(
+    #     x=alt.X('size', bin=True, title='File Size (bytes)'),
+    #     y='count()',
+    #     tooltip=['size', 'count()']
+    # ).properties(
+    #     title='File Size Distribution'
+    # )
+
+    # Create a histogram using Altair
+    chart = alt.Chart(data).mark_bar().encode(
+        alt.X('size', bin=alt.Bin(maxbins=50), title='File Size (bytes)'),
+        y='count()'
     )
 
-    chart = chart.interactive()  # make the chart interactive
+    # # Create a KDE plot using Altair
+    # chart = alt.Chart(data).transform_density(
+    #     'size',
+    #     as_=['size', 'count'],
+    # ).mark_area(opacity=0.5).encode(
+    #     alt.X('size:Q', title='File Size (bytes)'),
+    #     alt.Y('count:Q', title='Count')
+    # )
 
+    chart = chart.interactive()  # make the chart interactive
     chart = chart.properties(
         width=600,
         height=400
@@ -143,12 +181,10 @@ def plot_file_sizes(title: str, files_dict: dict):
 
 
 def humanize_bytes(size):
-    # Convert bytes to a more human-readable format
-    one_k_bytes = 1024.0
     for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-        if abs(size) < one_k_bytes:
+        if abs(size) < ONE_K_BYTES:
             return "%3.1f %sB" % (size, unit)
-        size /= one_k_bytes
+        size /= ONE_K_BYTES
 
 
 def plot_datetime(title: str, files_dict: dict):

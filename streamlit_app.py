@@ -231,24 +231,27 @@ def show_file_info(session_state: SessionState):
         st.markdown("**No project is created!**")
 
     if selected and len(selected) > 0:
-        id, name = selected.split('-')
+        id, name, = selected.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(id))
         st.markdown("# Image Files Info")
-        chart_datetime = plot_datetime("### Created date time", project_selected["image_files"])
-        if chart_datetime:
-            session_state.display_chart(chart_datetime)
+        chart_images_ctime = plot_datetime("### Created date time", project_selected["image_files"])
+        if chart_images_ctime:
+            session_state.display_chart("{}.image_files_ctime".format(id), chart_images_ctime)
 
         chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
         if chart_images_file_sizes:
-            session_state.display_chart(chart_images_file_sizes)
+            session_state.display_chart("{}.image_file_sizes".format(id), chart_images_file_sizes)
 
         st.markdown("# Label Files Info")
-        plot_datetime("### Created date time", project_selected["label_files"])
-        chart_label_file_sizes = plot_file_sizes("### Label file sizes", project_selected["label_files"])
-        if chart_label_file_sizes:
-            session_state.display_chart(chart_label_file_sizes)
+        chart_labels_ctime = plot_datetime("### Created date time", project_selected["label_files"])
+        if chart_labels_ctime:
+            session_state.display_chart("{}.label_files_ctime".format(id), chart_images_ctime)
 
-        session_state.show_download_charts_button()
+        chart_label_file_sizes = plot_file_sizes("### File sizes", project_selected["label_files"])
+        if chart_label_file_sizes:
+            session_state.display_chart("{}.label_file_sizes".format(id), chart_label_file_sizes)
+
+        session_state.show_download_charts_button(id)
 
 
 def show_image_quality(session_state: SessionState):
@@ -268,17 +271,17 @@ def show_image_quality(session_state: SessionState):
         st.markdown("**No project is created!**")
 
     if selected and len(selected) > 0:
-        id, name = selected.split('-')
-        project_selected = session_state.projects_info.get_project_by_id(int(id))
+        project_id, name = selected.split('-', maxsplit=1)
+        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               project_selected["image_files"])
         # Display the histogram in Streamlit
         if chart_aspect_ratios:
-            session_state.display_chart(chart_aspect_ratios)
+            session_state.display_chart("{}.aspect_ratios".format(project_id), chart_aspect_ratios)
         if chart_brightness:
-            session_state.display_chart(chart_brightness)
+            session_state.display_chart("{}.brightness".format(project_id), chart_brightness)
 
-        session_state.show_download_charts_button()
+        session_state.show_download_charts_button(project_id)
 
 
 def start_st():
