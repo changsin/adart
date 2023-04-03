@@ -1,5 +1,4 @@
 import os.path
-import tempfile
 
 import altair as alt
 import attr

@@ -152,10 +152,13 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, annotation_fmt, destinat
                 os.path.join(ori_folder, os.path.basename(anno_file)))
 
     # directly write to the destination
-    with open(os.path.join(destination_folder, fname + '.json'), 'w', encoding='utf-8') as jf:
+    target_filename = os.path.join(destination_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
         json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
     st.write("Converted {}".format(anno_file))
+
+    return target_filename
 
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행

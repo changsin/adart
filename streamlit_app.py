@@ -6,6 +6,7 @@ import shutil
 from st_aggrid import AgGrid
 
 from convert_lib import convert_CVAT_to_Form
+from label_quality import *
 from projects_info import Project
 from session_state import *
 from statistics import *
@@ -19,24 +20,6 @@ def default(obj):
 
 def home(menu_dart: SessionState):
     st.write("DaRT")
-
-
-def from_file(str_default, folder, filename):
-    full_path = os.path.join(folder, filename)
-    if os.path.exists(full_path) and os.path.getsize(full_path) > 0:
-        file = open(full_path, 'r', encoding='utf-8')
-        return json.load(file)
-
-    return json.loads(str_default)
-
-
-def to_file(data, folder, filename):
-    """
-    save data to path
-    """
-    full_path = os.path.join(folder, filename)
-    with open(full_path, 'w', encoding="utf-8") as json_file:
-        json_file.write(data)
 
 
 def dashboard(menu_dart: SessionState):
@@ -84,10 +67,10 @@ def dashboard(menu_dart: SessionState):
     # st.dataframe(df_project_table)
 
     st.subheader("**Tasks**")
-    json_tasks = from_file("{\"num_count\":0,\"tasks\":[]}",
-                           # os.path.join(os.getcwd(), "data"),
-                           ADQ_WORKING_FOLDER,
-                           TASKS + JSON_EXT)
+    json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
+                                   # os.path.join(os.getcwd(), "data"),
+                                   ADQ_WORKING_FOLDER,
+                                   TASKS + JSON_EXT)
 
     df_tasks = pd.DataFrame(columns=TASK_COLUMNS)
     if len(json_tasks[TASKS]) > 0:
@@ -140,7 +123,6 @@ def create_projects(menu_dart: SessionState):
         submitted = st.form_submit_button("Create project")
 
         if submitted:
-            # Do something with the user's inputs
             st.markdown(f"**Name:** {name}")
             st.markdown(f"**Images folder:** {images_folder}")
             # get_folder_info(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
@@ -158,33 +140,39 @@ def create_projects(menu_dart: SessionState):
 
             project_id = menu_dart.projects_info.get_next_project_id()
 
-            # from_file()
-            destination_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
-            if not os.path.exists(destination_folder):
-                os.mkdir(destination_folder)
+            target_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+            if not os.path.exists(target_folder):
+                os.mkdir(target_folder)
 
+            target_filenames = []
             for folder, files in label_files.items():
                 for file in files:
                     anno_file = os.path.join(folder, file)
                     if labels_format_type == CVAT_XML:
-                        convert_CVAT_to_Form("NN", anno_file,
-                                             str(labels_format_type).lower(), destination_folder)
+                        target_filename = convert_CVAT_to_Form("NN", anno_file,
+                                                               str(labels_format_type).lower(),
+                                                               target_folder)
+                        target_filenames.append(target_filename)
                     elif labels_format_type == ADQ_JSON:
-                        ori_folder = os.path.join(destination_folder, "origin")
+                        ori_folder = os.path.join(target_folder, "origin")
                         if not os.path.exists(ori_folder):
                             os.mkdir(ori_folder)
 
-                        shutil.copy(anno_file,
-                                    os.path.join(ori_folder, os.path.basename(anno_file)))
+                        target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
+                        shutil.copy(anno_file, target_filename)
 
-            new_project = Project(project_id, name, image_files, label_files,
+                        target_filenames.append(target_filename)
+
+            label_files_dict = {os.getcwd(): target_filenames}
+            new_project = Project(project_id, name, image_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
             # NB: add as a json dict to make manipulating in pandas dataframe easier
             menu_dart.projects_info.add(new_project.to_json())
 
-            to_file(json.dumps(menu_dart.projects_info, default=default, indent=2),
-                    ADQ_WORKING_FOLDER,
-                    PROJECTS + JSON_EXT)
+            utils.to_file(json.dumps(menu_dart.projects_info,
+                                     default=default, indent=2),
+                          ADQ_WORKING_FOLDER,
+                          PROJECTS + JSON_EXT)
 
             dashboard(menu_dart)
 
@@ -197,23 +185,10 @@ def create_tasks(menu_dart: SessionState):
 
 
 def show_file_info(session_state: SessionState):
-    selected = None
+    selected_project = _select_project(session_state)
 
-    if session_state.projects_info.num_count > 0:
-        df_projects = pd.DataFrame(session_state.projects_info.projects)
-        df_project_id_names = df_projects[["id", "name"]]
-        options = ["{}-{}".format(id, name)
-                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
-        # set an empty string as the default selection - no action
-        options.append("")
-        selected = st.selectbox("Select project",
-                                options=options,
-                                index=len(options) - 1)
-    else:
-        st.markdown("**No project is created!**")
-
-    if selected and len(selected) > 0:
-        project_id, name, = selected.split('-', maxsplit=1)
+    if selected_project and len(selected_project) > 0:
+        project_id, name, = selected_project.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(project_id))
 
         if project_selected.get("image_files"):
@@ -222,7 +197,7 @@ def show_file_info(session_state: SessionState):
             if chart_images_ctime:
                 session_state.display_chart(project_id, "image_files_ctime", chart_images_ctime)
 
-            chart_images_file_sizes = plot_file_sizes("### File sizes", project_selected["image_files"])
+            chart_images_file_sizes = plot_file_sizes("### File size", project_selected["image_files"])
             if chart_images_file_sizes:
                 session_state.display_chart(project_id, "image_file_sizes", chart_images_file_sizes)
 
@@ -232,7 +207,7 @@ def show_file_info(session_state: SessionState):
             if chart_labels_ctime:
                 session_state.display_chart(project_id, "label_files_ctime", chart_labels_ctime)
 
-            chart_label_file_sizes = plot_file_sizes("### File sizes", project_selected["label_files"])
+            chart_label_file_sizes = plot_file_sizes("### File size", project_selected["label_files"])
             if chart_label_file_sizes:
                 session_state.display_chart(project_id, "label_file_sizes", chart_label_file_sizes)
 
@@ -240,23 +215,10 @@ def show_file_info(session_state: SessionState):
 
 
 def show_image_quality(session_state: SessionState):
-    selected = None
+    selected_project = _select_project(session_state)
 
-    if session_state.projects_info.num_count > 0:
-        df_projects = pd.DataFrame(session_state.projects_info.projects)
-        df_project_id_names = df_projects[["id", "name"]]
-        options = ["{}-{}".format(id, name)
-                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
-        # set an empty string as the default selection - no action
-        options.append("")
-        selected = st.selectbox("Select project",
-                                options=options,
-                                index=len(options) - 1)
-    else:
-        st.markdown("**No project is created!**")
-
-    if selected and len(selected) > 0:
-        project_id, name = selected.split('-', maxsplit=1)
+    if selected_project and len(selected_project) > 0:
+        project_id, name = selected_project.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(project_id))
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               project_selected["image_files"])
@@ -269,16 +231,39 @@ def show_image_quality(session_state: SessionState):
         session_state.show_download_charts_button(project_id)
 
 
+def _select_project(session_state: SessionState):
+    if session_state.projects_info.num_count > 0:
+        df_projects = pd.DataFrame(session_state.projects_info.projects)
+        df_project_id_names = df_projects[["id", "name"]]
+        options = ["{}-{}".format(id, name)
+                   for id, name in df_project_id_names[["id", "name"]].values.tolist()]
+        # set an empty string as the default selection - no action
+        options.append("")
+        return st.selectbox("Select project",
+                            options=options,
+                            index=len(options) - 1)
+    else:
+        st.markdown("**No project is created!**")
+
+
+def show_label_quality(session_state: SessionState):
+    selected_project = _select_project(session_state)
+    if selected_project and len(selected_project) > 0:
+        project_id, name = selected_project.split('-', maxsplit=1)
+        project_selected = session_state.projects_info.get_project_by_id(int(project_id))
+        load_label_files("Label quality", project_selected["label_files"])
+
+
 def start_st():
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
 
     st.sidebar.header("**DaRT** - Data Reviewing Tool")
 
-    json_projects = from_file("{\"num_count\":0,\"projects\":[]}",
-                              # os.path.join(os.getcwd(), "data"),
-                              ADQ_WORKING_FOLDER,
-                              PROJECTS + JSON_EXT)
+    json_projects = utils.from_file("{\"num_count\":0,\"projects\":[]}",
+                                    # os.path.join(os.getcwd(), "data"),
+                                    ADQ_WORKING_FOLDER,
+                                    PROJECTS + JSON_EXT)
     projects_info = ProjectsInfo.from_json(json_projects)
 
     session_state = SessionState(projects_info=projects_info)
@@ -289,7 +274,8 @@ def start_st():
         "Create Projects": lambda: create_projects(session_state),
         "Create Tasks": lambda: create_tasks(session_state),
         "Show file info": lambda: show_file_info(session_state),
-        "Show image quality": lambda: show_image_quality(session_state)
+        "Show image quality": lambda: show_image_quality(session_state),
+        "Show label quality": lambda: show_label_quality(session_state)
     }
 
     # Create a sidebar with menu options
