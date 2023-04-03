@@ -122,8 +122,6 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
 
 
 def plot_file_sizes(title: str, files_dict: dict):
-    st.markdown(title)
-
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
@@ -135,7 +133,7 @@ def plot_file_sizes(title: str, files_dict: dict):
                 file_sizes[file_stat.st_size] = file_sizes[file_stat.st_size] + 1
             else:
                 file_sizes[file_stat.st_size] = 1
-
+    # return plot_chart(title, x_label='size', y_label='count', data_dict=file_sizes, chart_type="line")
     data = pd.DataFrame({
         'size': file_sizes.keys(),
         'count': file_sizes.values()
@@ -143,14 +141,14 @@ def plot_file_sizes(title: str, files_dict: dict):
 
     data['size'] = data['size'].astype(int)
 
-    # # Draw a line graph
-    # chart = alt.Chart(data).mark_line().encode(
-    #     x=alt.X('size', bin=True, title='File Size (bytes)'),
-    #     y='count()',
-    #     tooltip=['size', 'count()']
-    # ).properties(
-    #     title='File Size Distribution'
-    # )
+    # # # Draw a line graph
+    # # chart = alt.Chart(data).mark_line().encode(
+    # #     x=alt.X('size', bin=True, title='File Size (bytes)'),
+    # #     y='count()',
+    # #     tooltip=['size', 'count()']
+    # # ).properties(
+    # #     title='File Size Distribution'
+    # # )
 
     # Create a histogram using Altair
     chart = alt.Chart(data).mark_bar().encode(
@@ -195,8 +193,6 @@ def plot_datetime(title: str, files_dict: dict):
 
     x_data_ctime = []
     y_data_ctime = []
-    x_data_utime = []
-    y_data_utime = []
     for folder, files in files_dict.items():
         level = folder.count(os.sep)
         indent = '-' * level
@@ -209,15 +205,10 @@ def plot_datetime(title: str, files_dict: dict):
                                                  humanize_bytes(file_stat.st_size),
                                                  dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
-                # # Append date and time to x and y data lists
+                # Append date and time to x and y data lists
                 x_data_ctime.append(dt_cdatetime.date())
                 y_data_ctime.append(float(ctime_object.strftime('%H.%M')))
 
-                dt_udatetime = dt.datetime.fromtimestamp(file_stat.st_mtime)
-                utime_object = dt_udatetime.time()
-                # # Append date and time to x and y data lists
-                x_data_utime.append(dt_udatetime.date())
-                y_data_utime.append(float(utime_object.strftime('%H.%M')))
     # # Define the number of columns
     # num_columns = 5
     #
@@ -245,18 +236,8 @@ def plot_datetime(title: str, files_dict: dict):
         'group': 'created'
     })
 
-    data2 = pd.DataFrame({
-        'date': x_data_utime,
-        'time': y_data_utime,
-        'group': 'updated'
-    })
-
     # Convert the date field to a datetime format
     data1['date'] = pd.to_datetime(data1['date'])
-    data2['date'] = pd.to_datetime(data2['date'])
-
-    # Combine the two datasets
-    data = pd.concat([data1, data2])
 
     # Draw the line graph
     chart = alt.Chart(data1).mark_circle(size=200).encode(
@@ -279,47 +260,9 @@ def plot_datetime(title: str, files_dict: dict):
     )
 
     return chart
-    #
-    # # return chart
-    #
-    # # Define the range of dot sizes
-    # min_size = 10
-    # max_size = 100
-    #
-    # # Calculate the size of each dot based on the number of data points
-    # sizes = np.linspace(min_size, max_size, len(x_data)) * 10
-    #
-    # # Plot data as a scatter plot
-    # fig, ax = plt.subplots(figsize=(10, 5))
-    # # Add legend and title to the plot
-    # # ax.legend(['File Creation Time'])
-    # ax.set_title("File Creation Time")
-    # ax.scatter(x_data, y_data, s=sizes, marker='o')
-    #
-    # # Set X-axis label
-    # ax.set_xlabel('Date')
-    # plt.xticks(rotation=45)
-    #
-    # # Set Y-axis label
-    # ax.set_ylabel('Time of the Day')
-    #
-    # # Set X-axis range
-    # start_date = min(x_data)
-    # end_date = max(x_data)
-    # # start_date = datetime.date(2023, 2, 1)
-    # # end_date = datetime.date(2023, 3, 1)
-    # ax.set_xlim(start_date, end_date)
-    #
-    # # # Add labels to the dots
-    # # for i, (x, y) in enumerate(zip(x_data, y_data)):
-    # #     ax.text(x, y, "*", fontsize=20)
-    # # Display plot
-    # st.pyplot(fig)
 
 
-def plot_bar_chart(title: str, x_label: str, y_label: str, data_dict: dict):
-    st.markdown(title)
-
+def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_type="bar"):
     if data_dict is None or len(data_dict.items()) == 0:
         return
 
@@ -329,12 +272,35 @@ def plot_bar_chart(title: str, x_label: str, y_label: str, data_dict: dict):
     })
 
     # Create a histogram using Altair
-    chart = alt.Chart(data).mark_bar().encode(
-        alt.X(x_label, title=title),
-        y=y_label
-    )
+    if chart_type == "circle":
+        # Convert the date field to a datetime format
+        # data[x_label] = pd.to_datetime(data[x_label])
+        chart = alt.Chart(data).mark_circle(size=200).encode(
+            x=alt.X(x_label),
+            y=alt.Y(y_label),
+            tooltip=[x_label, y_label]
+        ).properties(
+            title=title
+        )
+    elif chart_type == "line":
+        chart = alt.Chart(data).mark_line().encode(
+            x=alt.X(x_label),
+            y=alt.Y(y_label),
+            tooltip=[x_label, y_label]
+        ).properties(
+            title=title
+        )
+    else:
+        chart = alt.Chart(data).mark_bar().encode(
+            x=alt.X(x_label),
+            y=alt.Y(y_label),
+            tooltip=[x_label, y_label]
+        ).properties(
+            title=title
+        )
 
-    chart = chart.interactive()  # make the chart interactive
+    # make the chart interactive
+    chart = chart.interactive()
     chart = chart.properties(
         width=600,
         height=400

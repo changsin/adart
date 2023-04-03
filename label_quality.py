@@ -38,19 +38,16 @@ def load_label_files(title: str, files_dict: dict):
                     class_labels[object.label] = 1
 
     overlap_areas = dict()
-    areas = dict()
+    dimensions = dict()
     for labels in label_objects:
         for image in labels.images:
             count = len(image.objects)
             for ob_id1 in range(count):
                 xtl1, ytl1, xbr1, ybr1 = image.objects[ob_id1].points
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
-                area1 = (rect1.xmax - rect1.xmin) * (rect1.ymax - rect1.ymin)
-                area1 = format(area1, '.0f')
-                if overlap_areas.get(area1):
-                    areas[area1] += 1
-                else:
-                    areas[area1] = 1
+                width1 = rect1.xmax - rect1.xmin
+                height1 = rect1.ymax - rect1.ymin
+                dimensions[image.name] = (width1, height1)
 
                 for ob_id2 in range(ob_id1 + 1, count):
                     xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
@@ -58,14 +55,16 @@ def load_label_files(title: str, files_dict: dict):
 
                     overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
 
+                    # overlap_percent = 0
                     if overlap_area > 0:
                         overlap_percent = format(overlap_area/max_area, '.2f')
+                        overlap_percent = float(overlap_percent) * 100
                         if overlap_areas.get(overlap_percent):
                             overlap_areas[overlap_percent] += 1
                         else:
                             overlap_areas[overlap_percent] = 1
 
-    return class_labels, overlap_areas, areas
+    return class_labels, overlap_areas, dimensions
 
 
 def triangle_area(vertices):

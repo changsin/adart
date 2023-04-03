@@ -1,15 +1,14 @@
 import datetime
-import fnmatch
 import json
 import shutil
 
 from st_aggrid import AgGrid
 
+from charts import *
 from convert_lib import convert_CVAT_to_Form
 from label_quality import *
 from projects_info import Project
 from session_state import *
-from statistics import *
 
 
 def default(obj):
@@ -80,36 +79,6 @@ def dashboard(menu_dart: SessionState):
     AgGrid(df_tasks)
 
 
-def generate_file_tree(folder_path, patterns):
-    file_tree_to_return = {}
-    for root, dirs, files in os.walk(folder_path):
-        level = root.replace(folder_path, '').count(os.sep)
-        indent = '-' * (level)
-
-        file_info_to_display = dict()
-        for pattern in patterns:
-            matched = fnmatch.filter([filename.lower() for filename in files], pattern.lower())
-            if matched:
-                sub_folder = root.replace(folder_path, '')
-                if file_info_to_display.get(sub_folder):
-                    file_info_to_display[sub_folder] = file_info_to_display[sub_folder] + len(matched)
-                else:
-                    file_info_to_display[sub_folder] = len(matched)
-
-                if file_tree_to_return.get(root):
-                    file_tree_to_return[root].extend(matched)
-                else:
-                    file_tree_to_return[root] = matched
-                # for filename in matched:
-                #     if not os.path.isdir(filename):
-                #         file_tree_to_return.append(os.path.join(root, filename))
-
-        for folder, count in file_info_to_display.items():
-            st.markdown('{}📁({}) {}/'.format(indent, count, folder))
-
-    return file_tree_to_return
-
-
 def create_projects(menu_dart: SessionState):
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
@@ -129,14 +98,14 @@ def create_projects(menu_dart: SessionState):
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
-            image_files = generate_file_tree(images_folder, images_format_type.split())
+            image_files = utils.generate_file_tree(images_folder, images_format_type.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
             if labels_format_type.endswith("JSON"):
                 patterns = ["*.json"]
 
-            label_files = generate_file_tree(labels_folder, patterns)
+            label_files = utils.generate_file_tree(labels_folder, patterns)
 
             project_id = menu_dart.projects_info.get_next_project_id()
 
@@ -251,24 +220,33 @@ def show_label_quality(session_state: SessionState):
     if selected_project and len(selected_project) > 0:
         project_id, name = selected_project.split('-', maxsplit=1)
         project_selected = session_state.projects_info.get_project_by_id(int(project_id))
-        class_labels, overlap_areas, areas = load_label_files("Label quality", project_selected["label_files"])
+        class_labels, overlap_areas, dimensions = load_label_files("Label quality", project_selected["label_files"])
 
-        chart_class_count = plot_bar_chart("Class Count", "class", "count", class_labels)
+        chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
             session_state.display_chart(project_id, "class_count", chart_class_count)
 
-        print(areas)
-        chart_overlap_areas = plot_bar_chart("Overlap Areas",
-                                             x_label="overlap %", y_label="count",
-                                             data_dict=overlap_areas)
+        chart_overlap_areas = plot_chart("Overlap Areas",
+                                         x_label="overlap %", y_label="count",
+                                         data_dict=overlap_areas)
         if chart_overlap_areas:
             session_state.display_chart(project_id, "overlap_areas", chart_overlap_areas)
 
-        chart_areas = plot_bar_chart("Areas",
-                                     x_label="overlap %", y_label="count",
-                                     data_dict=areas)
-        if chart_areas:
-            session_state.display_chart(project_id, "areas", chart_areas)
+        # create DataFrame from dictionary
+        df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
+
+        # apply function to split pairs into dictionary
+        dimension_dict = dict(zip(df_dimensions['width'], df_dimensions['height']))
+        print(dimension_dict)
+
+        # widths, heights = zip(*df_dimensions.apply(lambda x: tuple(x)))
+        # df_dimensions = pd.concat([pd.Series(widths), pd.Series(heights)], axis=1)
+        chart_dimensions = plot_chart("Dimensions",
+                                      x_label="width", y_label="height",
+                                      data_dict=dimension_dict, chart_type="circle")
+        if chart_dimensions:
+            session_state.display_chart(project_id, "dimensions", chart_dimensions)
+
 
 def start_st():
     if not os.path.exists(ADQ_WORKING_FOLDER):
@@ -305,12 +283,4 @@ def start_st():
 if __name__ == '__main__':
     # dashboard()
     start_st()
-    # json_projects = load_projects("{\"num_count\":0,\"projects\":[]}",
-    #                               os.path.join(os.getcwd(), "data"),
-    #                               "project-sample1.json")
-    # print(pd.DataFrame(json_projects["projects"]))
-    # json_tasks = from_file("{\"num_count\":0,\"tasks\":[]}",
-    #                         os.path.join(os.getcwd(), "data"),
-    #                        "task-sample1.json")
-    # df_tasks = pd.DataFrame(json_tasks["tasks"])
-    # print(df_tasks[['id', 'name', "project_id"]])
+
