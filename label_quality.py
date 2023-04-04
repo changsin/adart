@@ -10,6 +10,23 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
 def chart_label_quality(selected_project):
+    def _plot_chart(title, x_label, y_label, data_dict, class_name, chart_type='line'):
+        chart = alt.Chart(data_dict).mark_point() if chart_type == "circle" else alt.Chart(data_dict).mark_line()
+
+        chart = chart.encode(
+            x=alt.X('width:Q', title=x_label),
+            y=alt.Y('height:Q', title=y_label),
+            color=alt.Color(class_name, type='nominal')
+        )
+
+        chart = chart.properties(
+            title=title,
+        )
+
+        chart = chart.interactive()
+
+        return chart
+
     class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
 
     chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
@@ -23,16 +40,27 @@ def chart_label_quality(selected_project):
         display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
 
     # create DataFrame from dictionary
-    df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
+    df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height', 'class'])
+    chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
+        x='width',
+        y='height',
+        color='class',
+        tooltip = ['class', 'width', 'height']
+        ).properties(
+            title="Dimensions of Labels"
+        )
 
-    # apply function to split pairs into dictionary
-    dimension_dict = dict(zip(df_dimensions['width'], df_dimensions['height']))
+    # make the chart interactive
+    chart_dimensions = chart_dimensions.interactive()
+    chart_dimensions = chart_dimensions.properties(
+        width=600,
+        height=400
+    ).add_selection(
+        alt.selection_interval(bind='scales', encodings=['x', 'y'])
+    ).add_selection(
+        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+    )
 
-    # widths, heights = zip(*df_dimensions.apply(lambda x: tuple(x)))
-    # df_dimensions = pd.concat([pd.Series(widths), pd.Series(heights)], axis=1)
-    chart_dimensions = plot_chart("Dimensions",
-                                  x_label="width", y_label="height",
-                                  data_dict=dimension_dict, chart_type="circle")
     if chart_dimensions:
         display_chart(selected_project.id, "dimensions", chart_dimensions)
 
@@ -74,7 +102,7 @@ def load_label_files(title: str, files_dict: dict):
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                 width1 = rect1.xmax - rect1.xmin
                 height1 = rect1.ymax - rect1.ymin
-                dimensions[image.name] = (width1, height1)
+                dimensions[image.name] = (width1, height1, image.objects[ob_id1].label)
 
                 for ob_id2 in range(ob_id1 + 1, count):
                     xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
