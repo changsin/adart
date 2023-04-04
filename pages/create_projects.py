@@ -8,7 +8,7 @@ import streamlit as st
 import utils
 from constants import *
 from convert_lib import convert_CVAT_to_Form
-from projects_info import Project
+from models.projects_info import Project
 
 
 def create_projects():

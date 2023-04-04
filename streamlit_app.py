@@ -6,7 +6,7 @@ from pages.create_projects import create_projects
 from pages.dashboard import dashboard
 from pages.label_quality import *
 from pages.review_images import show_images
-from projects_info import ProjectsInfo
+from models.projects_info import ProjectsInfo
 
 
 def home():

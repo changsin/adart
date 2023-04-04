@@ -1,12 +1,10 @@
 from collections import namedtuple
 
 import shapely
-import streamlit as st
 
-import utils
-from adq_labels import AdqLabels
+from models.adq_labels import AdqLabels
 from charts import *
-from dart_labels import DartLabels
+from models.dart_labels import DartLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
