@@ -1,156 +1,16 @@
-import datetime
 import json
 import shutil
 
-from st_aggrid import AgGrid
-
-from charts import *
-from convert_lib import convert_CVAT_to_Form
-from label_quality import *
-from projects_info import ProjectsInfo, Project
-from review_images import show_images
 from constants import *
-
-
-def default(obj):
-    if hasattr(obj, 'to_json'):
-        return obj.to_json()
-    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+from pages.create_projects import create_projects
+from pages.dashboard import dashboard
+from pages.label_quality import *
+from pages.review_images import show_images
+from projects_info import ProjectsInfo
 
 
 def home():
     st.write("DaRT")
-
-
-def dashboard():
-    st.write("Dashboard")
-
-    # This works
-    # # Create a sample dataframe
-    # df = pd.DataFrame({'Name': ['Alice', 'Bob', 'Charlie'], 'Age': [25, 30, 35]})
-    #
-    # # Define a custom HTML template for each row
-    # row_template = """
-    # <div style="cursor: pointer">
-    #   <div>{}</div>
-    #   <div>{}</div>
-    # </div>
-    # """
-    #
-    # # Display the dataframe using the custom template
-    # for index, row in df.iterrows():
-    #     st.write(row_template.format(row['Name'], row['Age']), unsafe_allow_html=True)
-
-    st.subheader("**Projects**")
-    df_projects = pd.DataFrame(columns=PROJECT_COLUMNS)
-    projects_info = st.session_state[PROJECTS]
-    if projects_info.num_count > 0:
-        # turn a class object to json dictionary to be processed by pandas dataframe
-        df_projects = pd.DataFrame(projects_info.to_json()[PROJECTS])
-        df_projects = df_projects[PROJECT_COLUMNS]
-
-    AgGrid(df_projects)
-
-    # # function to handle row clicks
-    # # Add a callback function to handle clicks on the rows
-    # def on_table_click(event):
-    #     if event:
-    #         # Get the index of the clicked row
-    #         row_index = event['row']
-    #
-    #         # Get the data in the clicked row
-    #         row_data = df_project_table.iloc[row_index]
-    #
-    #         # Do something with the data (for example, print it to the console)
-    #         print('Clicked row:', row_data)
-    #
-    # table_project.add_rows(on_table_click)
-    # st.dataframe(df_project_table)
-
-    st.subheader("**Tasks**")
-    json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
-                                   # os.path.join(os.getcwd(), "data"),
-                                   ADQ_WORKING_FOLDER,
-                                   TASKS + JSON_EXT)
-
-    df_tasks = pd.DataFrame(columns=TASK_COLUMNS)
-    if len(json_tasks[TASKS]) > 0:
-        df_tasks = pd.DataFrame(json_tasks[TASKS])
-        df_tasks = df_tasks[TASK_COLUMNS]
-
-    AgGrid(df_tasks)
-
-
-def create_projects():
-    with st.form("Create A Project"):
-        name = st.text_input("**Name:**")
-        images_folder = st.text_input("**Images folder:**")
-        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
-                   SUPPORTED_VIDEO_FILE_EXTENSIONS,
-                   SUPPORTED_AUDIO_FILE_EXTENSIONS,
-                   "*", ""]
-        selected_file_types = st.selectbox("**Image file types**",
-                                           options,
-                                           index=len(options) - 1)
-
-        labels_folder = st.text_input("**Labels folder:**")
-        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
-        submitted = st.form_submit_button("Create project")
-
-        if submitted:
-            st.markdown(f"**Name:** {name}")
-            st.markdown(f"**Images folder:** {images_folder}")
-            # get_folder_info(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
-            # show_dir_tree(Path(images_folder))
-            # files_tree = generate_file_tree(images_folder)
-            # display_file_tree(files_tree, indent=2)
-            image_files = utils.generate_file_tree(images_folder, selected_file_types.split())
-
-            st.markdown(f"**Labels folder:** {labels_folder}")
-            patterns = ["*.xml"]
-            if labels_format_type.endswith("JSON"):
-                patterns = ["*.json"]
-
-            label_files = utils.generate_file_tree(labels_folder, patterns)
-
-            projects_info = st.session_state[PROJECTS]
-            project_id = projects_info.get_next_project_id()
-
-            target_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
-            if not os.path.exists(target_folder):
-                os.mkdir(target_folder)
-
-            target_filenames = []
-            for folder, files in label_files.items():
-                for file in files:
-                    anno_file = os.path.join(folder, file)
-                    if labels_format_type == CVAT_XML:
-                        target_filename = convert_CVAT_to_Form("NN", anno_file,
-                                                               str(labels_format_type).lower(),
-                                                               target_folder)
-                        target_filenames.append(target_filename)
-                    elif labels_format_type == ADQ_JSON:
-                        ori_folder = os.path.join(target_folder, "origin")
-                        if not os.path.exists(ori_folder):
-                            os.mkdir(ori_folder)
-
-                        target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
-                        shutil.copy(anno_file, target_filename)
-
-                        target_filenames.append(target_filename)
-
-            label_files_dict = {os.getcwd(): target_filenames}
-            new_project = Project(project_id, name, image_files, label_files_dict,
-                                  1, 1, str(datetime.datetime.now()))
-            # NB: add as a json dict to make manipulating in pandas dataframe easier
-            projects_info.add(new_project.to_json())
-
-            utils.to_file(json.dumps(projects_info,
-                                     default=default, indent=2),
-                          ADQ_WORKING_FOLDER,
-                          PROJECTS + JSON_EXT)
-
-            dashboard()
 
 
 def create_tasks():
@@ -176,7 +36,7 @@ def delete_project():
             st.markdown("**Deleted project {}-{}".format(selected_project.id, selected_project.name))
 
             utils.to_file(json.dumps(projects_info,
-                                     default=default, indent=2),
+                                     default=utils.default, indent=2),
                           ADQ_WORKING_FOLDER,
                           PROJECTS + JSON_EXT)
 
@@ -252,31 +112,7 @@ def show_label_quality():
             st.write("No labels!")
             return
 
-        class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
-
-        chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
-        if chart_class_count:
-            display_chart(selected_project.id, "class_count", chart_class_count)
-
-        chart_overlap_areas = plot_chart("Overlap Areas",
-                                         x_label="overlap %", y_label="count",
-                                         data_dict=overlap_areas)
-        if chart_overlap_areas:
-            display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
-
-        # create DataFrame from dictionary
-        df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
-
-        # apply function to split pairs into dictionary
-        dimension_dict = dict(zip(df_dimensions['width'], df_dimensions['height']))
-
-        # widths, heights = zip(*df_dimensions.apply(lambda x: tuple(x)))
-        # df_dimensions = pd.concat([pd.Series(widths), pd.Series(heights)], axis=1)
-        chart_dimensions = plot_chart("Dimensions",
-                                      x_label="width", y_label="height",
-                                      data_dict=dimension_dict, chart_type="circle")
-        if chart_dimensions:
-            display_chart(selected_project.id, "dimensions", chart_dimensions)
+        chart_label_quality(selected_project)
 
 
 def review_images():

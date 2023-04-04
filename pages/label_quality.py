@@ -5,9 +5,38 @@ import streamlit as st
 
 import utils
 from adq_labels import AdqLabels
+from charts import *
 from dart_labels import DartLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+
+
+def chart_label_quality(selected_project):
+    class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
+
+    chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
+    if chart_class_count:
+        display_chart(selected_project.id, "class_count", chart_class_count)
+
+    chart_overlap_areas = plot_chart("Overlap Areas",
+                                     x_label="overlap %", y_label="count",
+                                     data_dict=overlap_areas)
+    if chart_overlap_areas:
+        display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
+
+    # create DataFrame from dictionary
+    df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
+
+    # apply function to split pairs into dictionary
+    dimension_dict = dict(zip(df_dimensions['width'], df_dimensions['height']))
+
+    # widths, heights = zip(*df_dimensions.apply(lambda x: tuple(x)))
+    # df_dimensions = pd.concat([pd.Series(widths), pd.Series(heights)], axis=1)
+    chart_dimensions = plot_chart("Dimensions",
+                                  x_label="width", y_label="height",
+                                  data_dict=dimension_dict, chart_type="circle")
+    if chart_dimensions:
+        display_chart(selected_project.id, "dimensions", chart_dimensions)
 
 
 def load_label_files(title: str, files_dict: dict):
