@@ -45,7 +45,7 @@ def chart_label_quality(selected_project):
         x='width',
         y='height',
         color='class',
-        tooltip = ['class', 'width', 'height']
+        tooltip=['class', 'width', 'height']
         ).properties(
             title="Dimensions of Labels"
         )

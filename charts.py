@@ -184,8 +184,7 @@ def plot_datetime(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
-    x_data_ctime = []
-    y_data_ctime = []
+    ctime_dict = dict()
     for folder, files in files_dict.items():
         level = folder.count(os.sep)
         indent = '-' * level
@@ -199,30 +198,21 @@ def plot_datetime(title: str, files_dict: dict):
                                                  dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
                 # Append date and time to x and y data lists
-                x_data_ctime.append(dt_cdatetime.date())
-                y_data_ctime.append(float(ctime_object.strftime('%H.%M')))
+                ctime_dict[file] = (dt_cdatetime.date(), float(ctime_object.strftime('%H.%M')), file)
 
-    data1 = pd.DataFrame({
-        'date': x_data_ctime,
-        'time': y_data_ctime,
-        'group': 'created'
-    })
+    df_ctime = pd.DataFrame.from_dict(ctime_dict, orient='index', columns=['date', 'time', 'file'])
 
-    # Convert the date field to a datetime format
-    data1['date'] = pd.to_datetime(data1['date'])
+    chart_ctime = alt.Chart(df_ctime).mark_circle().encode(
+        x='date',
+        y='time',
+        tooltip=['date', 'time', 'file']
+        ).properties(
+            title="Created Time"
+        )
 
-    # Draw the line graph
-    chart = alt.Chart(data1).mark_circle(size=200).encode(
-        x=alt.X('date:T', title='Date'),  # Specify the data type for the date field as 'T' for datetime
-        y=alt.Y('time:Q', title='Time'),
-        color='group',
-        tooltip=['date', 'time:Q']
-    ).properties(
-        title='Created at'
-    )
-    chart = chart.interactive()  # make the chart interactive
-
-    chart = chart.properties(
+    # make the chart interactive
+    chart_ctime = chart_ctime.interactive()
+    chart_ctime = chart_ctime.properties(
         width=600,
         height=400
     ).add_selection(
@@ -231,7 +221,7 @@ def plot_datetime(title: str, files_dict: dict):
         alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
     )
 
-    return chart
+    return chart_ctime
 
 
 @st.cache_data
