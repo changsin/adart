@@ -6,13 +6,11 @@ import cv2
 import pandas as pd
 import streamlit as st
 import utils
-from constants import CHARTS
+import constants
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
-    st.markdown(title)
-
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
@@ -121,7 +119,7 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     return chart_aspect_ratios, chart_brightness
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def plot_file_sizes(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
@@ -181,10 +179,8 @@ def plot_file_sizes(title: str, files_dict: dict):
     return chart
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def plot_datetime(title: str, files_dict: dict):
-    st.markdown(title)
-
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
@@ -238,7 +234,7 @@ def plot_datetime(title: str, files_dict: dict):
     return chart
 
 
-@st.cache(allow_output_mutation=True)
+@st.cache_data
 def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_type="bar"):
     if data_dict is None or len(data_dict.items()) == 0:
         return
@@ -295,10 +291,10 @@ def display_chart(project_id, name, chart):
 
     # save to the session_state for later use
     charts = dict()
-    if st.session_state.get(CHARTS):
-        charts = st.session_state[CHARTS]
+    if st.session_state.get(constants.CHARTS):
+        charts = st.session_state[constants.CHARTS]
     else:
-        st.session_state[CHARTS] = charts
+        st.session_state[constants.CHARTS] = charts
 
     if charts.get(project_id):
         charts[project_id][name] = chart
@@ -308,7 +304,7 @@ def display_chart(project_id, name, chart):
 
 # Create a function to save all charts in the SessionState object
 def show_download_charts_button(project_id):
-    charts = st.session_state[CHARTS]
+    charts = st.session_state[constants.CHARTS]
     if not charts.get(project_id):
         st.text("Nothing here")
         return
@@ -316,7 +312,7 @@ def show_download_charts_button(project_id):
     combined_chart = alt.concat(*charts[project_id].values(), columns=len(charts[project_id]))
     # Create a temporary file
     combined_filename = "{}.{}.{}".format(project_id, "combined_charts", "html")
-    full_path = os.path.join(constants.ADQ_WORKING_FOLDER, project_id, combined_filename)
+    full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
     # # Save chart as HTML file
     combined_chart.save(full_path, format='html')
 

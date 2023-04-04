@@ -161,18 +161,16 @@ def create_tasks():
 
 
 def delete_project():
-    projects_info = st.session_state[PROJECTS]
-    selected_project = _select_project(projects_info)
+    selected_project = _select_project()
 
-    if selected_project and len(selected_project) > 0:
-        project_id, name, = selected_project.split('-', maxsplit=1)
-        project_selected = projects_info.get_project_by_id(int(project_id))
-        projects_info.projects.remove(project_selected)
+    if selected_project:
+        projects_info = st.session_state[PROJECTS]
+        projects_info.projects.remove(selected_project)
 
-        folder_path = os.path.join(ADQ_WORKING_FOLDER, project_id)
+        folder_path = os.path.join(ADQ_WORKING_FOLDER, selected_project.id)
         if os.path.exists(folder_path):
             shutil.rmtree(folder_path)
-        st.markdown("**Deleted project {}".format(project_id))
+        st.markdown("**Deleted project {}".format(selected_project.id))
 
         utils.to_file(json.dumps(projects_info,
                                  default=default, indent=2),
@@ -184,55 +182,49 @@ def delete_project():
 
 
 def show_file_info():
-    projects_info = st.session_state[PROJECTS]
-    selected_project = _select_project(projects_info)
+    selected_project = _select_project()
 
-    if selected_project and len(selected_project) > 0:
-        project_id, name, = selected_project.split('-', maxsplit=1)
-        project_selected = projects_info.get_project_by_id(int(project_id))
-
-        if project_selected.get("image_files"):
+    if selected_project:
+        if selected_project.image_files:
             st.markdown("# Image Files Info")
-            chart_images_ctime = plot_datetime("### Created date time", project_selected["image_files"])
+            chart_images_ctime = plot_datetime("### Created date time", selected_project.image_files)
             if chart_images_ctime:
-                display_chart(project_id, "image_files_ctime", chart_images_ctime)
+                display_chart(selected_project.id, "image_files_ctime", chart_images_ctime)
 
-            chart_images_file_sizes = plot_file_sizes("### File size", project_selected["image_files"])
+            chart_images_file_sizes = plot_file_sizes("### File size", selected_project.image_files)
             if chart_images_file_sizes:
-                display_chart(project_id, "image_file_sizes", chart_images_file_sizes)
+                display_chart(selected_project.id, "image_file_sizes", chart_images_file_sizes)
 
-        if project_selected.get("label_files"):
+        if selected_project.label_files:
             st.markdown("# Label Files Info")
-            chart_labels_ctime = plot_datetime("### Created date time", project_selected["label_files"])
+            chart_labels_ctime = plot_datetime("### Created date time", selected_project.label_files)
             if chart_labels_ctime:
-                display_chart(project_id, "label_files_ctime", chart_labels_ctime)
+                display_chart(selected_project.id, "label_files_ctime", chart_labels_ctime)
 
-            chart_label_file_sizes = plot_file_sizes("### File size", project_selected["label_files"])
+            chart_label_file_sizes = plot_file_sizes("### File size", selected_project.label_files)
             if chart_label_file_sizes:
-                display_chart(project_id, "label_file_sizes", chart_label_file_sizes)
+                display_chart(selected_project.id, "label_file_sizes", chart_label_file_sizes)
 
-        show_download_charts_button(project_id)
+        show_download_charts_button(selected_project.id)
 
 
 def show_image_quality():
-    projects_info = st.session_state[PROJECTS]
-    selected_project = _select_project(projects_info)
+    selected_project = _select_project()
 
-    if selected_project and len(selected_project) > 0:
-        project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = projects_info.get_project_by_id(int(project_id))
+    if selected_project:
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
-                                                                              project_selected["image_files"])
+                                                                              selected_project.image_files)
         # Display the histogram in Streamlit
         if chart_aspect_ratios:
-            display_chart(project_id, "aspect_ratios", chart_aspect_ratios)
+            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios)
         if chart_brightness:
-            display_chart(project_id, "brightness", chart_brightness)
+            display_chart(selected_project.id, "brightness", chart_brightness)
 
-        show_download_charts_button(project_id)
+        show_download_charts_button(selected_project.id)
 
 
-def _select_project(projects_info: ProjectsInfo):
+def _select_project():
+    projects_info = st.session_state[PROJECTS]
     if projects_info.num_count > 0:
         df_projects = pd.DataFrame(projects_info.projects)
         df_project_id_names = df_projects[["id", "name"]]
@@ -240,30 +232,30 @@ def _select_project(projects_info: ProjectsInfo):
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
-        return st.selectbox("Select project",
-                            options=options,
-                            index=len(options) - 1)
+        selected_project = st.selectbox("Select project",
+                                        options=options,
+                                        index=len(options) - 1)
+        if selected_project:
+            project_id, name, = selected_project.split('-', maxsplit=1)
+            return projects_info.get_project_by_id(int(project_id))
     else:
         st.markdown("**No project is created!**")
 
 
 def show_label_quality():
-    projects_info = st.session_state[PROJECTS]
-    selected_project = _select_project(projects_info)
-    if selected_project and len(selected_project) > 0:
-        project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = projects_info.get_project_by_id(int(project_id))
-        class_labels, overlap_areas, dimensions = load_label_files("Label quality", project_selected["label_files"])
+    selected_project = _select_project()
+    if selected_project:
+        class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
-            display_chart(project_id, "class_count", chart_class_count)
+            display_chart(selected_project.id, "class_count", chart_class_count)
 
         chart_overlap_areas = plot_chart("Overlap Areas",
                                          x_label="overlap %", y_label="count",
                                          data_dict=overlap_areas)
         if chart_overlap_areas:
-            display_chart(project_id, "overlap_areas", chart_overlap_areas)
+            display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
 
         # create DataFrame from dictionary
         df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height'])
@@ -278,17 +270,13 @@ def show_label_quality():
                                       x_label="width", y_label="height",
                                       data_dict=dimension_dict, chart_type="circle")
         if chart_dimensions:
-            display_chart(project_id, "dimensions", chart_dimensions)
+            display_chart(selected_project.id, "dimensions", chart_dimensions)
 
 
 def review_images():
-    projects_info = st.session_state[PROJECTS]
-    selected_project = _select_project(projects_info)
-    if selected_project and len(selected_project) > 0:
-        project_id, name = selected_project.split('-', maxsplit=1)
-        project_selected = projects_info.get_project_by_id(int(project_id))
-
-        show_images(project_selected["image_files"])
+    selected_project = _select_project()
+    if selected_project:
+        show_images(selected_project.image_files)
 
 
 def start_st():

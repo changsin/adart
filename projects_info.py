@@ -50,7 +50,7 @@ class ProjectsInfo:
                 project_to_return = project
                 break
 
-        return project_to_return
+        return Project.from_json(project_to_return)
 
     @staticmethod
     def from_json(json_dict):
