@@ -2,7 +2,7 @@ import json
 
 import attr
 
-from adq_labels import AdqLabels
+from models.adq_labels import AdqLabels
 
 
 @attr.s(slots=True, frozen=False)

@@ -1,11 +1,11 @@
 import json
 import shutil
 
-from common.constants import *
-from pages.create_projects import create_projects
-from pages.dashboard import dashboard
-from pages.label_quality import *
-from pages.review_images import show_images
+from constants import *
+from create_projects import create_projects
+from dashboard import dashboard
+from label_quality import *
+from review_images import show_images
 from models.projects_info import ProjectsInfo
 
 

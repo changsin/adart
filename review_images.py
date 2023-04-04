@@ -3,7 +3,7 @@ import os
 
 import streamlit as st
 
-from common import utils
+import utils
 
 
 # from streamlit_drawable_canvas import st_canvas
