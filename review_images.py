@@ -12,6 +12,15 @@ import utils
 # import streamlit.components.v1 as components
 
 
+def _show_full_size_image(full_path, size, date):
+    st.image(full_path,
+             # use_column_width=True,
+             caption="{} {} {}".format(os.path.basename(full_path),
+                                       size,
+                                       date))
+
+
+@st.cache_resource
 def show_images(files_dict: dict):
     # Define the number of columns
     num_columns = 5
@@ -27,13 +36,21 @@ def show_images(files_dict: dict):
                 full_path = os.path.join(folder, file)
                 file_stat = os.stat(full_path)
                 dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
-                print(full_path)
                 st.image(full_path,
                          # use_column_width=True,
-                         caption="{} {} {}".format(file,
-                                                   utils.humanize_bytes(file_stat.st_size),
-                                                   dt_datetime.date()),
+                         # title="{} {} {}".format(file,
+                         #                           utils.humanize_bytes(file_stat.st_size),
+                         #                           dt_datetime.date()),
                          width=100)
+                # button_clicked = st.button("click to expand {}".format(file))
+                # Call the event handler if the button is clicked
+                # Create the expander panel
+                with st.expander("{}".format(file)):
+                    # # Call the event handler if the button is clicked
+                    # if button_clicked:
+                    _show_full_size_image(full_path,
+                                          utils.humanize_bytes(file_stat.st_size),
+                                          dt_datetime.date())
     #
     # # Define the JavaScript code to add a double-click event handler to all images
     # js_code = """

@@ -248,6 +248,10 @@ def _select_project():
 def show_label_quality():
     selected_project = _select_project()
     if selected_project:
+        if not selected_project.label_files:
+            st.write("No labels!")
+            return
+
         class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
@@ -265,7 +269,6 @@ def show_label_quality():
 
         # apply function to split pairs into dictionary
         dimension_dict = dict(zip(df_dimensions['width'], df_dimensions['height']))
-        print(dimension_dict)
 
         # widths, heights = zip(*df_dimensions.apply(lambda x: tuple(x)))
         # df_dimensions = pd.concat([pd.Series(widths), pd.Series(heights)], axis=1)
