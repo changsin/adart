@@ -24,7 +24,7 @@ class ProjectsInfo:
     def to_json(self):
         return {
             "num_count": self.num_count,
-            "projects": self.projects
+            "projects": [project.to_json() for project in self.projects]
         }
 
     def __dict__(self):
@@ -44,18 +44,14 @@ class ProjectsInfo:
         if len(self.projects) == 0:
             return 0
 
-        project_to_return = None
         for project in self.projects:
-            if project['id'] == id:
-                project_to_return = project
-                break
-
-        return Project.from_json(project_to_return)
+            if project.id == id:
+                return project
 
     @staticmethod
     def from_json(json_dict):
         return ProjectsInfo(num_count=json_dict['num_count'],
-                            projects=json_dict['projects'])
+                            projects=[Project.from_json(json_project) for json_project in json_dict['projects']])
 
 
 @attr.s(slots=True, frozen=True)

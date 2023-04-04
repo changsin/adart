@@ -46,7 +46,7 @@ def dashboard():
     projects_info = st.session_state[PROJECTS]
     if projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
-        df_projects = pd.DataFrame(projects_info.projects)
+        df_projects = pd.DataFrame(projects_info.to_json()[PROJECTS])
         df_projects = df_projects[PROJECT_COLUMNS]
 
     AgGrid(df_projects)
@@ -164,21 +164,24 @@ def delete_project():
     selected_project = _select_project()
 
     if selected_project:
-        projects_info = st.session_state[PROJECTS]
-        projects_info.projects.remove(selected_project)
+        if st.button("Are you sure you want to delete the project {}-{}?"
+                     .format(selected_project.id, selected_project.name)):
+            # Your code to handle the user choosing not to proceed
+            projects_info = st.session_state[PROJECTS]
+            projects_info.projects.remove(selected_project)
 
-        folder_path = os.path.join(ADQ_WORKING_FOLDER, selected_project.id)
-        if os.path.exists(folder_path):
-            shutil.rmtree(folder_path)
-        st.markdown("**Deleted project {}".format(selected_project.id))
+            folder_path = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            st.markdown("**Deleted project {}-{}".format(selected_project.id, selected_project.name))
 
-        utils.to_file(json.dumps(projects_info,
-                                 default=default, indent=2),
-                      ADQ_WORKING_FOLDER,
-                      PROJECTS + JSON_EXT)
+            utils.to_file(json.dumps(projects_info,
+                                     default=default, indent=2),
+                          ADQ_WORKING_FOLDER,
+                          PROJECTS + JSON_EXT)
 
-        # TODO: Delete tasks too
-        dashboard()
+            # TODO: Delete tasks too
+            dashboard()
 
 
 def show_file_info():
@@ -226,7 +229,7 @@ def show_image_quality():
 def _select_project():
     projects_info = st.session_state[PROJECTS]
     if projects_info.num_count > 0:
-        df_projects = pd.DataFrame(projects_info.projects)
+        df_projects = pd.DataFrame(projects_info.to_json()[PROJECTS])
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
