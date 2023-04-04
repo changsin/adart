@@ -1,4 +1,4 @@
-import fnmatch
+import glob
 import json
 import os
 
@@ -42,8 +42,9 @@ def generate_file_tree(folder_path, patterns):
 
         file_info_to_display = dict()
         for pattern in patterns:
-            matched = fnmatch.filter([filename.lower() for filename in files], pattern.lower())
+            matched = glob.glob(os.path.join(root, pattern), recursive=True)
             if matched:
+                matched = [os.path.basename(full_path) for full_path in matched]
                 sub_folder = root.replace(folder_path, '')
                 if file_info_to_display.get(sub_folder):
                     file_info_to_display[sub_folder] = file_info_to_display[sub_folder] + len(matched)

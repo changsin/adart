@@ -85,10 +85,14 @@ def create_projects():
     with st.form("Create A Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
-        images_format_type = st.selectbox("**Image file types**",
-                                          ["*.jpg *.jpeg *.png *.bmp *.tiff *.gif",
-                                           "*.wav",
-                                           "*"])
+        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
+                   SUPPORTED_VIDEO_FILE_EXTENSIONS,
+                   SUPPORTED_AUDIO_FILE_EXTENSIONS,
+                   "*", ""]
+        selected_file_types = st.selectbox("**Image file types**",
+                                           options,
+                                           index=len(options) - 1)
+
         labels_folder = st.text_input("**Labels folder:**")
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
         submitted = st.form_submit_button("Create project")
@@ -100,7 +104,7 @@ def create_projects():
             # show_dir_tree(Path(images_folder))
             # files_tree = generate_file_tree(images_folder)
             # display_file_tree(files_tree, indent=2)
-            image_files = utils.generate_file_tree(images_folder, images_format_type.split())
+            image_files = utils.generate_file_tree(images_folder, selected_file_types.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
@@ -154,6 +158,29 @@ def create_tasks():
         sample_percent = st.text_input("% of samples")
 
         st.form_submit_button("Create tasks")
+
+
+def delete_project():
+    projects_info = st.session_state[PROJECTS]
+    selected_project = _select_project(projects_info)
+
+    if selected_project and len(selected_project) > 0:
+        project_id, name, = selected_project.split('-', maxsplit=1)
+        project_selected = projects_info.get_project_by_id(int(project_id))
+        projects_info.projects.remove(project_selected)
+
+        folder_path = os.path.join(ADQ_WORKING_FOLDER, project_id)
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+        st.markdown("**Deleted project {}".format(project_id))
+
+        utils.to_file(json.dumps(projects_info,
+                                 default=default, indent=2),
+                      ADQ_WORKING_FOLDER,
+                      PROJECTS + JSON_EXT)
+
+        # TODO: Delete tasks too
+        dashboard()
 
 
 def show_file_info():
@@ -284,6 +311,7 @@ def start_st():
         "Dashboard": lambda: dashboard(),
         "Create Projects": lambda: create_projects(),
         "Create Tasks": lambda: create_tasks(),
+        "Delete Project": lambda: delete_project(),
         "Show file info": lambda: show_file_info(),
         "Show image quality": lambda: show_image_quality(),
         "Show label quality": lambda: show_label_quality(),

@@ -6,10 +6,10 @@ import cv2
 import pandas as pd
 import streamlit as st
 import utils
-import constants
+from constants import CHARTS
 
-CHARTS = "charts"
 
+@st.cache(allow_output_mutation=True)
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     st.markdown(title)
 
@@ -121,6 +121,7 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     return chart_aspect_ratios, chart_brightness
 
 
+@st.cache(allow_output_mutation=True)
 def plot_file_sizes(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
@@ -180,6 +181,7 @@ def plot_file_sizes(title: str, files_dict: dict):
     return chart
 
 
+@st.cache(allow_output_mutation=True)
 def plot_datetime(title: str, files_dict: dict):
     st.markdown(title)
 
@@ -236,6 +238,7 @@ def plot_datetime(title: str, files_dict: dict):
     return chart
 
 
+@st.cache(allow_output_mutation=True)
 def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_type="bar"):
     if data_dict is None or len(data_dict.items()) == 0:
         return
