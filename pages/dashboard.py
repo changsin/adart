@@ -2,8 +2,8 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
-import utils
-from constants import *
+from common import utils
+from common.constants import *
 
 
 def dashboard():
@@ -53,9 +53,9 @@ def dashboard():
 
     st.subheader("**Tasks**")
     json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
-                                   # os.path.join(os.getcwd(), "data"),
-                                   ADQ_WORKING_FOLDER,
-                                   TASKS + JSON_EXT)
+                                 # os.path.join(os.getcwd(), "data"),
+                                 ADQ_WORKING_FOLDER,
+                                 TASKS + JSON_EXT)
 
     df_tasks = pd.DataFrame(columns=TASK_COLUMNS)
     if len(json_tasks[TASKS]) > 0:

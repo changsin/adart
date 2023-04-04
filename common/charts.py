@@ -195,8 +195,8 @@ def plot_datetime(title: str, files_dict: dict):
                 file_stat = os.stat(os.path.join(folder, file))
                 dt_cdatetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
                 st.markdown("📄{} ({}) {}".format(file,
-                                                  utils.humanize_bytes(file_stat.st_size),
-                                                  dt_cdatetime.date()))
+                                                 utils.humanize_bytes(file_stat.st_size),
+                                                 dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
                 # Append date and time to x and y data lists
                 x_data_ctime.append(dt_cdatetime.date())

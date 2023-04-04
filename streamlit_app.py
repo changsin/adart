@@ -1,7 +1,7 @@
 import json
 import shutil
 
-from constants import *
+from common.constants import *
 from pages.create_projects import create_projects
 from pages.dashboard import dashboard
 from pages.label_quality import *

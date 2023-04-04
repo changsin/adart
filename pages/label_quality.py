@@ -3,7 +3,7 @@ from collections import namedtuple
 import shapely
 
 from models.adq_labels import AdqLabels
-from charts import *
+from common.charts import *
 from models.dart_labels import DartLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
