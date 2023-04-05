@@ -16,23 +16,22 @@ def show_file_info():
     selected_project = select_project()
 
     if selected_project:
-        if selected_project.image_files:
+        if len(selected_project.image_files) > 0:
             st.markdown("# Image Files Info")
-            chart_images_ctime = plot_datetime("### Created date time", selected_project.image_files)
+            chart_images_ctime, chart_images_file_size = plot_file_info("### Created date time",
+                                                                        selected_project.image_files)
             if chart_images_ctime:
                 display_chart(selected_project.id, "image_files_ctime", chart_images_ctime)
+            if chart_images_file_size:
+                display_chart(selected_project.id, "image_file_sizes", chart_images_file_size)
 
-            chart_images_file_sizes = plot_file_sizes("### File size", selected_project.image_files)
-            if chart_images_file_sizes:
-                display_chart(selected_project.id, "image_file_sizes", chart_images_file_sizes)
-
-        if selected_project.label_files:
+        if len(selected_project.label_files) > 0:
             st.markdown("# Label Files Info")
-            chart_labels_ctime = plot_datetime("### Created date time", selected_project.label_files)
+            chart_labels_ctime, chart_label_file_sizes = plot_file_info("### Created date time",
+                                                                        selected_project.label_files)
             if chart_labels_ctime:
                 display_chart(selected_project.id, "label_files_ctime", chart_labels_ctime)
 
-            chart_label_file_sizes = plot_file_sizes("### File size", selected_project.label_files)
             if chart_label_file_sizes:
                 display_chart(selected_project.id, "label_file_sizes", chart_label_file_sizes)
 

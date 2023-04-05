@@ -104,42 +104,17 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
 
 
 @st.cache_data
-def plot_file_sizes(title: str, files_dict: dict):
-    if files_dict is None or len(files_dict.items()) == 0:
-        return
-
-    file_sizes = dict()
-    for folder, files in files_dict.items():
-        for file in files:
-            file_stat = os.stat(os.path.join(folder, file))
-            if file_sizes.get(file_stat.st_size):
-                file_sizes[file_stat.st_size] = file_sizes[file_stat.st_size] + 1
-            else:
-                file_sizes[file_stat.st_size] = 1
-    # return plot_chart(title, x_label='size', y_label='count', data_dict=file_sizes, chart_type="line")
-    data = pd.DataFrame({
-        'size': file_sizes.keys(),
-        'count': file_sizes.values()
-    })
-
-    data['size'] = data['size'].astype(int)
+def plot_file_sizes(df_file_info: pd.DataFrame):
+    df_file_info['size'] = df_file_info['size'].astype(int)
 
     # Create a histogram using Altair
-    chart = alt.Chart(data).mark_bar().encode(
+    chart = alt.Chart(df_file_info).mark_bar().encode(
         alt.X('size', bin=alt.Bin(maxbins=50), title='File Size (bytes)'),
-        y='count()'
+        y='count()',
+        # tooltip=['count()', alt.datum.file_size, 'file']
     ).properties(
         title='File Size Distribution'
     )
-
-    # # Create a KDE plot using Altair
-    # chart = alt.Chart(data).transform_density(
-    #     'size',
-    #     as_=['size', 'count'],
-    # ).mark_area(opacity=0.5).encode(
-    #     alt.X('size:Q', title='File Size (bytes)'),
-    #     alt.Y('count:Q', title='Count')
-    # )
 
     chart = chart.interactive()  # make the chart interactive
     chart = chart.properties(
@@ -155,11 +130,11 @@ def plot_file_sizes(title: str, files_dict: dict):
 
 
 @st.cache_data
-def plot_datetime(title: str, files_dict: dict):
+def plot_file_info(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
-    ctime_dict = dict()
+    file_info_dict = dict()
     for folder, files in files_dict.items():
         level = folder.count(os.sep)
         indent = '-' * level
@@ -173,9 +148,10 @@ def plot_datetime(title: str, files_dict: dict):
                                                  dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
                 # Append date and time to x and y data lists
-                ctime_dict[file] = (dt_cdatetime.date(), float(ctime_object.strftime('%H.%M')), file)
+                file_info_dict[file] = (dt_cdatetime.date(), float(ctime_object.strftime('%H.%M')), file_stat.st_size)
 
-    df_ctime = pd.DataFrame.from_dict(ctime_dict, orient='index', columns=['date', 'time', 'file'])
+    df_ctime = pd.DataFrame.from_dict(file_info_dict, orient='index', columns=['date', 'time', 'size'])
+    df_ctime = df_ctime.assign(file=file_info_dict.keys())
 
     # convert the date column to a string representation
     df_ctime['date'] = df_ctime['date'].astype(str)
@@ -183,7 +159,7 @@ def plot_datetime(title: str, files_dict: dict):
     chart_ctime = alt.Chart(df_ctime).mark_circle().encode(
         x='date',
         y='time',
-        tooltip=['date', 'time', 'file']
+        tooltip=['date', 'time', 'size', 'file']
         ).properties(
             title="Created Time"
         )
@@ -199,7 +175,9 @@ def plot_datetime(title: str, files_dict: dict):
         alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
     )
 
-    return chart_ctime
+    chart_sizes = plot_file_sizes(df_ctime)
+
+    return chart_ctime, chart_sizes
 
 
 @st.cache_data
