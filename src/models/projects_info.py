@@ -2,58 +2,6 @@ import attr
 import json
 
 
-@attr.s(slots=True, frozen=False)
-class ProjectsInfo:
-    num_count = attr.ib(validator=attr.validators.instance_of(int))
-    # NB: add as a json dict to make manipulating in pandas dataframe easier
-    projects = attr.ib(validator=attr.validators.instance_of(list))
-
-    def __iter__(self):
-        yield from {
-            "num_count": self.num_count,
-            "projects": self.projects
-        }.items()
-
-    def __str__(self):
-        return json.dumps(self.to_json(), ensure_ascii=False)
-
-    def add(self, project):
-        self.projects.append(project)
-        self.num_count = len(self.projects)
-
-    def to_json(self):
-        return {
-            "num_count": self.num_count,
-            "projects": [project.to_json() for project in self.projects]
-        }
-
-    def __dict__(self):
-        return vars(self)
-
-    def get_next_project_id(self):
-        if len(self.projects) == 0:
-            return 0
-
-        project_idx = []
-        for project in self.projects:
-            project_idx.append(project.id)
-
-        return max(project_idx) + 1
-
-    def get_project_by_id(self, id):
-        if len(self.projects) == 0:
-            return 0
-
-        for project in self.projects:
-            if project.id == id:
-                return project
-
-    @staticmethod
-    def from_json(json_dict):
-        return ProjectsInfo(num_count=json_dict['num_count'],
-                            projects=[Project.from_json(json_project) for json_project in json_dict['projects']])
-
-
 @attr.s(slots=True, frozen=True)
 class Project:
     id = attr.ib(validator=attr.validators.instance_of(int))
@@ -165,7 +113,7 @@ class Project:
         }
 
     @staticmethod
-    def from_json(json_dict):
+    def from_json(json_dict: dict):
         return Project(
             id=json_dict["id"],
             name=json_dict["name"],
@@ -203,3 +151,54 @@ class Project:
 
     def __dict__(self):
         return vars(self)
+
+
+@attr.s(slots=True, frozen=False)
+class ProjectsInfo:
+    num_count = attr.ib(validator=attr.validators.instance_of(int))
+    # NB: add as a json dict to make manipulating in pandas dataframe easier
+    projects = attr.ib(validator=attr.validators.instance_of(list))
+
+    def __iter__(self):
+        yield from {
+            "num_count": self.num_count,
+            "projects": self.projects
+        }.items()
+
+    def __str__(self):
+        return json.dumps(self.to_json(), ensure_ascii=False)
+
+    def add(self, project: Project):
+        self.projects.append(project)
+        self.num_count = len(self.projects)
+
+    def to_json(self):
+        return {
+            "num_count": self.num_count,
+            "projects": [project.to_json() for project in self.projects]
+        }
+
+    def __dict__(self):
+        return vars(self)
+
+    def get_next_project_id(self) -> int:
+        if len(self.projects) == 0:
+            return 0
+
+        project_idx = []
+        for project in self.projects:
+            project_idx.append(project.id)
+
+        return max(project_idx) + 1
+
+    def get_project_by_id(self, project_id: int) -> Project:
+        if len(self.projects) > 0:
+            for project in self.projects:
+                if project.id == project_id:
+                    print("#####returning {}".format(project_id))
+                    return project
+
+    @staticmethod
+    def from_json(json_dict):
+        return ProjectsInfo(num_count=json_dict['num_count'],
+                            projects=[Project.from_json(json_project) for json_project in json_dict['projects']])

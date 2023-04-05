@@ -69,4 +69,3 @@ def generate_file_tree(folder_path, patterns):
             st.markdown('{}📁({}) {}/'.format(indent, count, folder))
 
     return file_tree_to_return
-

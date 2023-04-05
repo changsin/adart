@@ -1,68 +1,18 @@
+import sys
 from collections import namedtuple
+from pathlib import Path
 
 import shapely
 
-from models.adq_labels import AdqLabels
-from charts import *
-from models.dart_labels import DartLabels
+path_root = Path(__file__).parents[2]
+sys.path.append(str(path_root))
+
+from src.models.adq_labels import AdqLabels
+from src.common.charts import *
+from src.models.dart_labels import DartLabels
+from src.home import select_project
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
-
-
-def chart_label_quality(selected_project):
-    def _plot_chart(title, x_label, y_label, data_dict, class_name, chart_type='line'):
-        chart = alt.Chart(data_dict).mark_point() if chart_type == "circle" else alt.Chart(data_dict).mark_line()
-
-        chart = chart.encode(
-            x=alt.X('width:Q', title=x_label),
-            y=alt.Y('height:Q', title=y_label),
-            color=alt.Color(class_name, type='nominal')
-        )
-
-        chart = chart.properties(
-            title=title,
-        )
-
-        chart = chart.interactive()
-
-        return chart
-
-    class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
-
-    chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
-    if chart_class_count:
-        display_chart(selected_project.id, "class_count", chart_class_count)
-
-    chart_overlap_areas = plot_chart("Overlap Areas",
-                                     x_label="overlap %", y_label="count",
-                                     data_dict=overlap_areas)
-    if chart_overlap_areas:
-        display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
-
-    # create DataFrame from dictionary
-    df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height', 'class'])
-    chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
-        x='width',
-        y='height',
-        color='class',
-        tooltip=['class', 'width', 'height']
-        ).properties(
-            title="Dimensions of Labels"
-        )
-
-    # make the chart interactive
-    chart_dimensions = chart_dimensions.interactive()
-    chart_dimensions = chart_dimensions.properties(
-        width=600,
-        height=400
-    ).add_selection(
-        alt.selection_interval(bind='scales', encodings=['x', 'y'])
-    ).add_selection(
-        alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-    )
-
-    if chart_dimensions:
-        display_chart(selected_project.id, "dimensions", chart_dimensions)
 
 
 def load_label_files(title: str, files_dict: dict):
@@ -175,3 +125,54 @@ def calculate_overlapping_rect(a, b):
         overlapping_area = dx*dy
 
     return overlapping_area, max_area
+
+
+def main():
+    selected_project = select_project()
+    if selected_project:
+        if not selected_project.label_files:
+            st.write("No labels!")
+            return
+
+        class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
+
+        chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
+        if chart_class_count:
+            display_chart(selected_project.id, "class_count", chart_class_count)
+
+        chart_overlap_areas = plot_chart("Overlap Areas",
+                                         x_label="overlap %", y_label="count",
+                                         data_dict=overlap_areas)
+        if chart_overlap_areas:
+            display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
+
+        # create DataFrame from dictionary
+        df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height', 'class'])
+        chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
+            x='width',
+            y='height',
+            color='class',
+            tooltip=['class', 'width', 'height']
+            ).properties(
+                title="Dimensions of Labels"
+            )
+
+        # make the chart interactive
+        chart_dimensions = chart_dimensions.interactive()
+        chart_dimensions = chart_dimensions.properties(
+            width=600,
+            height=400
+        ).add_selection(
+            alt.selection_interval(bind='scales', encodings=['x', 'y'])
+        ).add_selection(
+            alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+        )
+
+        if chart_dimensions:
+            display_chart(selected_project.id, "dimensions", chart_dimensions)
+
+        show_download_charts_button(selected_project.id)
+
+
+if __name__ == '__main__':
+    main()

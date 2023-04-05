@@ -2,13 +2,19 @@ import datetime
 import json
 import os
 import shutil
+import sys
+from pathlib import Path
 
 import streamlit as st
 
-import utils
-from constants import *
-from convert_lib import convert_CVAT_to_Form
-from models.projects_info import Project
+path_root = Path(__file__).parents[2]
+sys.path.append(str(path_root))
+
+from src.common import utils
+from src.common.constants import *
+from src.common.convert_lib import convert_CVAT_to_Form
+from src.models.projects_info import Project
+from src.home import select_project, get_projects_info
 
 
 def create_projects():
@@ -80,3 +86,44 @@ def create_projects():
                           PROJECTS + JSON_EXT)
 
             st.write("Project {} {} created".format(project_id, name))
+
+
+def delete_project():
+    selected_project = select_project()
+
+    if selected_project:
+        if st.button("Are you sure you want to delete the project {}-{}?"
+                     .format(selected_project.id, selected_project.name)):
+            # Your code to handle the user choosing not to proceed
+            projects_info = get_projects_info()
+            projects_info.projects.remove(selected_project)
+
+            folder_path = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+            st.markdown("**Deleted project {}-{}".format(selected_project.id, selected_project.name))
+
+            utils.to_file(json.dumps(projects_info,
+                                     default=utils.default, indent=2),
+                          ADQ_WORKING_FOLDER,
+                          PROJECTS + JSON_EXT)
+
+            # TODO: Delete tasks too
+
+
+def main():
+    menu = {
+        "Create Projects": lambda: create_projects(),
+        "Delete Project": lambda: delete_project(),
+    }
+
+    # Create a sidebar with menu options
+    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
+
+    if selected_action:
+        # Call the selected method based on the user's selection
+        menu[selected_action]()
+
+
+if __name__ == '__main__':
+    main()
