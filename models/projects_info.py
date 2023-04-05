@@ -15,7 +15,7 @@ class ProjectsInfo:
         }.items()
 
     def __str__(self):
-        return json.dumps(dict(self), ensure_ascii=False)
+        return json.dumps(self.to_json(), ensure_ascii=False)
 
     def add(self, project):
         self.projects.append(project)
@@ -36,7 +36,7 @@ class ProjectsInfo:
 
         project_idx = []
         for project in self.projects:
-            project_idx.append(project["id"])
+            project_idx.append(project.id)
 
         return max(project_idx) + 1
 
