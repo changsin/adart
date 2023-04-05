@@ -3,6 +3,16 @@ import os
 
 import streamlit as st
 
+import importlib.util
+
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+    from pathlib import Path
+
+    path_root = Path(__file__).parents[1]
+    sys.path.append(str(path_root))
+
 from src.common import utils
 from src.home import select_project
 
@@ -51,8 +61,10 @@ def show_images(files_dict: dict):
 def main():
     selected_project = select_project()
 
-    if selected_project:
+    if selected_project and selected_project.image_files:
         show_images(selected_project.image_files)
+    else:
+        st.write("No image files")
 
 
 if __name__ == '__main__':

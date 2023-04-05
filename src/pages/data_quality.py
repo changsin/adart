@@ -1,3 +1,13 @@
+import importlib.util
+
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+    from pathlib import Path
+
+    path_root = Path(__file__).parents[1]
+    sys.path.append(str(path_root))
+
 from src.common.charts import *
 from src.home import select_project
 
@@ -32,7 +42,7 @@ def show_file_info():
 def show_image_quality():
     selected_project = select_project()
 
-    if selected_project:
+    if selected_project and selected_project.image_files:
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               selected_project.image_files)
         # Display the histogram in Streamlit
@@ -42,6 +52,8 @@ def show_image_quality():
             display_chart(selected_project.id, "brightness", chart_brightness)
 
         show_download_charts_button(selected_project.id)
+    else:
+        st.write("No image data")
 
 
 def main():

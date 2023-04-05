@@ -5,6 +5,16 @@ import shutil
 
 import streamlit as st
 
+import importlib.util
+
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+    from pathlib import Path
+
+    path_root = Path(__file__).parents[1]
+    sys.path.append(str(path_root))
+
 from src.common import utils
 from src.common.constants import *
 from src.common.convert_lib import convert_CVAT_to_Form

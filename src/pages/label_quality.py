@@ -2,6 +2,16 @@ from collections import namedtuple
 
 import shapely
 
+import importlib.util
+
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+    from pathlib import Path
+
+    path_root = Path(__file__).parents[1]
+    sys.path.append(str(path_root))
+
 from src.common.charts import *
 from src.home import select_project
 from src.models.adq_labels import AdqLabels

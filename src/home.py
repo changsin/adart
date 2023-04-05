@@ -1,8 +1,13 @@
-import sys
-from pathlib import Path
+import importlib.util
+import os.path
 
-path_root = Path(__file__).parents[1]
-sys.path.append(str(path_root))
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+    from pathlib import Path
+
+    path_root = Path(__file__).parents[1]
+    sys.path.append(str(path_root))
 
 from src.common.charts import *
 from src.common import utils
@@ -52,8 +57,9 @@ def main():
         os.mkdir(constants.ADQ_WORKING_FOLDER)
 
     st.set_page_config(page_title="DaRT")
-    st.sidebar.header("**DaRT** - Data Reviewing Tool")
-    st.image("D:\\data\AI-Hub\\AI-hub-sample\\1_2020_11_05_12_50_driveway_walk_sun_B_4_03\\2020_11_05_12_50_driveway_walk_sun_B_4_00228.jpg")
+    st.header("**DaRT** - Data Reviewing Tool")
+    st.subheader("Under Construction")
+    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"))
 
     json_projects = utils.from_file("{\"num_count\":0,\"projects\":[]}",
                                     # os.path.join(os.getcwd(), "data"),
