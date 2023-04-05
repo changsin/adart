@@ -74,8 +74,6 @@ def create_projects():
                                   1, 1, str(datetime.datetime.now()))
             projects_info.add(new_project)
 
-            print("***{}".format(projects_info))
-
             utils.to_file(json.dumps(projects_info,
                                      default=utils.default, indent=2),
                           ADQ_WORKING_FOLDER,

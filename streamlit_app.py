@@ -114,6 +114,8 @@ def show_label_quality():
 
         chart_label_quality(selected_project)
 
+        show_download_charts_button(selected_project.id)
+
 
 def review_images():
     selected_project = _select_project()

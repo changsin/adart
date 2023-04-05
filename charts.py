@@ -47,22 +47,6 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
             else:
                 brightness_values[brightness] = 1
 
-    # print(aspect_ratios)
-    # print(brightness_values)
-    # # Create a Pandas DataFrame from the aspect ratios
-    # df_aspect_ratios = pd.DataFrame({
-    #     'aspect_ratio': aspect_ratios.keys(),
-    #     'count()': aspect_ratios.values()
-    # })
-    #
-    # # Create a histogram of the aspect ratios using Altair
-    # chart_aspect_ratios = alt.Chart(df_aspect_ratios).mark_bar().encode(
-    #     x=alt.X('aspect_ratio'),
-    #     y=alt.Y('count():Q', title='Count'),
-    #     tooltip=['aspect_ratio', 'count()']
-    # ).properties(
-    #     title='Aspect Ratios of Images'
-    # )
     aspect_ratios_list = [(k, v) for k, v in aspect_ratios.items()]
 
     # Done with the help of ChatGPT:
@@ -139,15 +123,6 @@ def plot_file_sizes(title: str, files_dict: dict):
     })
 
     data['size'] = data['size'].astype(int)
-
-    # # # Draw a line graph
-    # # chart = alt.Chart(data).mark_line().encode(
-    # #     x=alt.X('size', bin=True, title='File Size (bytes)'),
-    # #     y='count()',
-    # #     tooltip=['size', 'count()']
-    # # ).properties(
-    # #     title='File Size Distribution'
-    # # )
 
     # Create a histogram using Altair
     chart = alt.Chart(data).mark_bar().encode(
@@ -306,7 +281,6 @@ def show_download_charts_button(project_id):
     # Create a temporary file
     combined_filename = "{}.{}.{}".format(project_id, "combined_charts", "html")
     full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
-    print(combined_chart)
     # # Save chart as HTML file
     combined_chart.save(full_path, format='html')
 
