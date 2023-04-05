@@ -2,19 +2,14 @@ import datetime
 import json
 import os
 import shutil
-import sys
-from pathlib import Path
 
 import streamlit as st
-
-path_root = Path(__file__).parents[2]
-sys.path.append(str(path_root))
 
 from src.common import utils
 from src.common.constants import *
 from src.common.convert_lib import convert_CVAT_to_Form
-from src.models.projects_info import Project
 from src.home import select_project, get_projects_info
+from src.models.projects_info import Project
 
 
 def create_projects():
@@ -36,10 +31,6 @@ def create_projects():
         if submitted:
             st.markdown(f"**Name:** {name}")
             st.markdown(f"**Images folder:** {images_folder}")
-            # get_folder_info(images_folder, SUPPORTED_IMAGE_FILE_EXTENSIONS)
-            # show_dir_tree(Path(images_folder))
-            # files_tree = generate_file_tree(images_folder)
-            # display_file_tree(files_tree, indent=2)
             image_files = utils.generate_file_tree(images_folder, selected_file_types.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")

@@ -1,16 +1,11 @@
-import sys
 from collections import namedtuple
-from pathlib import Path
 
 import shapely
 
-path_root = Path(__file__).parents[2]
-sys.path.append(str(path_root))
-
-from src.models.adq_labels import AdqLabels
 from src.common.charts import *
-from src.models.dart_labels import DartLabels
 from src.home import select_project
+from src.models.adq_labels import AdqLabels
+from src.models.dart_labels import DartLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 

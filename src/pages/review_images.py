@@ -1,12 +1,7 @@
 import datetime as dt
 import os
-import sys
-from pathlib import Path
 
 import streamlit as st
-
-path_root = Path(__file__).parents[1]
-sys.path.append(str(path_root))
 
 from src.common import utils
 from src.home import select_project

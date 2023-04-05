@@ -195,7 +195,6 @@ class ProjectsInfo:
         if len(self.projects) > 0:
             for project in self.projects:
                 if project.id == project_id:
-                    print("#####returning {}".format(project_id))
                     return project
 
     @staticmethod

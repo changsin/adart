@@ -5,11 +5,6 @@ import altair as alt
 import cv2
 import pandas as pd
 import streamlit as st
-import sys
-from pathlib import Path
-
-path_root = Path(__file__).parents[2]
-sys.path.append(str(path_root))
 
 from src.common import constants, utils
 
