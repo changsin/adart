@@ -72,8 +72,9 @@ def create_projects():
             label_files_dict = {os.getcwd(): target_filenames}
             new_project = Project(project_id, name, image_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
-            # NB: add as a json dict to make manipulating in pandas dataframe easier
-            projects_info.add(new_project.to_json())
+            projects_info.add(new_project)
+
+            print("***{}".format(projects_info))
 
             utils.to_file(json.dumps(projects_info,
                                      default=utils.default, indent=2),

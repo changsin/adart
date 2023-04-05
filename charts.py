@@ -202,6 +202,9 @@ def plot_datetime(title: str, files_dict: dict):
 
     df_ctime = pd.DataFrame.from_dict(ctime_dict, orient='index', columns=['date', 'time', 'file'])
 
+    # convert the date column to a string representation
+    df_ctime['date'] = df_ctime['date'].astype(str)
+
     chart_ctime = alt.Chart(df_ctime).mark_circle().encode(
         x='date',
         y='time',
@@ -303,6 +306,7 @@ def show_download_charts_button(project_id):
     # Create a temporary file
     combined_filename = "{}.{}.{}".format(project_id, "combined_charts", "html")
     full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
+    print(combined_chart)
     # # Save chart as HTML file
     combined_chart.save(full_path, format='html')
 
