@@ -45,13 +45,6 @@ def select_project():
         st.markdown("**No project is created!**")
 
 
-def create_tasks():
-    with st.form("Create Tasks"):
-        sample_percent = st.text_input("% of samples")
-
-        st.form_submit_button("Create tasks")
-
-
 def main():
     if not os.path.exists(constants.ADQ_WORKING_FOLDER):
         os.mkdir(constants.ADQ_WORKING_FOLDER)

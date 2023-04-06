@@ -20,39 +20,39 @@ from src.models.dart_labels import DartLabels
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
-def load_label_files(title: str, files_dict: dict):
-    st.markdown(title)
+def load_label_files(label_files_dict: dict) -> dict:
+    label_objects_dict = {}
 
-    if files_dict is None or len(files_dict.items()) == 0:
-        return
+    if label_files_dict and len(label_files_dict.items()) > 0:
+        for folder, label_files in label_files_dict.items():
+            for label_file in label_files:
+                json_labels = utils.from_file("{}",
+                                              folder,
+                                              label_file)
+                adq_labels = AdqLabels.from_json(json_labels)
+                # convert to dart label format for easier processing
+                dart_labels = DartLabels.from_adq_labels(adq_labels)
+                label_objects_dict[label_file] = dart_labels
+
+    return label_objects_dict
+
+
+def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
+    label_objects_dict = load_label_files(label_files_dict)
 
     class_labels = dict()
-    label_objects = []
-
-    for folder, files in files_dict.items():
-        for file in files:
-            json_labels = utils.from_file("{}",
-                                          folder,
-                                          file)
-            adq_labels = AdqLabels.from_json(json_labels)
-            # convert to dart label format for easier processing
-            dart_labels = DartLabels.from_adq_labels(adq_labels)
-            label_objects.append(dart_labels)
-
-    for labels in label_objects:
-        for image in labels.images:
-            for object in image.objects:
-                if class_labels.get(object.label):
-                    class_labels[object.label] += 1
-                else:
-                    class_labels[object.label] = 1
-
     overlap_areas = dict()
     dimensions = dict()
-    for labels in label_objects:
-        for image in labels.images:
+    for label_file, dart_labels in label_objects_dict.items():
+        for image in dart_labels.images:
             count = len(image.objects)
             for ob_id1 in range(count):
+                label = image.objects[ob_id1].label
+                if class_labels.get(label):
+                    class_labels[label] += 1
+                else:
+                    class_labels[label] = 1
+
                 xtl1, ytl1, xbr1, ybr1 = image.objects[ob_id1].points
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                 width1 = rect1.xmax - rect1.xmin
@@ -65,7 +65,6 @@ def load_label_files(title: str, files_dict: dict):
 
                     overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
 
-                    # overlap_percent = 0
                     if overlap_area > 0:
                         overlap_percent = format(overlap_area/max_area, '.2f')
                         overlap_percent = float(overlap_percent) * 100
@@ -139,7 +138,7 @@ def main():
             st.write("No labels!")
             return
 
-        class_labels, overlap_areas, dimensions = load_label_files("Label quality", selected_project.label_files)
+        class_labels, overlap_areas, dimensions = get_label_metrics(selected_project.label_files)
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
