@@ -1,7 +1,8 @@
+import copy
 import importlib.util
+import json
 import os.path
-
-import pandas as pd
+import random
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -11,6 +12,7 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
+from src.common.constants import *
 from src.common.charts import *
 from src.home import select_project
 from src.pages import label_metrics
@@ -24,12 +26,6 @@ def step_size(value):
         return 10.0
     else:
         return 100.0
-
-
-# def sample_data(selected_project: Project, df_sample_count: pd.DataFrame):
-#     for index, row in df_sample_count.iterrows():
-#         label_file
-#         label_file_path = os.path.join(constants.ADQ_WORKING_FOLDER, selected_project.id, row)
 
 
 def calculate_sample_count(count, percent):
@@ -51,14 +47,35 @@ def calculate_sample_distribution(df_total_count: pd.DataFrame,
     return df_sample_count
 
 
+def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
+    sampled = {}
+    for index, row in df_sample_count.iterrows():
+        label_filename = row['filename']
+        sample_count = row['count']
+
+        dart_labels = dart_labels_dict[label_filename]
+        sampled_dart_labels = copy.deepcopy(dart_labels)
+        random.shuffle(sampled_dart_labels.images)
+
+        sampled_dart_labels.images = sampled_dart_labels.images[:sample_count]
+        print(len(sampled_dart_labels.images))
+        sampled[label_filename] = sampled_dart_labels
+
+        # save the sample label file
+        task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
+        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2), task_folder, label_filename)
+
+    return sampled
+
+
 def main():
     selected_project = select_project()
 
     if selected_project:
-        label_objects_dict = label_metrics.load_label_files(selected_project.label_files)
+        dart_labels_dict = label_metrics.load_label_files(selected_project.label_files)
         images_per_label_file_dict = dict()
-        if label_objects_dict.items() is not None:
-            for labels_file, dart_labels in label_objects_dict.items():
+        if dart_labels_dict.items() is not None:
+            for labels_file, dart_labels in dart_labels_dict.items():
                 images_per_label_file_dict[labels_file] = len(dart_labels.images)
 
         df_total_count = pd.DataFrame(images_per_label_file_dict.items(), columns=['filename', 'count'])
@@ -92,7 +109,8 @@ def main():
 
                     st.write("Here is how the image files will be sampled")
                     st.dataframe(df_sample_count)
-                    return
+
+                    sample_data(selected_project, dart_labels_dict, df_sample_count)
 
 
 if __name__ == '__main__':

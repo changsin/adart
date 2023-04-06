@@ -65,7 +65,7 @@ def create_projects():
                         target_filename = convert_CVAT_to_Form("NN", anno_file,
                                                                str(labels_format_type).lower(),
                                                                target_folder)
-                        target_filenames.append(target_filename)
+                        target_filenames.append(os.path.basename(target_filename))
                     elif labels_format_type == ADQ_JSON:
                         ori_folder = os.path.join(target_folder, "origin")
                         if not os.path.exists(ori_folder):
@@ -74,9 +74,9 @@ def create_projects():
                         target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
                         shutil.copy(anno_file, target_filename)
 
-                        target_filenames.append(target_filename)
+                        target_filenames.append(os.path.basename(target_filename))
 
-            label_files_dict = {os.getcwd(): target_filenames}
+            label_files_dict = {target_folder: target_filenames}
             new_project = Project(project_id, name, image_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
             projects_info.add(new_project)

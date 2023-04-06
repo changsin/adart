@@ -20,19 +20,31 @@ from src.models.dart_labels import DartLabels
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
+def load_label_file(folder: str, label_file: str) -> DartLabels:
+    """
+    :param folder: parent folder
+    :param label_file: label filename
+    :return: DartLabels object
+    """
+    json_labels = utils.from_file("{}",
+                                  folder,
+                                  label_file)
+    adq_labels = AdqLabels.from_json(json_labels)
+    # convert to dart label format for easier processing
+    return DartLabels.from_adq_labels(adq_labels)
+
+
 def load_label_files(label_files_dict: dict) -> dict:
+    """
+    :param label_files_dict: label files with key=folder value=label filename
+    :return: a dictionary with key=label filename value=DartLabels
+    """
     label_objects_dict = {}
 
     if label_files_dict and len(label_files_dict.items()) > 0:
         for folder, label_files in label_files_dict.items():
             for label_file in label_files:
-                json_labels = utils.from_file("{}",
-                                              folder,
-                                              label_file)
-                adq_labels = AdqLabels.from_json(json_labels)
-                # convert to dart label format for easier processing
-                dart_labels = DartLabels.from_adq_labels(adq_labels)
-                label_objects_dict[label_file] = dart_labels
+                label_objects_dict[label_file] = load_label_file(folder, label_file)
 
     return label_objects_dict
 

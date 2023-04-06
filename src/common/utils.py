@@ -35,6 +35,9 @@ def to_file(data, folder, filename):
     """
     save data to path
     """
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
     full_path = os.path.join(folder, filename)
     with open(full_path, 'w', encoding="utf-8") as json_file:
         json_file.write(data)
