@@ -1,18 +1,17 @@
 import datetime
+import importlib.util
 import json
 import os
 import shutil
+from pathlib import Path
 
 import streamlit as st
-
-import importlib.util
 
 spec = importlib.util.find_spec("src")
 if spec is None:
     import sys
-    from pathlib import Path
 
-    path_root = Path(__file__).parents[2]
+    path_root = Path(__file__).parent.parent
     sys.path.append(str(path_root))
 
 from src.common import utils
@@ -114,7 +113,7 @@ def delete_project():
 
 
 def main():
-    builtin_image_folder = "D:\\workspace\\data_reviewer\\src\\viewer\\img_dir"
+    builtin_image_folder = os.path.join(Path(__file__).parent.parent, "viewer", "img_dir")
     menu = {
         "Create Projects": lambda: create_projects(),
         "Delete Project": lambda: delete_project(),
