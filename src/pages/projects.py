@@ -21,6 +21,7 @@ from src.common.convert_lib import convert_CVAT_to_Form
 from src.home import select_project, get_projects_info
 from src.models.projects_info import Project
 
+from src.viewer.app import run
 
 def create_projects():
     with st.form("Create A Project"):
@@ -113,9 +114,11 @@ def delete_project():
 
 
 def main():
+    builtin_image_folder = "D:\\workspace\\data_reviewer\\src\\viewer\\img_dir"
     menu = {
         "Create Projects": lambda: create_projects(),
         "Delete Project": lambda: delete_project(),
+        "Viewer": lambda: run(builtin_image_folder,  ["", "dog", "cat"])
     }
 
     # Create a sidebar with menu options
