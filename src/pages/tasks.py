@@ -42,7 +42,7 @@ def calculate_sample_distribution(df_total_count: pd.DataFrame,
             st.warning("Please set a higher percentage to pick at least one file per folder")
             return None
         else:
-            df_sample_count['count'] = sample_count
+            df_sample_count.iloc[index] = (row['filename'], sample_count)
 
     return df_sample_count
 
@@ -58,7 +58,6 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         random.shuffle(sampled_dart_labels.images)
 
         sampled_dart_labels.images = sampled_dart_labels.images[:sample_count]
-        print(len(sampled_dart_labels.images))
         sampled[label_filename] = sampled_dart_labels
 
         # save the sample label file
@@ -104,10 +103,13 @@ def main():
                         total_sample_count = df_sample_count['count'].sum()
 
                     if total_sample_count > total_count:
-                        st.warning("Please enter a valid percent value")
+                        st.warning("Please enter a valid percent value.")
+                        st.warning("Sample count ({}) is greater than the total image count ({})"
+                                   .format(total_sample_count, total_count))
+                        st.dataframe(df_sample_count)
                         return
 
-                    st.write("Here is how the image files will be sampled")
+                    st.write("Here is how the image files are sampled")
                     st.dataframe(df_sample_count)
 
                     sample_data(selected_project, dart_labels_dict, df_sample_count)

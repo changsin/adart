@@ -50,7 +50,7 @@ def create_projects():
 
             label_files = utils.generate_file_tree(labels_folder, patterns)
 
-            projects_info = st.session_state[PROJECTS]
+            projects_info = get_projects_info()
             project_id = projects_info.get_next_project_id()
 
             target_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))

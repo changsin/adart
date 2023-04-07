@@ -250,6 +250,10 @@ def display_chart(project_id, name, chart):
 
 # Create a function to save all charts in the SessionState object
 def show_download_charts_button(project_id):
+    if not st.session_state.get(constants.CHARTS):
+        st.text("No chart was saved")
+        return
+
     charts = st.session_state[constants.CHARTS]
     if not charts.get(project_id):
         st.text("Nothing here")
