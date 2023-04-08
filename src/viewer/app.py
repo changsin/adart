@@ -4,27 +4,31 @@ from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.manage import ImageManager, ImageDirManager
 
 
-def run(img_dir, labels):
+def run(img_dir, label_dir, labels):
     st.set_option("deprecation.showfileUploaderEncoding", False)
-    idm = ImageDirManager(img_dir)
+    idm = ImageDirManager(img_dir, label_dir)
 
-    if "files" not in st.session_state:
-        st.session_state["files"] = idm.get_all_files()
+    if "img_files" not in st.session_state:
+        st.session_state["img_files"] = idm.get_all_img_files()
         st.session_state["annotation_files"] = idm.get_exist_annotation_files()
         st.session_state["image_index"] = 0
+        st.session_state["annotation_file_index"] = 0
     else:
-        idm.set_all_files(st.session_state["files"])
+        idm.set_all_img_files(st.session_state["img_files"])
         idm.set_annotation_files(st.session_state["annotation_files"])
     
     def refresh():
-        st.session_state["files"] = idm.get_all_files()
+        st.session_state["img_files"] = idm.get_all_img_files()
         st.session_state["annotation_files"] = idm.get_exist_annotation_files()
         st.session_state["image_index"] = 0
+        st.session_state["annotation_file_index"] = 0
 
     def next_image():
         image_index = st.session_state["image_index"]
-        if image_index < len(st.session_state["files"]) - 1:
+        if image_index < len(st.session_state["img_files"]) - 1:
             st.session_state["image_index"] += 1
+            st.session_state["annotation_file_index"] += 1
+            # print("st.session_state[\"image_index\"] {}".format(st.session_state["image_index"]))
         else:
             st.warning('This is the last image.')
 
@@ -45,11 +49,11 @@ def run(img_dir, labels):
             next_image()
 
     def go_to_image():
-        file_index = st.session_state["files"].index(st.session_state["file"])
+        file_index = st.session_state["img_files"].index(st.session_state["img_file"])
         st.session_state["image_index"] = file_index
 
     # Sidebar: show status
-    n_files = len(st.session_state["files"])
+    n_files = len(st.session_state["img_files"])
     n_annotate_files = len(st.session_state["annotation_files"])
     st.sidebar.write("Total files:", n_files)
     st.sidebar.write("Total annotate files:", n_annotate_files)
@@ -57,10 +61,10 @@ def run(img_dir, labels):
 
     st.sidebar.selectbox(
         "Files",
-        st.session_state["files"],
+        st.session_state["img_files"],
         index=st.session_state["image_index"],
         on_change=go_to_image,
-        key="file",
+        key="img_file",
     )
     col1, col2 = st.sidebar.columns(2)
     with col1:
@@ -72,8 +76,10 @@ def run(img_dir, labels):
 
     # Main content: annotate images
     img_file_name = idm.get_image(st.session_state["image_index"])
+    annotation_file_name = idm.get_annotation_file(st.session_state["annotation_file_index"])
     img_path = os.path.join(img_dir, img_file_name)
-    im = ImageManager(img_path)
+    label_path = os.path.join(label_dir, annotation_file_name)
+    im = ImageManager(img_path, label_path)
     img = im.get_img()
     resized_img = im.resizing_img()
     resized_rects = im.get_resized_rects()
@@ -84,6 +90,7 @@ def run(img_dir, labels):
         image_annotate_file_name = img_file_name.split(".")[0] + ".xml"
         if image_annotate_file_name not in st.session_state["annotation_files"]:
             st.session_state["annotation_files"].append(image_annotate_file_name)
+        print(image_annotate_file_name)
         next_annotate_file()
 
     if rects:
@@ -105,6 +112,7 @@ def run(img_dir, labels):
                 )
                 im.set_annotation(i, select_label)
 
+
 if __name__ == "__main__":
     custom_labels = ["", "dog", "cat"]
-    run("img_dir", custom_labels)
+    run("img_dir", "img_dir", custom_labels)

@@ -19,17 +19,17 @@ class ImageManager:
         filename(str): the image file.
     """
 
-    def __init__(self, filename):
+    def __init__(self, img_filename, label_filename):
         """initiate module"""
-        self._filename = filename
-        self._img = Image.open(filename)
+        self._label_filename = label_filename
+        self._img = Image.open(img_filename)
         self._rects = []
         self._load_rects()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
 
     def _load_rects(self):
-        rects_xml = read_xml(self._filename)
+        rects_xml = read_xml(self._label_filename)
         if rects_xml:
             self._rects = rects_xml
 
@@ -137,42 +137,46 @@ class ImageManager:
 
     def save_annotation(self):
         """output the xml annotation file."""
-        output_xml(self._filename, self._img, self._current_rects)
+        output_xml(self._label_filename, self._img, self._current_rects)
 
 
 class ImageDirManager:
-    def __init__(self, dir_name):
-        self._dir_name = dir_name
-        self._files = []
+    def __init__(self, img_dir_name, label_dir_name):
+        self._img_dir_name = img_dir_name
+        self._annotation_dir_name = label_dir_name
+        self._img_files = []
         self._annotations_files = []
 
-    def get_all_files(self, allow_types=["png", "jpg", "jpeg"]):
+    def get_all_img_files(self, allow_types=["png", "jpg", "jpeg"]):
         allow_types += [i.upper() for i in allow_types]
         mask = ".*\.[" + "|".join(allow_types) + "]"
-        self._files = [
-            file for file in os.listdir(self._dir_name) if re.match(mask, file)
+        self._img_files = [
+            file for file in os.listdir(self._img_dir_name) if re.match(mask, file)
         ]
-        return self._files
+        return self._img_files
 
     def get_exist_annotation_files(self):
         self._annotations_files = [
-            file for file in os.listdir(self._dir_name) if re.match(".*.xml", file)
+            file for file in os.listdir(self._annotation_dir_name) if re.match(".*.xml", file)
         ]
         return self._annotations_files
 
-    def set_all_files(self, files):
-        self._files = files
+    def set_all_img_files(self, files):
+        self._img_files = files
 
     def set_annotation_files(self, files):
         self._annotations_files = files
 
     def get_image(self, index):
-        return self._files[index]
+        return self._img_files[index]
+
+    def get_annotation_file(self, index):
+        return self._annotations_files[index]
 
     def _get_next_image_helper(self, index):
-        while index < len(self._files) - 1:
+        while index < len(self._img_files) - 1:
             index += 1
-            image_file = self._files[index]
+            image_file = self._img_files[index]
             image_file_name = image_file.split(".")[0]
             if f"{image_file_name}.xml" not in self._annotations_files:
                 return index
@@ -182,5 +186,5 @@ class ImageDirManager:
         image_index = self._get_next_image_helper(index)
         if image_index:
             return image_index
-        if not image_index and len(self._files) != len(self._annotations_files):
+        if not image_index and len(self._img_files) != len(self._annotations_files):
             return self._get_next_image_helper(0)

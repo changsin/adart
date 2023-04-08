@@ -11,7 +11,7 @@ spec = importlib.util.find_spec("src")
 if spec is None:
     import sys
 
-    path_root = Path(__file__).parent.parent
+    path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
 from src.common import utils
@@ -22,8 +22,9 @@ from src.models.projects_info import Project
 
 from src.viewer.app import run
 
+
 def create_projects():
-    with st.form("Create A Project"):
+    with st.form("Create Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
         options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
@@ -117,7 +118,7 @@ def main():
     menu = {
         "Create Projects": lambda: create_projects(),
         "Delete Project": lambda: delete_project(),
-        "Viewer": lambda: run(builtin_image_folder,  ["", "dog", "cat"])
+        "Viewer": lambda: run(builtin_image_folder, builtin_image_folder, ["", "dog", "cat"])
     }
 
     # Create a sidebar with menu options
