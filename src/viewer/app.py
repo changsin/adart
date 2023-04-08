@@ -132,7 +132,7 @@ def main(labels=["", "cat", "dog"]):
         if selected_task:
             task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                        str(selected_project.id),
-                                       str(selected_task.id))
+                                       str(selected_index))
             dart_labels = load_label_file(task_folder, selected_task.anno_file_name)
 
             # TODO: find the mapping between the img_dir and dart_labels
@@ -161,7 +161,6 @@ def main(labels=["", "cat", "dog"]):
                 if image_index < len(st.session_state["img_files"]) - 1:
                     st.session_state["image_index"] += 1
                     st.session_state["annotation_file_index"] += 1
-                    # print("st.session_state[\"image_index\"] {}".format(st.session_state["image_index"]))
                 else:
                     st.warning('This is the last image.')
 
@@ -210,7 +209,7 @@ def main(labels=["", "cat", "dog"]):
             # Main content: annotate images
             img_file_name = idm.get_image(st.session_state["image_index"])
             # img_path = os.path.join(img_dir, img_file_name)
-            im = DartImageManager(img_dir, dart_labels.images[selected_index])
+            im = DartImageManager(img_dir, dart_labels.images[st.session_state["image_index"]])
             img = im.get_img()
             resized_img = im.resizing_img()
             resized_rects = im.get_resized_rects()
@@ -221,7 +220,6 @@ def main(labels=["", "cat", "dog"]):
                 image_annotate_file_name = img_file_name.split(".")[0] + ".xml"
                 if image_annotate_file_name not in st.session_state["annotation_files"]:
                     st.session_state["annotation_files"].append(image_annotate_file_name)
-                print(image_annotate_file_name)
                 next_annotate_file()
 
             if rects:

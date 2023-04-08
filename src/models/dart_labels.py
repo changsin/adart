@@ -44,7 +44,6 @@ class DartLabels:
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
             images=[DartLabels.Image.from_json(json_image) for json_image in json_dict['images']]
-
         )
 
     @staticmethod
@@ -186,7 +185,8 @@ class DartLabels:
                                      group_id=json_dict['group_id'],
                                      points=json_dict['points'],
                                      attributes=json_dict['attributes'],
-                                     verification_result=json_dict['verification_result'])
+                                     verification_result=json_dict['verification_result']
+                                     if json_dict.get('verification_result') else None)
 
         @staticmethod
         def from_adq_object(adq_object: AdqLabels.Object):
