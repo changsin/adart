@@ -163,118 +163,120 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
 def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):
-    if img_annof_relation == '11':
-        output_jdict = dict()
+    if img_annof_relation != '11':
+        return
 
-        # 최종 산출물인 json 파일에 default로 들어있는 key-value값
-        output_jdict['mode'] = 'annotation'
-        output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
-        output_jdict['template_version'] = "0.1"
+    output_jdict = dict()
 
-        # output_jdict_imgs : 최종 산출물인 json 파일의 images의 value가 될 이미지 list
-        output_jdict_imgs = list()
+    # 최종 산출물인 json 파일에 default로 들어있는 key-value값
+    output_jdict['mode'] = 'annotation'
+    output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
+    output_jdict['template_version'] = "0.1"
 
-        # PASCAL VOC의 경우, 이미지 : 어노테이션 파일의 관계가 1 : 1이기 때문에
-        # 별도의 image_id 정보가 없다.
-        # id_idx가 대신 image_id 역할을 하기위해 선언한 변수
-        id_idx = 0
+    # output_jdict_imgs : 최종 산출물인 json 파일의 images의 value가 될 이미지 list
+    output_jdict_imgs = list()
 
-        # PASCAL VOC의 경우, 이미지 : 어노테이션 파일의 관계가 1 : 1이기 때문에
-        # 어노테이션 파일 개수만큼 for loop를 수행해야 output_jdict의 images value를 얻어낼 수 있다.
-        for each_xmlfile in anno_file_list:
-            xml_structure = ET.parse(each_xmlfile)
+    # PASCAL VOC의 경우, 이미지 : 어노테이션 파일의 관계가 1 : 1이기 때문에
+    # 별도의 image_id 정보가 없다.
+    # id_idx가 대신 image_id 역할을 하기위해 선언한 변수
+    id_idx = 0
 
-            # tag 이름은 find_all로 찾는다.
-            # 대신, 중복된 태그가 있을 수 있으니 무조건 absolute path로 탐색
-            # root의 경우, ElementTree의 getroot 함수를 통해서 노드를 받아옴.
-            root_info = xml_structure.getroot()
+    # PASCAL VOC의 경우, 이미지 : 어노테이션 파일의 관계가 1 : 1이기 때문에
+    # 어노테이션 파일 개수만큼 for loop를 수행해야 output_jdict의 images value를 얻어낼 수 있다.
+    for each_xmlfile in anno_file_list:
+        xml_structure = ET.parse(each_xmlfile)
 
-
-            # pascal voc tag의 root tag는 'annotation'이기 때문에
-            # 아닌 경우 Exception을 호출한다.
-            # added at 22.04.01
-            if root_info.tag != 'annotation':
-                raise Exception(each_xmlfile + '는 PASCAL VOC XML 포맷이 아닙니다.')
+        # tag 이름은 find_all로 찾는다.
+        # 대신, 중복된 태그가 있을 수 있으니 무조건 absolute path로 탐색
+        # root의 경우, ElementTree의 getroot 함수를 통해서 노드를 받아옴.
+        root_info = xml_structure.getroot()
 
 
-            # 1개만 있는 태그는 find 명령어 사용
-            # N개 있는 태그는 findall 명령어를 통해서 탐색 수행
-            cur_img = dict()
-            cur_img['image_id'] = str(id_idx)
-            id_idx += 1
-
-            filename_tag = root_info.find('filename')
-            cur_img['name'] = os.path.basename(filename_tag.text)
-
-            # xml 파일의 text의 경우, 데이터 형변환(숫자라면 integer를 쫓아감)을 따라가는 경향이 있음.
-            # 현재 만들어준 json의 value들은 속성의 값(attribute value)로부터 형 변환이 수행되어왔기 떄문에
-            # string을 변환해주는 작업이 필요하다.
-            img_resol_info = root_info.find('size')
-            img_width_info = img_resol_info.find('width')
-            img_height_info = img_resol_info.find('height')
-            cur_img['width'] = str(img_width_info.text)
-            cur_img['height'] = str(img_height_info.text)
-
-            # cur_img_objlist : 현재 이미지가 가지고 있는 객체('objects')의 value가 될 객체 list
-            cur_img_objlist = list()
-
-            obj_info = root_info.findall('object')
-
-            for each_obj_info in obj_info:
-                cur_obj = dict()
-                label_name_info = each_obj_info.find('name')
-                cur_obj['label'] = label_name_info.text if label_name_info.text else 'empty'
-                # PASCAL VOC는 기본적으로 box만 지원하기 때문에 type에 대해서 고민 X
-                cur_obj['type'] = 'box'
-                cur_obj['occluded'] = "0"
-                cur_obj['z_order'] = "0"
-                # PASCAL VOC는 기본적으로 객체들이 다 독립적이기 때문에 group_id의 value는 빈 문자열("")로 지정
-                cur_obj['group_id'] = ""
-
-                box_info = each_obj_info.find('bndbox')
-                xtl_info = box_info.find('xmin')
-                ytl_info = box_info.find('ymin')
-                xbr_info = box_info.find('xmax')
-                ybr_info = box_info.find('ymax')
-
-                cur_obj['position'] = str(xtl_info.text) + ', ' + str(ytl_info.text) + ', ' + str(xbr_info.text) + ', ' + str(ybr_info.text)
-
-                cur_obj_attrlist = list()
-                cur_obj['attributes'] = cur_obj_attrlist
-
-                # 각 객체에 대한 처리가 완료되면, cur_img_objlist에 현재 객체(cur_obj)를 추가해준다.
-                cur_img_objlist.append(cur_obj)
+        # pascal voc tag의 root tag는 'annotation'이기 때문에
+        # 아닌 경우 Exception을 호출한다.
+        # added at 22.04.01
+        if root_info.tag != 'annotation':
+            raise Exception(each_xmlfile + '는 PASCAL VOC XML 포맷이 아닙니다.')
 
 
-            cur_img['objects'] = cur_img_objlist
+        # 1개만 있는 태그는 find 명령어 사용
+        # N개 있는 태그는 findall 명령어를 통해서 탐색 수행
+        cur_img = dict()
+        cur_img['image_id'] = str(id_idx)
+        id_idx += 1
+
+        filename_tag = root_info.find('filename')
+        cur_img['name'] = os.path.basename(filename_tag.text)
+
+        # xml 파일의 text의 경우, 데이터 형변환(숫자라면 integer를 쫓아감)을 따라가는 경향이 있음.
+        # 현재 만들어준 json의 value들은 속성의 값(attribute value)로부터 형 변환이 수행되어왔기 떄문에
+        # string을 변환해주는 작업이 필요하다.
+        img_resol_info = root_info.find('size')
+        img_width_info = img_resol_info.find('width')
+        img_height_info = img_resol_info.find('height')
+        cur_img['width'] = str(img_width_info.text)
+        cur_img['height'] = str(img_height_info.text)
+
+        # cur_img_objlist : 현재 이미지가 가지고 있는 객체('objects')의 value가 될 객체 list
+        cur_img_objlist = list()
+
+        obj_info = root_info.findall('object')
+
+        for each_obj_info in obj_info:
+            cur_obj = dict()
+            label_name_info = each_obj_info.find('name')
+            cur_obj['label'] = label_name_info.text if label_name_info.text else 'empty'
+            # PASCAL VOC는 기본적으로 box만 지원하기 때문에 type에 대해서 고민 X
+            cur_obj['type'] = 'box'
+            cur_obj['occluded'] = "0"
+            cur_obj['z_order'] = "0"
+            # PASCAL VOC는 기본적으로 객체들이 다 독립적이기 때문에 group_id의 value는 빈 문자열("")로 지정
+            cur_obj['group_id'] = ""
+
+            box_info = each_obj_info.find('bndbox')
+            xtl_info = box_info.find('xmin')
+            ytl_info = box_info.find('ymin')
+            xbr_info = box_info.find('xmax')
+            ybr_info = box_info.find('ymax')
+
+            cur_obj['position'] = str(xtl_info.text) + ', ' + str(ytl_info.text) + ', ' + str(xbr_info.text) + ', ' + str(ybr_info.text)
+
+            cur_obj_attrlist = list()
+            cur_obj['attributes'] = cur_obj_attrlist
+
+            # 각 객체에 대한 처리가 완료되면, cur_img_objlist에 현재 객체(cur_obj)를 추가해준다.
+            cur_img_objlist.append(cur_obj)
 
 
-            # 현재 이미지(cur_img)에 대한 처리가 완료되면, output_jdict_imgs에 현재 이미지 관련 정보를 추가한다.
-            output_jdict_imgs.append(cur_img)
+        cur_img['objects'] = cur_img_objlist
 
-        output_jdict['images'] = output_jdict_imgs
 
-        # copy the original annotation files under origin
-        target_ori_folder = os.path.join(target_folder, "origin")
-        if not os.path.exists(target_ori_folder):
-            os.mkdir(target_ori_folder)
+        # 현재 이미지(cur_img)에 대한 처리가 완료되면, output_jdict_imgs에 현재 이미지 관련 정보를 추가한다.
+        output_jdict_imgs.append(cur_img)
 
-        for each_annofile in anno_file_list:
-            shutil.copy(each_annofile, os.path.join(target_folder, 'origin'))
+    output_jdict['images'] = output_jdict_imgs
 
-        # take the folder name as the fname
-        fname = os.path.basename(os.path.dirname(anno_file_list[0]))
+    # copy the original annotation files under origin
+    target_ori_folder = os.path.join(target_folder, "origin")
+    if not os.path.exists(target_ori_folder):
+        os.mkdir(target_ori_folder)
 
-        # directly write to the destination
-        target_filename = os.path.join(target_folder, fname + '.json')
-        with open(target_filename, 'w', encoding='utf-8') as jf:
-            json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+    for each_annofile in anno_file_list:
+        shutil.copy(each_annofile, os.path.join(target_folder, 'origin'))
 
-        st.write("Converted {}".format(fname))
+    # take the folder name as the fname
+    fname = os.path.basename(os.path.dirname(anno_file_list[0]))
 
-        target_filename = os.path.join(target_folder, fname + '.json')
-        with open(target_filename, 'w', encoding='utf-8') as jf:
-            json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+    # directly write to the destination
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+
+    st.write("Converted {}".format(fname))
+
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
     return target_filename
 
