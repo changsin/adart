@@ -1,5 +1,9 @@
-import attr
 import json
+
+import attr
+
+import src.common.utils as utils
+from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
 
 
 @attr.s(slots=True, frozen=True)
@@ -196,6 +200,12 @@ class ProjectsInfo:
             for project in self.projects:
                 if project.id == project_id:
                     return project
+
+    def save(self):
+        utils.to_file(json.dumps(self,
+                                 default=utils.default, indent=2),
+                      ADQ_WORKING_FOLDER,
+                      PROJECTS + JSON_EXT)
 
     @staticmethod
     def from_json(json_dict):

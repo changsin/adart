@@ -12,6 +12,7 @@ if spec is None:
 from src.common.charts import *
 from src.common import utils
 from src.models.projects_info import ProjectsInfo
+from src.models.tasks_info import TasksInfo
 
 
 def get_projects_info():
@@ -43,6 +44,16 @@ def select_project():
             return projects_info.get_project_by_id(int(project_id))
     else:
         st.markdown("**No project is created!**")
+
+
+def get_tasks_info():
+    if st.session_state.get(constants.TASKS):
+        return st.session_state[constants.TASKS]
+
+    json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
+                                    constants.ADQ_WORKING_FOLDER,
+                                    constants.TASKS + constants.JSON_EXT)
+    return TasksInfo.from_json(json_tasks)
 
 
 def main():

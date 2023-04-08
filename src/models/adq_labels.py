@@ -162,6 +162,8 @@ class AdqLabels:
             if json_dict.get('verification_result'):
                 verification_result = ['verification_result']
 
+            print(json_dict)
+
             return AdqLabels.Object(label=json_dict['label'],
                                     type=json_dict['type'],
                                     occluded=json_dict['occluded'],

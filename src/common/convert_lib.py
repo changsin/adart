@@ -34,7 +34,7 @@ def collect_org_annofile_as_list(target_data_directory, file_ext, image_annofile
     return org_annofile_list
 
 # Blackolive(CVAT) xml 파일을 검증도구에서 사용할 포맷으로 변경할 때 사용하는 함수
-def convert_CVAT_to_Form(img_annof_relation, anno_file, annotation_fmt, destination_folder):
+def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
     # Blackolive가 지원하는 객체 타입
     BO_object_types = ['box', 'polygon', 'polyline', 'points', 'face', 'body', 'leftHand', 'rightHand']
 
@@ -145,14 +145,14 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, annotation_fmt, destinat
     # 우선 원본 어노테이션 파일을 데이터 폴더\origin 폴더로 이동시켜서 원본 어노테이션 파일(xml)을 백업한다.
     fname, ext = os.path.splitext(os.path.basename(anno_file))
 
-    ori_folder = os.path.join(destination_folder, "origin")
+    ori_folder = os.path.join(target_folder, "origin")
     if not os.path.exists(ori_folder):
         os.mkdir(ori_folder)
     shutil.copy(anno_file,
                 os.path.join(ori_folder, os.path.basename(anno_file)))
 
     # directly write to the destination
-    target_filename = os.path.join(destination_folder, fname + '.json')
+    target_filename = os.path.join(target_folder, fname + '.json')
     with open(target_filename, 'w', encoding='utf-8') as jf:
         json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
@@ -162,12 +162,7 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, annotation_fmt, destinat
 
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
-def convert_PASCAL_to_Form(img_annof_relation, data_directory, annotation_fmt):
-    # file_format : 어노테이션 파일 포맷('xml')
-    # anno_file_list : 현재 데이터 폴더(data_directory)에 있는 어노테이션 파일의 목록
-    file_format = annotation_fmt.split(' ')[-1]
-    anno_file_list = collect_org_annofile_as_list(data_directory, file_format, img_annof_relation)
-
+def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):
     if img_annof_relation == '11':
         output_jdict = dict()
 
@@ -187,7 +182,7 @@ def convert_PASCAL_to_Form(img_annof_relation, data_directory, annotation_fmt):
         # PASCAL VOC의 경우, 이미지 : 어노테이션 파일의 관계가 1 : 1이기 때문에
         # 어노테이션 파일 개수만큼 for loop를 수행해야 output_jdict의 images value를 얻어낼 수 있다.
         for each_xmlfile in anno_file_list:
-            xml_structure = ET.parse(os.path.join(data_directory, each_xmlfile))
+            xml_structure = ET.parse(each_xmlfile)
 
             # tag 이름은 find_all로 찾는다.
             # 대신, 중복된 태그가 있을 수 있으니 무조건 absolute path로 탐색
@@ -199,7 +194,7 @@ def convert_PASCAL_to_Form(img_annof_relation, data_directory, annotation_fmt):
             # 아닌 경우 Exception을 호출한다.
             # added at 22.04.01
             if root_info.tag != 'annotation':
-                raise Exception(os.path.join(data_directory, each_xmlfile) + '는 PASCAL VOC XML 포맷이 아닙니다.')
+                raise Exception(each_xmlfile + '는 PASCAL VOC XML 포맷이 아닙니다.')
 
 
             # 1개만 있는 태그는 find 명령어 사용
@@ -228,7 +223,7 @@ def convert_PASCAL_to_Form(img_annof_relation, data_directory, annotation_fmt):
             for each_obj_info in obj_info:
                 cur_obj = dict()
                 label_name_info = each_obj_info.find('name')
-                cur_obj['label'] = label_name_info.text
+                cur_obj['label'] = label_name_info.text if label_name_info.text else 'empty'
                 # PASCAL VOC는 기본적으로 box만 지원하기 때문에 type에 대해서 고민 X
                 cur_obj['type'] = 'box'
                 cur_obj['occluded'] = "0"
@@ -257,21 +252,31 @@ def convert_PASCAL_to_Form(img_annof_relation, data_directory, annotation_fmt):
             # 현재 이미지(cur_img)에 대한 처리가 완료되면, output_jdict_imgs에 현재 이미지 관련 정보를 추가한다.
             output_jdict_imgs.append(cur_img)
 
-
         output_jdict['images'] = output_jdict_imgs
 
+        # copy the original annotation files under origin
+        target_ori_folder = os.path.join(target_folder, "origin")
+        if not os.path.exists(target_ori_folder):
+            os.mkdir(target_ori_folder)
 
-        # 최종 산출물일 dictionary 객체(output_jdict) 연산이 완료되면
-        # 우선 원본 어노테이션 파일을 데이터 폴더\origin 폴더로 이동시켜서 원본 어노테이션 파일들(xml)을 백업한다.
         for each_annofile in anno_file_list:
-            shutil.move(os.path.join(data_directory, each_annofile), os.path.join(data_directory, 'origin'))
+            shutil.copy(each_annofile, os.path.join(target_folder, 'origin'))
 
-        fname, ext = os.path.splitext(anno_file_list[0])
+        # take the folder name as the fname
+        fname = os.path.basename(os.path.dirname(anno_file_list[0]))
 
-        # 그리고나서, 첫 번째 원본 어노테이션 파일이름.json으로 데이터를 저장하면 작업이 완료된다.
-        with open(os.path.join(data_directory, fname + '.json'), 'w', encoding='utf-8') as jf:
+        # directly write to the destination
+        target_filename = os.path.join(target_folder, fname + '.json')
+        with open(target_filename, 'w', encoding='utf-8') as jf:
             json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
+        st.write("Converted {}".format(fname))
+
+        target_filename = os.path.join(target_folder, fname + '.json')
+        with open(target_filename, 'w', encoding='utf-8') as jf:
+            json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+
+    return target_filename
 
 # COCO json 파일을 검증도구에서 사용할 포맷으로 변경할 때 사용하는 함수
 def convert_COCO_to_Form(img_annof_relation, data_directory, annotation_fmt):

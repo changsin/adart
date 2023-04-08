@@ -69,7 +69,11 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                 width1 = rect1.xmax - rect1.xmin
                 height1 = rect1.ymax - rect1.ymin
-                dimensions[image.name] = (width1, height1, image.objects[ob_id1].label)
+
+                if dimensions.get(image.name):
+                    dimensions[image.name].append((width1, height1, image.objects[ob_id1].label))
+                else:
+                    dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
 
                 for ob_id2 in range(ob_id1 + 1, count):
                     xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
@@ -163,14 +167,15 @@ def main():
             display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
 
         # create DataFrame from dictionary
-        df_dimensions = pd.DataFrame.from_dict(dimensions, orient='index', columns=['width', 'height', 'class'])
+        df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
+                                     columns=['filename', 'width', 'height', 'class'])
         chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
             x='width',
             y='height',
             color='class',
-            tooltip=['class', 'width', 'height']
+            tooltip=['class', 'width', 'height', 'filename']
             ).properties(
-                title="Dimensions of Labels"
+                title="Label Dimensions"
             )
 
         # make the chart interactive

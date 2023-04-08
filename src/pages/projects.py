@@ -16,7 +16,7 @@ if spec is None:
 
 from src.common import utils
 from src.common.constants import *
-from src.common.convert_lib import convert_CVAT_to_Form
+from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import select_project, get_projects_info
 from src.models.projects_info import Project
 
@@ -59,34 +59,34 @@ def create_projects():
                 os.mkdir(target_folder)
 
             target_filenames = []
-            for folder, files in label_files.items():
-                for file in files:
-                    anno_file = os.path.join(folder, file)
-                    if labels_format_type == CVAT_XML:
-                        target_filename = convert_CVAT_to_Form("NN", anno_file,
-                                                               str(labels_format_type).lower(),
-                                                               target_folder)
-                        target_filenames.append(os.path.basename(target_filename))
-                    elif labels_format_type == ADQ_JSON:
-                        ori_folder = os.path.join(target_folder, "origin")
-                        if not os.path.exists(ori_folder):
-                            os.mkdir(ori_folder)
+            if labels_format_type == PASCAL_VOC_XML:
+                for folder, files in label_files.items():
+                    anno_files = [os.path.join(folder, file) for file in files]
+                    target_filename = convert_PASCAL_to_Form("11", anno_files, target_folder)
+                    target_filenames.append(os.path.basename(target_filename))
+            else:
+                for folder, files in label_files.items():
+                    for file in files:
+                        anno_file = os.path.join(folder, file)
+                        if labels_format_type == CVAT_XML:
+                            target_filename = convert_CVAT_to_Form("NN", anno_file,
+                                                                   target_folder)
+                            target_filenames.append(os.path.basename(target_filename))
+                        elif labels_format_type == ADQ_JSON:
+                            ori_folder = os.path.join(target_folder, "origin")
+                            if not os.path.exists(ori_folder):
+                                os.mkdir(ori_folder)
 
-                        target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
-                        shutil.copy(anno_file, target_filename)
+                            target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
+                            shutil.copy(anno_file, target_filename)
 
-                        target_filenames.append(os.path.basename(target_filename))
+                            target_filenames.append(os.path.basename(target_filename))
 
             label_files_dict = {target_folder: target_filenames}
             new_project = Project(project_id, name, image_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
             projects_info.add(new_project)
-
-            utils.to_file(json.dumps(projects_info,
-                                     default=utils.default, indent=2),
-                          ADQ_WORKING_FOLDER,
-                          PROJECTS + JSON_EXT)
-
+            projects_info.save()
             st.write("Project {} {} created".format(project_id, name))
 
 

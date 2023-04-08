@@ -14,9 +14,10 @@ if spec is None:
 
 from src.common.constants import *
 from src.common.charts import *
-from src.home import select_project
+from src.home import select_project, get_tasks_info
 from src.pages import label_metrics
 from src.models.projects_info import Project
+from src.models.tasks_info import TasksInfo, Task, TaskState
 
 
 def step_size(value):
@@ -48,6 +49,8 @@ def calculate_sample_distribution(df_total_count: pd.DataFrame,
 
 
 def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
+    tasks_info = get_tasks_info()
+
     sampled = {}
     for index, row in df_sample_count.iterrows():
         label_filename = row['filename']
@@ -63,6 +66,17 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         # save the sample label file
         task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
         utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2), task_folder, label_filename)
+
+        task_id = tasks_info.get_next_task_id()
+        task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
+        new_task = Task(task_id,
+                        task_name,
+                        selected_project.id,
+                        str(TaskState.DVS_NEW.description),
+                        label_filename)
+
+        tasks_info.add(new_task)
+        tasks_info.save()
 
     return sampled
 
