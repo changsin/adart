@@ -43,7 +43,8 @@ class DartLabels:
             twconverted=json_dict['twconverted'],
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
-            images=json_dict['images']
+            images=[DartLabels.Image.from_json(json_image) for json_image in json_dict['images']]
+
         )
 
     @staticmethod
@@ -100,7 +101,7 @@ class DartLabels:
                 name=json_dict['name'],
                 width=json_dict['width'],
                 height=json_dict['height'],
-                objects=json_dict['objects']
+                objects=[DartLabels.Object.from_json(json_obj) for json_obj in json_dict['objects']]
             )
 
         @staticmethod

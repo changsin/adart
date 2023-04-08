@@ -29,9 +29,14 @@ def load_label_file(folder: str, label_file: str) -> DartLabels:
     json_labels = utils.from_file("{}",
                                   folder,
                                   label_file)
-    adq_labels = AdqLabels.from_json(json_labels)
-    # convert to dart label format for easier processing
-    return DartLabels.from_adq_labels(adq_labels)
+    # check if it is already in DartLabels format
+    if json_labels.get('position'):
+        adq_labels = AdqLabels.from_json(json_labels)
+        # convert to dart label format for easier processing
+        return DartLabels.from_adq_labels(adq_labels)
+    else:
+        return DartLabels.from_json(json_labels)
+
 
 
 def load_label_files(label_files_dict: dict) -> dict:

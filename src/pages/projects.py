@@ -118,8 +118,8 @@ def main():
     menu = {
         "Create Projects": lambda: create_projects(),
         "Delete Project": lambda: delete_project(),
-        # "Viewer": lambda: app.main()
-        "Viewer": lambda: app.run(builtin_image_folder, builtin_image_folder, ["", "dog", "cat"])
+        "Viewer": lambda: app.main()
+        # "Viewer": lambda: app.run(builtin_image_folder, builtin_image_folder, ["", "dog", "cat"])
     }
 
     # Create a sidebar with menu options

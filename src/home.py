@@ -56,24 +56,30 @@ def get_tasks_info():
     return TasksInfo.from_json(json_tasks)
 
 
-def select_task():
+def select_task(project_id):
     tasks_info = get_tasks_info()
     if tasks_info.num_count > 0:
         df_tasks = pd.DataFrame(tasks_info.to_json()[constants.TASKS])
-        df_tasks_id_names = df_tasks[["id", "name"]]
+        df_tasks = df_tasks[["id", "name", "project_id"]]
+        df_filtered = df_tasks[df_tasks['project_id'] == project_id]
         options = ["{}-{}".format(task_id, name)
-                   for task_id, name in df_tasks_id_names[["id", "name"]].values.tolist()]
+                   for task_id, name, project_id in
+                   df_filtered[["id", "name", "project_id"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
         selected_task = st.selectbox("Select task",
-                                        options=options,
-                                        index=len(options) - 1)
-
+                                     options=options,
+                                     index=len(options) - 1)
         if selected_task:
-            task_id, name, = selected_task.split('-', maxsplit=1)
-            return tasks_info.get_task_by_id(int(task_id))
+            # Get the index of the selected option
+            # Use it to get the corresponding images folder
+            selected_index = options.index(selected_task)
+            task_id, _ = selected_task.split('-', maxsplit=1)
+            return tasks_info.get_task_by_id(int(task_id)), selected_index
     else:
         st.markdown("**No project is created!**")
+
+    return None, None
 
 
 def main():

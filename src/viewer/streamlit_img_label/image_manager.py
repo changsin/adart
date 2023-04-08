@@ -23,9 +23,10 @@ class DartImageManager:
         """initiate module"""
         self.image_lables = image_labels
         # TODO: setting it as a place holder - to be removed later
-        self._label_filename = os.path.join(image_folder, image_labels.name + ".xml")
+        self._label_filename = image_folder
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
-
+        self._rects = []
+        self._load_rects()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
 
@@ -38,15 +39,18 @@ class DartImageManager:
         return self._img
 
     def _load_rects(self):
-        converted_rects = dict()
+        converted_rects = []
         for label_object in self.image_lables.objects:
-            left, top, right, bottom = label_object
+            rect = dict()
+            left, top, right, bottom = label_object.points
             width = right - left
             height = bottom - top
-            converted_rects["left"] = left
-            converted_rects["top"] = top
-            converted_rects["width"] = width
-            converted_rects["height"] = height
+            rect["left"] = int(left)
+            rect["top"] = int(top)
+            rect["width"] = int(width)
+            rect["height"] = int(height)
+
+            converted_rects.append(rect)
 
         self._rects = converted_rects
 
