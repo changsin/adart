@@ -1,7 +1,9 @@
 import os
-import streamlit.components.v1 as components
+
 import numpy as np
-from .manage import ImageManager, ImageDirManager
+import streamlit.components.v1 as components
+
+from .image_manager import DartImageManager, DartImageDirManager
 
 _RELEASE = True
 
@@ -77,7 +79,7 @@ if not _RELEASE:
 
     img_dir = "img_dir"
 
-    idm = ImageDirManager(img_dir, img_dir)
+    idm = DartImageDirManager(img_dir, img_dir)
 
     if "img_files" not in st.session_state:
         st.session_state["img_files"] = idm.get_all_img_files()
@@ -139,9 +141,9 @@ if not _RELEASE:
     )
     col1, col2 = st.sidebar.columns(2)
     with col1:
-        st.button(label="Previous image", on_click=previous_image)
+        st.button(label="Previous", on_click=previous_image)
     with col2:
-        st.button(label="Next image", on_click=next_image)
+        st.button(label="Next", on_click=next_image)
     st.sidebar.button(label="Next need annotate", on_click=next_annotate_file)
     st.sidebar.button(label="Refresh", on_click=refresh)
 
@@ -149,7 +151,7 @@ if not _RELEASE:
     img_file_name = idm.get_image(st.session_state["image_index"])
     annotation_file_name = idm.get_image(st.session_state["annotation_file_index"])
     img_path = os.path.join(img_dir, img_file_name)
-    im = ImageManager(img_path, annotation_file_name)
+    im = DartImageManager(img_path, annotation_file_name)
     img = im.get_img()
     resized_img = im.resizing_img()
     resized_rects = im.get_resized_rects()

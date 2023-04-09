@@ -64,7 +64,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         })
 
         rects.forEach((rect) => {
-            const { top, left, width, height } = rect
+            const { top, left, width, height, label } = rect
             canvasTmp.add(
                 new fabric.Rect({
                     left,
@@ -78,8 +78,18 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     strokeUniform: true,
                     hasRotatingPoint: false,
                 })
-            )
-        })
+            );
+            canvas.add(
+                new fabric.Text(label, {
+                    left: left,
+                    top: top,
+                    fontFamily: "Arial",
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    fill: "black",
+                })
+            );
+        });
         setLabels(rects.map((rect) => rect.label))
 
         setCanvas(canvasTmp)
@@ -126,7 +136,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         clearHandler()
         const { rects, boxColor }: PythonArgs = props.args
         rects.forEach((rect) => {
-            const { top, left, width, height } = rect
+            const { top, left, width, height, label } = rect;
             canvas.add(
                 new fabric.Rect({
                     left,
@@ -140,8 +150,18 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     strokeUniform: true,
                     hasRotatingPoint: false,
                 })
-            )
-        })
+            );
+            canvas.add(
+                new fabric.Text(label, {
+                    left: left,
+                    top: top,
+                    fontFamily: "Arial",
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    fill: "black",
+                })
+            );
+        });
         sendCoordinates(labels)
     }
 

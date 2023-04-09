@@ -89,7 +89,7 @@ def main():
     st.set_page_config(page_title="DaRT")
     st.header("**DaRT** - Data Reviewing Tool")
     st.subheader("Under Construction")
-    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"))
+    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
 
     json_projects = utils.from_file("{\"num_count\":0,\"projects\":[]}",
                                     # os.path.join(os.getcwd(), "data"),

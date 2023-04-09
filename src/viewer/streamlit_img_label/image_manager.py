@@ -1,6 +1,8 @@
 import os
+
 import numpy as np
 from PIL import Image
+
 from src.models.dart_labels import DartLabels
 from src.viewer.streamlit_img_label.annotation import output_xml
 
@@ -49,6 +51,7 @@ class DartImageManager:
             rect["top"] = int(top)
             rect["width"] = int(width)
             rect["height"] = int(height)
+            rect["label"] = label_object.label
 
             converted_rects.append(rect)
 
@@ -62,7 +65,7 @@ class DartImageManager:
         """
         return self._rects
 
-    def resizing_img(self, max_height=700, max_width=700):
+    def resizing_img(self, max_height=1000, max_width=1000):
         """resizing the image by max_height and max_width.
 
         Args:
