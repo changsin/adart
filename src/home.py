@@ -16,6 +16,9 @@ from src.models.tasks_info import TasksInfo
 
 
 def get_projects_info():
+    if not os.path.exists(constants.ADQ_WORKING_FOLDER):
+        os.mkdir(constants.ADQ_WORKING_FOLDER)
+
     if st.session_state.get(constants.PROJECTS):
         return st.session_state[constants.PROJECTS]
 
@@ -92,7 +95,7 @@ def main():
         os.mkdir(constants.ADQ_WORKING_FOLDER)
 
     st.set_page_config(page_title="DaRT")
-    st.header("**DaRT** - Data Reviewing Tool")
+    st.header("**ADaRT** - AI Data Reviewing Tool")
     st.subheader("Under Construction")
     st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
 
