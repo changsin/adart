@@ -178,16 +178,32 @@ def delete_project():
             projects_info.save()
 
 
+def update_project():
+    st.sidebar.write("Coming soon")
+
+
+def create_project():
+    menu = {
+        "data": lambda: create_data_project(),
+        "model": lambda: create_model_project(),
+    }
+
+    # Create a sidebar with menu options
+    selected_project_type = st.sidebar.selectbox("Project type", list(menu.keys()))
+    if selected_project_type:
+        # Call the selected method based on the user's selection
+        menu[selected_project_type]()
+
+
 def main():
     menu = {
-        "Create Data Project": lambda: create_data_project(),
-        "Create Model Project": lambda: create_model_project(),
+        "Create Project": lambda: create_project(),
+        "Update Project": lambda: update_project(),
         "Delete Project": lambda: delete_project()
     }
 
     # Create a sidebar with menu options
     selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
-
     if selected_action:
         # Call the selected method based on the user's selection
         menu[selected_action]()
