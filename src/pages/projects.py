@@ -21,8 +21,8 @@ from src.home import select_project, get_projects_info
 from src.models.projects_info import Project
 
 
-def create_projects():
-    with st.form("Create Project"):
+def create_data_project():
+    with st.form("Create a Data Project"):
         name = st.text_input("**Name:**")
         images_folder = st.text_input("**Images folder:**")
         options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
@@ -40,7 +40,7 @@ def create_projects():
         if submitted:
             st.markdown(f"**Name:** {name}")
             st.markdown(f"**Images folder:** {images_folder}")
-            image_files = utils.generate_file_tree(images_folder, selected_file_types.split())
+            data_files = utils.generate_file_tree(images_folder, selected_file_types.split())
 
             st.markdown(f"**Labels folder:** {labels_folder}")
             patterns = ["*.xml"]
@@ -81,11 +81,52 @@ def create_projects():
                             target_filenames.append(os.path.basename(target_filename))
 
             label_files_dict = {target_folder: target_filenames}
-            new_project = Project(project_id, name, image_files, label_files_dict,
+            new_project = Project(project_id, name, data_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()))
             projects_info.add(new_project)
             projects_info.save()
             st.write("Project {} {} created".format(project_id, name))
+
+
+def create_model_project():
+    with st.form("Create Model Validation Project"):
+        project_name = st.text_input("**Name:**")
+
+        company_name = st.text_input("**Company Name:**")
+        company_url = st.text_input("**Company URL:**")
+        company_address = st.text_input("**Company address:**")
+        company_contact_person = st.text_input("**Contact person**")
+        company_contact_person_email = st.text_input("**Contact person email:**")
+        company_contact_person_phone = st.text_input("**Contact person phone number:**")
+
+        domain = st.selectbox("Domain", ["Object recognition", "Motion "])
+
+        contacted_date = st.date_input("**Contacted:**")
+        uploaded_contacted_artifacts = st.file_uploader("Upload contacted artifacts", accept_multiple_files=True)
+
+        new_project_id = get_projects_info().get_next_project_id()
+
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(new_project_id))
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
+        if uploaded_contacted_artifacts:
+            # Save the uploaded file
+            with open(os.path.join(save_folder, uploaded_contacted_artifacts.name), "wb") as f:
+                f.write(uploaded_contacted_artifacts.getbuffer())
+
+        test_date = st.date_input("**Test date**")
+        uploaded_test_artifacts = st.file_uploader("Upload test artifacts", accept_multiple_files=True)
+        if uploaded_test_artifacts:
+            for file in uploaded_test_artifacts:
+                # Save each uploaded file
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+
+        submitted = st.form_submit_button("Create project")
+        if submitted:
+
+            st.write("Project {} {} created".format(new_project_id, project_name))
 
 
 def delete_project():
@@ -114,7 +155,8 @@ def delete_project():
 
 def main():
     menu = {
-        "Create Projects": lambda: create_projects(),
+        "Create Data Project": lambda: create_data_project(),
+        "Create Model Project": lambda: create_model_project(),
         "Delete Project": lambda: delete_project()
     }
 

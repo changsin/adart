@@ -22,8 +22,8 @@ def main(labels=ErrorType.get_all_error_types()):
         dart_labels = load_label_file(task_folder, selected_task.anno_file_name)
 
         # TODO: find the mapping between the img_dir and dart_labels
-        image_files_list = list(selected_project.image_files.items())
-        img_dir = image_files_list[selected_index][0]
+        data_files_list = list(selected_project.data_files.items())
+        img_dir = data_files_list[selected_index][0]
 
         idm = DartImageDirManager(img_dir, dart_labels)
 

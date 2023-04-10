@@ -12,7 +12,7 @@ class TaskState(Enum):
     DVS_NEW = (1, "Created")        # "생성"
     DVS_WORKING = (2, "Working")    # "작업중"
     DVS_DONE = (3, "Done")          # "작업완료"
-    DVS_CLOSED = (4, "Closed")       # "종료"
+    DVS_CLOSED = (4, "Closed")      # "종료"
 
     def __new__(cls, value, description):
         obj = object.__new__(cls)
@@ -154,5 +154,3 @@ class TasksInfo:
     def from_json(json_dict):
         return TasksInfo(num_count=json_dict['num_count'],
                          tasks=[Task.from_json(json_task) for json_task in json_dict['tasks']])
-
-

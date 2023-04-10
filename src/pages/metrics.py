@@ -24,12 +24,12 @@ def show_file_metrics():
     selected_project = select_project()
 
     if selected_project:
-        if len(selected_project.image_files) > 0:
+        if len(selected_project.data_files) > 0:
             st.markdown("# Image Files Info")
             chart_images_ctime, chart_images_file_size = plot_file_info("### Created date time",
-                                                                        selected_project.image_files)
+                                                                        selected_project.data_files)
             if chart_images_ctime:
-                display_chart(selected_project.id, "image_files_ctime", chart_images_ctime)
+                display_chart(selected_project.id, "data_files_ctime", chart_images_ctime)
             if chart_images_file_size:
                 display_chart(selected_project.id, "image_file_sizes", chart_images_file_size)
 
@@ -49,9 +49,9 @@ def show_file_metrics():
 def show_image_metrics():
     selected_project = select_project()
 
-    if selected_project and selected_project.image_files:
+    if selected_project and selected_project.data_files:
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
-                                                                              selected_project.image_files)
+                                                                              selected_project.data_files)
         # Display the histogram in Streamlit
         if chart_aspect_ratios:
             display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios)
