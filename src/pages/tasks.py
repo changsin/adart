@@ -15,9 +15,10 @@ if spec is None:
 from src.common.constants import *
 from src.common.charts import *
 from src.home import select_project, get_tasks_info
-from src.pages import label_metrics
+from src.pages import metrics
 from src.models.projects_info import Project
 from src.models.tasks_info import TasksInfo, Task, TaskState
+import src.viewer.app as app
 
 
 def step_size(value):
@@ -46,6 +47,46 @@ def calculate_sample_distribution(df_total_count: pd.DataFrame,
             df_sample_count.iloc[index] = (row['filename'], sample_count)
 
     return df_sample_count
+
+def _show_full_size_image(full_path, size, date):
+    st.image(full_path,
+             # use_column_width=True,
+             caption="{} {} {}".format(os.path.basename(full_path),
+                                       size,
+                                       date))
+
+
+@st.cache_resource
+def show_images(files_dict: dict):
+    # Define the number of columns
+    num_columns = 5
+
+    for folder, files in files_dict.items():
+        # # Calculate the number of rows needed based on the number of images and columns
+        # num_rows = int(len(files) / num_columns) + (1 if len(files) % num_columns > 0 else 0)
+
+        # Create a layout with the specified number of columns
+        columns = st.columns(num_columns)
+        for i, file in enumerate(files):
+            with columns[i % num_columns]:
+                full_path = os.path.join(folder, file)
+                file_stat = os.stat(full_path)
+                dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
+                st.image(full_path,
+                         # use_column_width=True,
+                         # title="{} {} {}".format(file,
+                         #                           utils.humanize_bytes(file_stat.st_size),
+                         #                           dt_datetime.date()),
+                         width=100)
+                # button_clicked = st.button("click to expand {}".format(file))
+                # Call the event handler if the button is clicked
+                # Create the expander panel
+                with st.expander("{}".format(file)):
+                    # # Call the event handler if the button is clicked
+                    # if button_clicked:
+                    _show_full_size_image(full_path,
+                                          utils.humanize_bytes(file_stat.st_size),
+                                          dt_datetime.date())
 
 
 def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
@@ -81,11 +122,11 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def main():
-    selected_project = select_project()
+def create_tasks():
+    selected_project = select_project(is_sidebar=True)
 
     if selected_project:
-        dart_labels_dict = label_metrics.load_label_files(selected_project.label_files)
+        dart_labels_dict = metrics.load_label_files(selected_project.label_files)
         images_per_label_file_dict = dict()
         if dart_labels_dict.items() is not None:
             for labels_file, dart_labels in dart_labels_dict.items():
@@ -127,6 +168,25 @@ def main():
                     st.dataframe(df_sample_count)
 
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
+
+def delete_tasks():
+    pass
+
+
+def main():
+    menu = {
+        "Create Tasks": lambda: create_tasks(),
+        "Delete Tasks": lambda: delete_tasks(),
+        "Review Images": lambda: app.main()
+    }
+
+    # Create a sidebar with menu options
+    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
+
+    if selected_action:
+        # Call the selected method based on the user's selection
+        menu[selected_action]()
+
 
 
 if __name__ == '__main__':

@@ -26,7 +26,7 @@ def get_projects_info():
     return ProjectsInfo.from_json(json_projects)
 
 
-def select_project():
+def select_project(is_sidebar=False):
     projects_info = get_projects_info()
     if projects_info.num_count > 0:
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
@@ -35,10 +35,15 @@ def select_project():
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
-        selected_project = st.selectbox("Select project",
-                                        options=options,
-                                        index=len(options) - 1)
+        if is_sidebar:
+            selected_project = st.sidebar.selectbox("Select project",
+                                                    options=options,
+                                                    index=len(options) - 1)
 
+        else:
+            selected_project = st.selectbox("Select project",
+                                            options=options,
+                                            index=len(options) - 1)
         if selected_project:
             project_id, name, = selected_project.split('-', maxsplit=1)
             return projects_info.get_project_by_id(int(project_id))

@@ -20,8 +20,6 @@ from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import select_project, get_projects_info
 from src.models.projects_info import Project
 
-import src.viewer.app as app
-
 
 def create_projects():
     with st.form("Create Project"):
@@ -114,12 +112,9 @@ def delete_project():
 
 
 def main():
-    builtin_image_folder = os.path.join(Path(__file__).parent.parent, "viewer", "img_dir")
     menu = {
         "Create Projects": lambda: create_projects(),
-        "Delete Project": lambda: delete_project(),
-        "Viewer": lambda: app.main()
-        # "Viewer": lambda: app.run(builtin_image_folder, builtin_image_folder, ["", "dog", "cat"])
+        "Delete Project": lambda: delete_project()
     }
 
     # Create a sidebar with menu options

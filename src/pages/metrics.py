@@ -1,8 +1,8 @@
 from collections import namedtuple
+import importlib.util
 
 import shapely
 
-import importlib.util
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -18,6 +18,49 @@ from src.models.adq_labels import AdqLabels
 from src.models.dart_labels import DartLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
+
+
+def show_file_metrics():
+    selected_project = select_project()
+
+    if selected_project:
+        if len(selected_project.image_files) > 0:
+            st.markdown("# Image Files Info")
+            chart_images_ctime, chart_images_file_size = plot_file_info("### Created date time",
+                                                                        selected_project.image_files)
+            if chart_images_ctime:
+                display_chart(selected_project.id, "image_files_ctime", chart_images_ctime)
+            if chart_images_file_size:
+                display_chart(selected_project.id, "image_file_sizes", chart_images_file_size)
+
+        if len(selected_project.label_files) > 0:
+            st.markdown("# Label Files Info")
+            chart_labels_ctime, chart_label_file_sizes = plot_file_info("### Created date time",
+                                                                        selected_project.label_files)
+            if chart_labels_ctime:
+                display_chart(selected_project.id, "label_files_ctime", chart_labels_ctime)
+
+            if chart_label_file_sizes:
+                display_chart(selected_project.id, "label_file_sizes", chart_label_file_sizes)
+
+        show_download_charts_button(selected_project.id)
+
+
+def show_image_metrics():
+    selected_project = select_project()
+
+    if selected_project and selected_project.image_files:
+        chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
+                                                                              selected_project.image_files)
+        # Display the histogram in Streamlit
+        if chart_aspect_ratios:
+            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios)
+        if chart_brightness:
+            display_chart(selected_project.id, "brightness", chart_brightness)
+
+        show_download_charts_button(selected_project.id)
+    else:
+        st.write("No image data")
 
 
 def load_label_file(folder: str, label_file: str) -> DartLabels:
@@ -152,7 +195,7 @@ def calculate_overlapping_rect(a, b):
     return overlapping_area, max_area
 
 
-def main():
+def show_label_metrics():
     selected_project = select_project()
     if selected_project:
         if not selected_project.label_files:
@@ -198,6 +241,21 @@ def main():
             display_chart(selected_project.id, "dimensions", chart_dimensions)
 
         show_download_charts_button(selected_project.id)
+
+
+def main():
+    menu = {
+        "Show file metrics": lambda: show_file_metrics(),
+        "Show image metrics": lambda: show_image_metrics(),
+        "Show label metrics": lambda: show_label_metrics()
+    }
+
+    # Create a sidebar with menu options
+    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
+
+    if selected_action:
+        # Call the selected method based on the user's selection
+        menu[selected_action]()
 
 
 if __name__ == '__main__':
