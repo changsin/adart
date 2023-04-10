@@ -31,6 +31,8 @@ from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import select_project, get_projects_info, get_tasks_info
 from src.models.projects_info import Project, ModelProject
 
+MULTI_SELECT_SEP = ';'
+
 
 def create_data_project():
     with st.form("Create a Data Project"):
@@ -122,13 +124,15 @@ def create_model_project():
         company_contact_person_phone = st.text_input("**Contact person phone number:**")
 
         model_type = st.multiselect("Model type", ["Object recognition", "Object detection", "Motion detection", "NLP"])
-        models_used = st.text_input("Models used (YOLOv5, etc. separated by commas)")
+        models_used = st.text_input("Models used (YOLOv5, etc. separated by semi-colons)")
 
-        data_type = st.multiselect("Data type", ["Unstructured", "Structured"], default="Unstructured")
+        default_options = ["Unstructured", "Structured"]
+        default_index = default_options.index("Unstructured")
+        data_type = st.radio("Data type", default_options, index=default_index)
         data_format = st.multiselect("Data format", ["image", "video", "audio", "text", "number"])
 
         domain = st.multiselect("Domain", DomainCode.get_all_types())
-        cost = st.number_input("Cost", step=utils.step_size(10000), format="%.2f")
+        cost = st.number_input("Cost", step=10000, format="%d")
 
         submitted = st.form_submit_button("Create project")
         if submitted:
@@ -138,8 +142,12 @@ def create_model_project():
 
             new_project_id = get_projects_info().get_next_project_id()
 
-            model_project = ModelProject(','.join(model_type), models_used, ','.join(data_type),
-                                         ','.join(data_format), ','.join(domain), cost=cost)
+            model_project = ModelProject(MULTI_SELECT_SEP.join(model_type),
+                                         models_used,
+                                         data_type,
+                                         MULTI_SELECT_SEP.join(data_format),
+                                         MULTI_SELECT_SEP.join(domain),
+                                         cost=cost)
 
             new_project = Project(new_project_id, project_name, {}, {},
                                   0, 0, str(datetime.datetime.now()),
@@ -190,7 +198,87 @@ def delete_project():
 
 
 def update_project():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        if selected_project.extended_properties:
+            update_model_project(selected_project)
+        else:
+            update_data_project(selected_project)
+
+
+def update_data_project(selected_project: Project):
     st.sidebar.write("Coming soon")
+
+
+def update_model_project(selected_project: Project):
+    with st.form("Update Model Validation Project"):
+        project_name = st.text_input("**Name:**", selected_project.name)
+
+        model_project_props = selected_project.extended_properties
+
+        company_name = st.text_input("**Company Name:**", selected_project.customer_company)
+        company_url = st.text_input("**Company URL:**", selected_project.customer_url)
+        company_address = st.text_input("**Company address:**", selected_project.customer_address)
+        company_contact_person = st.text_input("**Contact person**", selected_project.customer_name)
+        company_contact_person_email = st.text_input("**Contact person email:**",
+                                                     selected_project.customer_email)
+        company_contact_person_phone = st.text_input("**Contact person phone number:**",
+                                                     selected_project.customer_phone)
+
+        default_options = None
+        if model_project_props.model_type:
+            default_options = [model_type for model_type in model_project_props.model_type.split(MULTI_SELECT_SEP)]
+        model_type = st.multiselect("Model type",
+                                    default=default_options,
+                                    options=["Object recognition", "Object detection", "Motion detection", "NLP"])
+        models_used = st.text_input("Models used (YOLOv5, etc. separated by commas)",
+                                    model_project_props.models_used)
+
+        default_options = ["Unstructured", "Structured"]
+        default_index = default_options.index(model_project_props.data_type)
+        data_type = st.radio("Data type", default_options,
+                             index=default_index)
+        default_options = [data_format for data_format in model_project_props.data_format.split(MULTI_SELECT_SEP)]
+        data_format = st.multiselect("Data format", ["image", "video", "audio", "text", "number"],
+                                     default=default_options)
+
+        default_options = None
+        if model_project_props.model_type:
+            default_options = [domain for domain in model_project_props.domain.split(MULTI_SELECT_SEP)]
+        domain = st.multiselect("Domain", default=default_options,
+                                options=DomainCode.get_all_types())
+
+        cost = st.number_input("Cost",
+                               value=int(model_project_props.cost),
+                               min_value=int(0), max_value=int(999999999),
+                               step=int(utils.step_size(10000)), format="%d")
+
+        submitted = st.form_submit_button("Update project")
+        if submitted:
+            if not project_name or len(project_name) == 0:
+                st.warning("Please enter a project name")
+                return
+
+            model_project_props = ModelProject(MULTI_SELECT_SEP.join(model_type),
+                                               models_used,
+                                               data_type,
+                                               MULTI_SELECT_SEP.join(data_format),
+                                               MULTI_SELECT_SEP.join(domain),
+                                               cost=cost)
+            selected_project.name = project_name
+            selected_project.customer_company = company_name
+            selected_project.customer_name = company_contact_person
+            selected_project.customer_url = company_url
+            selected_project.customer_email = company_contact_person_email
+            selected_project.customer_phone = company_contact_person_phone,
+            selected_project.customer_address = company_address,
+            selected_project.extended_properties = model_project_props
+
+            projects_info = get_projects_info()
+            projects_info.update_project(selected_project)
+            projects_info.save()
+
+            st.write("Project {} {} updated".format(selected_project.id, project_name))
 
 
 def create_project():
