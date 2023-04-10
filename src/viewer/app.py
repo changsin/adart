@@ -9,7 +9,7 @@ from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import DartImageManager, DartImageDirManager
 
 
-def main(labels=ErrorType.get_all_error_types()):
+def main(labels=ErrorType.get_all_types()):
     selected_project = select_project(is_sidebar=True)
     if not selected_project:
         return

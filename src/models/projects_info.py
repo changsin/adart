@@ -4,10 +4,11 @@ import attr
 
 import src.common.utils as utils
 from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
+from abc import ABC
 
 
-@attr.s(slots=True, frozen=True)
-class Project:
+@attr.s(slots=True, frozen=False)
+class Project(ABC):
     id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
     # new attributes
@@ -33,13 +34,18 @@ class Project:
     dir_name = attr.ib(default=None)
 
     annotation_classes = attr.ib(default=None)
-    customer_company = attr.ib(default=None)
-    customer_name = attr.ib(default=None)
-    customer_phone = attr.ib(default=None)
-    customer_email = attr.ib(default=None)
     annotation_errors = attr.ib(default=None)
     dataset_name = attr.ib(default=None)
     domain_id = attr.ib(default=None)
+
+    customer_company = attr.ib(default=None)
+    customer_url = attr.ib(default=None)
+    customer_name = attr.ib(default=None)
+    customer_phone = attr.ib(default=None)
+    customer_email = attr.ib(default=None)
+    customer_address = attr.ib(default=None)
+
+    extended_properties = attr.ib(default=None)
 
     def __iter__(self):
         yield from {
@@ -68,13 +74,18 @@ class Project:
             "dir_name": self.per_task_count,
 
             "annotation_classes": self.annotation_classes,
-            "customer_company": self.customer_company,
-            "customer_name": self.customer_name,
-            "customer_phone": self.customer_phone,
-            "customer_email": self.customer_email,
             "annotation_errors": self.annotation_errors,
             "dataset_name": self.dataset_name,
-            "domain_id": self.domain_id
+            "domain_id": self.domain_id,
+
+            "customer_company": self.customer_company,
+            "customer_name": self.customer_name,
+            "customer_url": self.customer_url,
+            "customer_phone": self.customer_phone,
+            "customer_email": self.customer_email,
+            "customer_address": self.customer_address,
+
+            "extended_properties": self.extended_properties
         }.items()
 
     def __str__(self):
@@ -107,13 +118,18 @@ class Project:
             "dir_name": self.per_task_count,
 
             "annotation_classes": self.annotation_classes,
-            "customer_company": self.customer_company,
-            "customer_name": self.customer_name,
-            "customer_phone": self.customer_phone,
-            "customer_email": self.customer_email,
             "annotation_errors": self.annotation_errors,
             "dataset_name": self.dataset_name,
-            "domain_id": self.domain_id
+            "domain_id": self.domain_id,
+
+            "customer_company": self.customer_company,
+            "customer_name": self.customer_name,
+            "customer_url": self.customer_url,
+            "customer_phone": self.customer_phone,
+            "customer_email": self.customer_email,
+            "customer_address": self.customer_address,
+
+            "extended_properties": self.extended_properties
         }
 
     @staticmethod
@@ -142,19 +158,66 @@ class Project:
             # TODO: for backward-compatibility
             per_task_count=json_dict["per_task_count"],
             dir_name=json_dict["dir_name"],
+            domain_id=json_dict["domain_id"],
 
             annotation_classes=json_dict["annotation_classes"],
-            customer_company=json_dict["customer_company"],
-            customer_name=json_dict["customer_name"],
-            customer_phone=json_dict["customer_phone"],
-            customer_email=json_dict["customer_email"],
             annotation_errors=json_dict["annotation_errors"],
             dataset_name=json_dict["dataset_name"],
-            domain_id=json_dict["domain_id"]
+
+            customer_company=json_dict["customer_company"],
+            customer_name=json_dict["customer_name"],
+            customer_url=json_dict["customer_url"] if json_dict.get("customer_url") else None,
+            customer_phone=json_dict["customer_phone"],
+            customer_email=json_dict["customer_email"],
+            customer_address=json_dict["customer_address"] if json_dict.get("customer_address") else None,
+
+            extended_properties=json_dict["extended_properties"] if json_dict.get("extended_properties") else None
         )
+
+
+@attr.s(slots=True, frozen=True)
+class ModelProject:
+    model_type = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    models_used = attr.ib(default=None, validator=attr.validators.instance_of(str))
+
+    data_type = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    data_format = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    domain = attr.ib(default=None, validator=attr.validators.instance_of(str))
+
+    def __iter__(self):
+        yield from {
+            "model_type": self.model_type,
+            "models_used": self.models_used,
+            "data_type": self.data_type,
+            "data_format": self.data_format,
+            "domain": self.domain
+        }.items()
+
+    def __str__(self):
+        return json.dumps(dict(self), ensure_ascii=False)
+
+    def to_json(self):
+        return {
+            "model_type": self.model_type,
+            "models_used": self.models_used,
+            "data_type": self.data_type,
+            "data_format": self.data_format,
+            "domain": self.domain
+        }
 
     def __dict__(self):
         return vars(self)
+
+    @staticmethod
+    def from_json(json_dict: dict):
+        return ModelProject(
+            url=json_dict["url"] if json_dict.get("url") else None,
+            model_type=json_dict["model_type"] if json_dict.get("model_type") else None,
+            models_used=json_dict["models_used"] if json_dict.get("models_used") else None,
+            data_type=json_dict["data_type"] if json_dict.get("data_type") else None,
+            data_format=json_dict["data_format"] if json_dict.get("data_format") else None,
+            domain=json_dict["domain"] if json_dict.get("domain") else None
+        )
 
 
 @attr.s(slots=True, frozen=False)

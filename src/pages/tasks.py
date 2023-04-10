@@ -12,7 +12,10 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
-from src.common.constants import *
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    ModelTaskType
+)
 from src.common.charts import *
 from src.home import select_project, get_tasks_info
 from src.pages import metrics
@@ -47,6 +50,7 @@ def calculate_sample_distribution(df_total_count: pd.DataFrame,
             df_sample_count.iloc[index] = (row['filename'], sample_count)
 
     return df_sample_count
+
 
 def _show_full_size_image(full_path, size, date):
     st.image(full_path,
@@ -90,8 +94,6 @@ def show_images(files_dict: dict):
 
 
 def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
-    tasks_info = get_tasks_info()
-
     sampled = {}
     for index, row in df_sample_count.iterrows():
         label_filename = row['filename']
@@ -108,6 +110,7 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
         utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2), task_folder, label_filename)
 
+        tasks_info = get_tasks_info()
         task_id = tasks_info.get_next_task_id()
         task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
         new_task = Task(task_id,
@@ -124,7 +127,6 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 
 def create_tasks():
     selected_project = select_project(is_sidebar=True)
-
     if selected_project:
         dart_labels_dict = metrics.load_label_files(selected_project.label_files)
         images_per_label_file_dict = dict()
@@ -169,6 +171,40 @@ def create_tasks():
 
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
 
+
+def add_model_task():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        with st.form("Create a Data Project"):
+            task_name = st.text_input("**Task Name:**")
+            date = st.date_input("**Date:**")
+            task_stage = st.selectbox("Task type", ModelTaskType.get_all_types())
+
+            uploaded_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
+
+            tasks_info = get_tasks_info()
+            new_task_id = tasks_info.get_next_task_id()
+
+            save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
+            if not os.path.exists(save_folder):
+                os.mkdir(save_folder)
+
+            if uploaded_files:
+                # Save the uploaded file
+                for file in uploaded_files:
+                    with open(os.path.join(save_folder, file.name), "wb") as f:
+                        f.write(file.getbuffer())
+
+            submitted = st.form_submit_button("Add Model Task")
+            if submitted:
+                new_task = Task(new_task_id, task_name, selected_project.id, task_stage, date=date)
+                tasks_info = get_tasks_info()
+                tasks_info.add(new_task)
+                tasks_info.save()
+
+                st.write("Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+
+
 def delete_tasks():
     pass
 
@@ -176,8 +212,9 @@ def delete_tasks():
 def main():
     menu = {
         "Create Tasks": lambda: create_tasks(),
+        "Review Images": lambda: app.main(),
         "Delete Tasks": lambda: delete_tasks(),
-        "Review Images": lambda: app.main()
+        "Add Model Task": lambda: add_model_task()
     }
 
     # Create a sidebar with menu options

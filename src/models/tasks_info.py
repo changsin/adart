@@ -28,13 +28,16 @@ class Task:
     name = attr.ib(validator=attr.validators.instance_of(str))
     project_id = attr.ib(validator=attr.validators.instance_of(int))
     state_name = attr.ib(validator=attr.validators.instance_of(str))
-    anno_file_name = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    anno_file_name = attr.ib(default=None)
     count = attr.ib(default=0, validator=attr.validators.instance_of(int))
     state_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
     annotator_id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
     annotator_fullname = attr.ib(default=None)
     reviewer_id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
     reviewer_fullname = attr.ib(default=None)
+
+    # new - mainly for model validations
+    date = attr.ib(default=None)
 
     def __iter__(self):
         yield from {

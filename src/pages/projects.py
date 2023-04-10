@@ -15,10 +15,25 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common import utils
-from src.common.constants import *
+from src.common.constants import (
+    SUPPORTED_AUDIO_FILE_EXTENSIONS,
+    SUPPORTED_IMAGE_FILE_EXTENSIONS,
+    SUPPORTED_VIDEO_FILE_EXTENSIONS,
+    SUPPORTED_FORMATS,
+
+    ADQ_WORKING_FOLDER,
+    PASCAL_VOC_XML,
+    CVAT_XML,
+    ADQ_JSON,
+
+    PROJECTS,
+    JSON_EXT,
+
+    DomainCode
+)
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import select_project, get_projects_info
-from src.models.projects_info import Project
+from src.models.projects_info import Project, ModelProject
 
 
 def create_data_project():
@@ -99,32 +114,37 @@ def create_model_project():
         company_contact_person_email = st.text_input("**Contact person email:**")
         company_contact_person_phone = st.text_input("**Contact person phone number:**")
 
-        domain = st.selectbox("Domain", ["Object recognition", "Motion "])
+        model_type = st.multiselect("Model type", ["Object recognition", "Object detection", "Motion detection", "NLP"])
+        models_used = st.text_input("Models used (YOLOv5, etc. separated by commas)")
 
-        contacted_date = st.date_input("**Contacted:**")
-        uploaded_contacted_artifacts = st.file_uploader("Upload contacted artifacts", accept_multiple_files=True)
+        data_type = st.multiselect("Data type", ["Unstructured", "Structured"], default="Unstructured")
+        data_format = st.multiselect("Data format", ["image", "video", "audio", "text", "number"])
 
-        new_project_id = get_projects_info().get_next_project_id()
-
-        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(new_project_id))
-        if not os.path.exists(save_folder):
-            os.mkdir(save_folder)
-
-        if uploaded_contacted_artifacts:
-            # Save the uploaded file
-            with open(os.path.join(save_folder, uploaded_contacted_artifacts.name), "wb") as f:
-                f.write(uploaded_contacted_artifacts.getbuffer())
-
-        test_date = st.date_input("**Test date**")
-        uploaded_test_artifacts = st.file_uploader("Upload test artifacts", accept_multiple_files=True)
-        if uploaded_test_artifacts:
-            for file in uploaded_test_artifacts:
-                # Save each uploaded file
-                with open(os.path.join(save_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
+        domain = st.multiselect("Domain", DomainCode.get_all_types())
 
         submitted = st.form_submit_button("Create project")
         if submitted:
+            if not project_name or len(project_name) == 0:
+                st.warning("Please enter a project name")
+                return
+
+            new_project_id = get_projects_info().get_next_project_id()
+
+            model_project = ModelProject(','.join(model_type), models_used, ','.join(data_type),
+                                         ','.join(data_format), ','.join(domain))
+
+            new_project = Project(new_project_id, project_name, {}, {},
+                                  0, 0, str(datetime.datetime.now()),
+                                  customer_company=company_name,
+                                  customer_name=company_contact_person,
+                                  customer_url=company_url,
+                                  customer_email=company_contact_person_email,
+                                  customer_phone=company_contact_person_phone,
+                                  customer_address=company_address,
+                                  extended_properties=model_project)
+            projects_info = get_projects_info()
+            projects_info.add(new_project)
+            projects_info.save()
 
             st.write("Project {} {} created".format(new_project_id, project_name))
 
