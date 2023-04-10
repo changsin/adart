@@ -138,6 +138,11 @@ def create_model_project():
                                   customer_phone=company_contact_person_phone,
                                   customer_address=company_address,
                                   extended_properties=model_project)
+
+            target_folder = os.path.join(ADQ_WORKING_FOLDER, str(new_project_id))
+            if not os.path.exists(target_folder):
+                os.mkdir(target_folder)
+
             projects_info = get_projects_info()
             projects_info.add(new_project)
             projects_info.save()
