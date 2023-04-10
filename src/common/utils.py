@@ -72,3 +72,18 @@ def generate_file_tree(folder_path, patterns):
             st.markdown('{}📁({}) {}/'.format(indent, count, folder))
 
     return file_tree_to_return
+
+
+def step_size(value):
+    if value < 10:
+        return 1.0
+    elif value < 100:
+        return 10.0
+    elif value < 1000:
+        return 100.0
+    elif value < 10000:
+        return 1000.0
+    elif value < 100000:
+        return 10000.0
+    else:
+        return 100.0

@@ -184,13 +184,16 @@ class ModelProject:
     data_format = attr.ib(default=None, validator=attr.validators.instance_of(str))
     domain = attr.ib(default=None, validator=attr.validators.instance_of(str))
 
+    cost = attr.ib(default=None, validator=attr.validators.instance_of(int))
+
     def __iter__(self):
         yield from {
             "model_type": self.model_type,
             "models_used": self.models_used,
             "data_type": self.data_type,
             "data_format": self.data_format,
-            "domain": self.domain
+            "domain": self.domain,
+            "cost": self.cost
         }.items()
 
     def __str__(self):
@@ -202,7 +205,8 @@ class ModelProject:
             "models_used": self.models_used,
             "data_type": self.data_type,
             "data_format": self.data_format,
-            "domain": self.domain
+            "domain": self.domain,
+            "cost": self.cost
         }
 
     def __dict__(self):
@@ -211,12 +215,12 @@ class ModelProject:
     @staticmethod
     def from_json(json_dict: dict):
         return ModelProject(
-            url=json_dict["url"] if json_dict.get("url") else None,
             model_type=json_dict["model_type"] if json_dict.get("model_type") else None,
             models_used=json_dict["models_used"] if json_dict.get("models_used") else None,
             data_type=json_dict["data_type"] if json_dict.get("data_type") else None,
             data_format=json_dict["data_format"] if json_dict.get("data_format") else None,
-            domain=json_dict["domain"] if json_dict.get("domain") else None
+            domain=json_dict["domain"] if json_dict.get("domain") else None,
+            cost=json_dict["cost"] if json_dict.get("cost") else None
         )
 
 

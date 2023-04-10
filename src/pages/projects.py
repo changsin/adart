@@ -117,6 +117,7 @@ def create_model_project():
         data_format = st.multiselect("Data format", ["image", "video", "audio", "text", "number"])
 
         domain = st.multiselect("Domain", DomainCode.get_all_types())
+        cost = st.number_input("Cost", step=utils.step_size(10000), format="%.2f")
 
         submitted = st.form_submit_button("Create project")
         if submitted:
@@ -127,7 +128,7 @@ def create_model_project():
             new_project_id = get_projects_info().get_next_project_id()
 
             model_project = ModelProject(','.join(model_type), models_used, ','.join(data_type),
-                                         ','.join(data_format), ','.join(domain))
+                                         ','.join(data_format), ','.join(domain), cost=cost)
 
             new_project = Project(new_project_id, project_name, {}, {},
                                   0, 0, str(datetime.datetime.now()),

@@ -19,7 +19,6 @@ from src.common.constants import (
 )
 from src.common.charts import *
 from src.home import (
-    get_projects_info,
     get_tasks_info,
     select_project,
     select_task
@@ -27,16 +26,9 @@ from src.home import (
 from src.pages import metrics
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
+from src.common import utils
 import src.viewer.app as app
 
-
-def step_size(value):
-    if value < 10:
-        return 1.0
-    elif value < 100:
-        return 10.0
-    else:
-        return 100.0
 
 
 def calculate_sample_count(count, percent):
@@ -145,7 +137,7 @@ def create_tasks():
         st.dataframe(df_total_count)
 
         with st.form("Create Tasks"):
-            sample_percent = st.number_input("% of samples", step=step_size(0.0), format="%.2f")
+            sample_percent = st.number_input("% of samples", step=utils.step_size(0.0), format="%.2f")
             is_keep_folders = st.checkbox("Keep folder structures", value=True)
 
             submitted = st.form_submit_button("Create tasks")
