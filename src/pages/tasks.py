@@ -188,6 +188,5 @@ def main():
         menu[selected_action]()
 
 
-
 if __name__ == '__main__':
     main()

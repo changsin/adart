@@ -89,11 +89,12 @@ def create_projects():
 
 
 def delete_project():
-    selected_project = select_project()
+    selected_project = select_project(is_sidebar=True)
 
     if selected_project:
-        if st.button("Are you sure you want to delete the project {}-{}?"
-                     .format(selected_project.id, selected_project.name)):
+        delete_confirmed = st.sidebar.button("Are you sure you want to delete the project {}-{}?"
+                                             .format(selected_project.id, selected_project.name))
+        if delete_confirmed:
             # Your code to handle the user choosing not to proceed
             projects_info = get_projects_info()
             projects_info.projects.remove(selected_project)

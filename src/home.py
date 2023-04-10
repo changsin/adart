@@ -26,7 +26,7 @@ def get_projects_info():
     return ProjectsInfo.from_json(json_projects)
 
 
-def select_project(is_sidebar=False):
+def select_project(is_sidebar=True):
     projects_info = get_projects_info()
     if projects_info.num_count > 0:
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
@@ -56,8 +56,8 @@ def get_tasks_info():
         return st.session_state[constants.TASKS]
 
     json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
-                                    constants.ADQ_WORKING_FOLDER,
-                                    constants.TASKS + constants.JSON_EXT)
+                                 constants.ADQ_WORKING_FOLDER,
+                                 constants.TASKS + constants.JSON_EXT)
     return TasksInfo.from_json(json_tasks)
 
 
@@ -72,9 +72,9 @@ def select_task(project_id):
                    df_filtered[["id", "name", "project_id"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
-        selected_task = st.selectbox("Select task",
-                                     options=options,
-                                     index=len(options) - 1)
+        selected_task = st.sidebar.selectbox("Select task",
+                                             options=options,
+                                             index=len(options) - 1)
         if selected_task:
             # Get the index of the selected option
             # Use it to get the corresponding images folder

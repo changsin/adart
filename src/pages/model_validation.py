@@ -1,7 +1,19 @@
-import streamlit as st
+import importlib.util
 import os
+from pathlib import Path
+
+import streamlit as st
+
+spec = importlib.util.find_spec("src")
+if spec is None:
+    import sys
+
+    path_root = Path(__file__).parents[2]
+    sys.path.append(str(path_root))
 
 from src.common.constants import ADQ_WORKING_FOLDER
+from src.home import get_projects_info
+from src.pages.projects import delete_project
 
 
 def create_project():
@@ -46,10 +58,6 @@ def create_project():
 
 
 def update_project():
-    pass
-
-
-def delete_project():
     pass
 
 
