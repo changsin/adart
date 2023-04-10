@@ -125,7 +125,7 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 
 def create_tasks():
     selected_project = select_project(is_sidebar=True)
-    if selected_project:
+    if selected_project and len(selected_project.label_files) > 0:
         dart_labels_dict = metrics.load_label_files(selected_project.label_files)
         images_per_label_file_dict = dict()
         if dart_labels_dict.items() is not None:
