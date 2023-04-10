@@ -3,6 +3,7 @@ import importlib.util
 import json
 import os.path
 import random
+import shutil
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -17,10 +18,15 @@ from src.common.constants import (
     ModelTaskType
 )
 from src.common.charts import *
-from src.home import select_project, get_tasks_info
+from src.home import (
+    get_projects_info,
+    get_tasks_info,
+    select_project,
+    select_task
+)
 from src.pages import metrics
 from src.models.projects_info import Project
-from src.models.tasks_info import TasksInfo, Task, TaskState
+from src.models.tasks_info import Task, TaskState
 import src.viewer.app as app
 
 
@@ -202,11 +208,30 @@ def add_model_task():
                 tasks_info.add(new_task)
                 tasks_info.save()
 
-                st.write("Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+                st.markdown("## Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
 def delete_tasks():
-    pass
+    selected_project = select_project(is_sidebar=True)
+    if not selected_project:
+        return
+
+    selected_task, selected_index = select_task(selected_project.id)
+    if selected_task:
+        delete_confirmed = st.sidebar.button("Are you sure you want to delete the task ({}) of project ({}-{})?"
+                                             .format(selected_task.id, selected_project.id, selected_project.name))
+        if delete_confirmed:
+            # projects_info = get_projects_info()
+            tasks_info = get_tasks_info()
+            tasks_info.tasks.remove(selected_task)
+
+            task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
+                                                 str(selected_project.id),
+                                                 str(selected_index))
+            if os.path.exists(task_folder_to_delete):
+                shutil.rmtree(task_folder_to_delete)
+            st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))
+            tasks_info.save()
 
 
 def main():

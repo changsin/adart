@@ -1,10 +1,10 @@
 import json
+from abc import ABC
 
 import attr
 
 import src.common.utils as utils
 from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
-from abc import ABC
 
 
 @attr.s(slots=True, frozen=False)

@@ -1,6 +1,5 @@
 import datetime
 import importlib.util
-import json
 import os
 import shutil
 from pathlib import Path
@@ -26,13 +25,10 @@ from src.common.constants import (
     CVAT_XML,
     ADQ_JSON,
 
-    PROJECTS,
-    JSON_EXT,
-
     DomainCode
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
-from src.home import select_project, get_projects_info
+from src.home import select_project, get_projects_info, get_tasks_info
 from src.models.projects_info import Project, ModelProject
 
 
@@ -156,21 +152,24 @@ def delete_project():
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the project {}-{}?"
                                              .format(selected_project.id, selected_project.name))
         if delete_confirmed:
-            # Your code to handle the user choosing not to proceed
-            projects_info = get_projects_info()
-            projects_info.projects.remove(selected_project)
-
+            # Delete the artifacts first
             folder_path = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
             if os.path.exists(folder_path):
                 shutil.rmtree(folder_path)
-            st.markdown("**Deleted project {}-{}".format(selected_project.id, selected_project.name))
 
-            utils.to_file(json.dumps(projects_info,
-                                     default=utils.default, indent=2),
-                          ADQ_WORKING_FOLDER,
-                          PROJECTS + JSON_EXT)
+            # Then all the tasks
+            tasks_info = get_tasks_info()
+            for selected_task in tasks_info.tasks:
+                if selected_task.project_id == selected_project.id:
+                    tasks_info.tasks.remove(selected_task)
+            tasks_info.save()
 
-            # TODO: Delete tasks too
+            # Finally delete the project itself
+            projects_info = get_projects_info()
+            projects_info.projects.remove(selected_project)
+
+            st.markdown("## Deleted project {} {}".format(selected_project.id, selected_project.name))
+            projects_info.save()
 
 
 def main():
