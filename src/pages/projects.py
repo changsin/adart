@@ -86,6 +86,17 @@ def create_data_project():
                             if not os.path.exists(ori_folder):
                                 os.mkdir(ori_folder)
 
+                            json_data = utils.from_file("{}",
+                                                        folder,
+                                                        file)
+                            if not json_data:
+                                st.write("Skipping {} - empty file".format(file))
+                                continue
+
+                            if not json_data.get("twconverted"):
+                                st.write("Skipping {} - not a valid adq label file".format(file))
+                                continue
+
                             target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
                             shutil.copy(anno_file, target_filename)
 
