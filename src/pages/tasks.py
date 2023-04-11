@@ -33,6 +33,9 @@ from src.common import utils
 import src.viewer.app as app
 
 
+DATE_FORMAT = "%Y %B %d %A"
+
+
 def calculate_sample_count(count, percent):
     return int((count * percent) / 100)
 
@@ -172,8 +175,62 @@ def create_tasks():
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
 
 
+def update_model_task(selected_project):
+    selected_task, selected_index = select_task(selected_project.id)
+    if not selected_task:
+        return
+
+    with st.form("Update a Model Task"):
+        task_name = st.text_input("**Task Name:**", selected_task.name)
+        description = st.text_area("Description", selected_task.description)
+        selected_date = dt.datetime.strptime(selected_task.date, DATE_FORMAT)
+        date = st.date_input("**Date:**", selected_date)
+        default_index = ModelTaskType.get_all_types().index(selected_task.state_name)
+        task_stage = st.selectbox("Task type", ModelTaskType.get_all_types(), index=default_index)
+
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(selected_task.id))
+
+        uploaded_files = utils.generate_file_tree(save_folder, "*")
+        with st.expander("{}".format(selected_task.id)):
+            for file in uploaded_files[save_folder]:
+                st.markdown("📄{}".format(file))
+
+        new_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
+
+        data_files = dict()
+        if new_files:
+            # Save the uploaded file
+            for file in new_files:
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                uploaded_files[save_folder].append(file.name)
+
+        data_files[save_folder] = uploaded_files
+
+        submitted = st.form_submit_button("Update Model Task")
+        if submitted:
+            selected_task.name = task_name
+            selected_task.description = description
+            selected_task.date = dt.datetime.strftime(date, DATE_FORMAT)
+            selected_task.state_name = task_stage
+            selected_task.data_files = data_files
+
+            tasks_info = get_tasks_info()
+            tasks_info.update_task(selected_task)
+            tasks_info.save()
+
+            st.markdown("### Updated Task ({}) ({}) in Project ({})".format(selected_task.id,
+                                                                            task_name,
+                                                                            selected_project.id))
+
+
 def update_task():
-    st.sidebar.write("Coming soon")
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        if selected_project.extended_properties:
+            update_model_task(selected_project)
+        else:
+            st.sidebar.write("Update data task is coming soon")
 
 
 def add_task():
@@ -186,9 +243,9 @@ def add_task():
 
 
 def add_model_task(selected_project: Project):
-    with st.form("Create a Model Project"):
+    with st.form("Create a Model Task"):
         task_name = st.text_input("**Task Name:**")
-        description = st.text_area("Description", selected_project.description)
+        description = st.text_area("Description")
         date = st.date_input("**Date:**")
         task_stage = st.selectbox("Task type", ModelTaskType.get_all_types())
 
@@ -214,7 +271,7 @@ def add_model_task(selected_project: Project):
         submitted = st.form_submit_button("Add Model Task")
         if submitted:
             new_task = Task(new_task_id, task_name, selected_project.id, task_stage,
-                            date=dt.datetime.strftime(date, "%Y %B %d %A"),
+                            date=dt.datetime.strftime(date, DATE_FORMAT),
                             data_files=data_files,
                             description=description)
             tasks_info = get_tasks_info()

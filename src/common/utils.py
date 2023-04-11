@@ -56,7 +56,7 @@ def generate_file_tree(folder_path, patterns):
                 matched = [os.path.basename(full_path) for full_path in matched]
                 sub_folder = root.replace(folder_path, '')
                 if file_info_to_display.get(sub_folder):
-                    file_info_to_display[sub_folder] = file_info_to_display[sub_folder] + len(matched)
+                    file_info_to_display[sub_folder] += len(matched)
                 else:
                     file_info_to_display[sub_folder] = len(matched)
 

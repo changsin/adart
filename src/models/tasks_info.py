@@ -21,7 +21,7 @@ class TaskState(Enum):
         return obj
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True, frozen=False)
 class Task:
     id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
@@ -163,6 +163,16 @@ class TasksInfo:
             for task in self.tasks:
                 if task.id == task_id:
                     return task
+
+    def update_task(self, task_to_update: Task):
+        if len(self.tasks) > 0:
+            index_to_update = None
+            for index, task in enumerate(self.tasks):
+                if task.id == task_to_update.id:
+                    index_to_update = index
+                    break
+
+            self.tasks[index_to_update] = task_to_update
 
     def save(self):
         utils.to_file(json.dumps(self,
