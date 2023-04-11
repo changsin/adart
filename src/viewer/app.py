@@ -14,6 +14,10 @@ def main(labels=ErrorType.get_all_types()):
     if not selected_project:
         return
 
+    if selected_project.extended_properties:
+        st.sidebar.write("Not a data project")
+        return
+
     selected_task, selected_index = select_task(selected_project.id)
     if selected_task:
         task_folder = os.path.join(ADQ_WORKING_FOLDER,

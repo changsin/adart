@@ -183,7 +183,9 @@ def update_model_task(selected_project):
     with st.form("Update a Model Task"):
         task_name = st.text_input("**Task Name:**", selected_task.name)
         description = st.text_area("Description", selected_task.description)
-        selected_date = dt.datetime.strptime(selected_task.date, DATE_FORMAT)
+        selected_date = dt.datetime.now()
+        if selected_task.date:
+            selected_date = dt.datetime.strptime(selected_task.date, DATE_FORMAT)
         date = st.date_input("**Date:**", selected_date)
         default_index = ModelTaskType.get_all_types().index(selected_task.state_name)
         task_stage = st.selectbox("Task type", ModelTaskType.get_all_types(), index=default_index)
@@ -191,9 +193,10 @@ def update_model_task(selected_project):
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(selected_task.id))
 
         uploaded_files = utils.generate_file_tree(save_folder, "*")
-        with st.expander("{}".format(selected_task.id)):
-            for file in uploaded_files[save_folder]:
-                st.markdown("📄{}".format(file))
+        if uploaded_files and len(uploaded_files) > 0:
+            with st.expander("{}".format(selected_task.id)):
+                for file in uploaded_files[save_folder]:
+                    st.markdown("📄{}".format(file))
 
         new_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
 
