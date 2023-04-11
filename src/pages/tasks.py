@@ -188,6 +188,7 @@ def add_task():
 def add_model_task(selected_project: Project):
     with st.form("Create a Model Project"):
         task_name = st.text_input("**Task Name:**")
+        description = st.text_area("Description", selected_project.description)
         date = st.date_input("**Date:**")
         task_stage = st.selectbox("Task type", ModelTaskType.get_all_types())
 
@@ -200,20 +201,22 @@ def add_model_task(selected_project: Project):
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
-        saved_filenames = []
+        data_files = dict()
         if uploaded_files:
             # Save the uploaded file
+            saved_filenames = []
             for file in uploaded_files:
                 with open(os.path.join(save_folder, file.name), "wb") as f:
                     f.write(file.getbuffer())
                 saved_filenames.append(file.name)
-        data_files = dict()
-        data_files[save_folder] = saved_filenames
+            data_files[save_folder] = saved_filenames
 
         submitted = st.form_submit_button("Add Model Task")
         if submitted:
             new_task = Task(new_task_id, task_name, selected_project.id, task_stage,
-                            date=dt.datetime.strftime(date, "%Y %B %d %A"), data_files=data_files)
+                            date=dt.datetime.strftime(date, "%Y %B %d %A"),
+                            data_files=data_files,
+                            description=description)
             tasks_info = get_tasks_info()
             tasks_info.add(new_task)
             tasks_info.save()

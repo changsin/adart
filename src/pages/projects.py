@@ -37,6 +37,7 @@ MULTI_SELECT_SEP = ';'
 def create_data_project():
     with st.form("Create a Data Project"):
         name = st.text_input("**Name:**")
+        description = st.text_area("Description")
         images_folder = st.text_input("**Images folder:**")
         options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
                    SUPPORTED_VIDEO_FILE_EXTENSIONS,
@@ -106,7 +107,7 @@ def create_data_project():
 
             label_files_dict = {target_folder: target_filenames}
             new_project = Project(project_id, name, data_files, label_files_dict,
-                                  1, 1, str(datetime.datetime.now()))
+                                  1, 1, str(datetime.datetime.now()), description=description)
             projects_info.add(new_project)
             projects_info.save()
             st.write("Project {} {} created".format(project_id, name))
@@ -115,6 +116,7 @@ def create_data_project():
 def create_model_project():
     with st.form("Create Model Validation Project"):
         project_name = st.text_input("**Name:**")
+        description = st.text_area("Description")
 
         company_name = st.text_input("**Company Name:**")
         company_url = st.text_input("**Company URL:**")
@@ -149,8 +151,6 @@ def create_model_project():
                                          MULTI_SELECT_SEP.join(domain),
                                          cost=cost)
 
-            print("address: {}".format(company_address))
-
             new_project = Project(new_project_id, project_name, {}, {},
                                   0, 0, str(datetime.datetime.now()),
                                   customer_company=company_name,
@@ -159,7 +159,8 @@ def create_model_project():
                                   customer_email=company_contact_person_email,
                                   customer_phone=company_contact_person_phone,
                                   customer_address=company_address,
-                                  extended_properties=model_project)
+                                  extended_properties=model_project,
+                                  description=description)
 
             target_folder = os.path.join(ADQ_WORKING_FOLDER, str(new_project_id))
             if not os.path.exists(target_folder):
@@ -215,6 +216,7 @@ def update_data_project(selected_project: Project):
 def update_model_project(selected_project: Project):
     with st.form("Update Model Validation Project"):
         project_name = st.text_input("**Name:**", selected_project.name)
+        description = st.text_area("Description", selected_project.description)
 
         # selected project might have already been deserialized.
         model_project_props = selected_project.extended_properties
@@ -282,6 +284,7 @@ def update_model_project(selected_project: Project):
             selected_project.customer_phone = company_contact_person_phone
             selected_project.customer_address = company_address
             selected_project.extended_properties = model_project_props
+            selected_project.description = description
 
             projects_info = get_projects_info()
             projects_info.update_project(selected_project)

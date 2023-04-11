@@ -39,6 +39,8 @@ class Task:
     date = attr.ib(default=None)
     data_files = attr.ib(default=None)
 
+    description = attr.ib(default=None)
+
     def __iter__(self):
         yield from {
             "id": self.id,
@@ -57,7 +59,9 @@ class Task:
             "reviewer_fullname": self.reviewer_fullname,
 
             "date": self.date,
-            "data_files": self.data_files
+            "data_files": self.data_files,
+
+            "description": self.description
         }.items()
 
     def __str__(self):
@@ -81,7 +85,9 @@ class Task:
             "reviewer_fullname": self.reviewer_fullname,
 
             "date": self.date,
-            "data_files": self.data_files
+            "data_files": self.data_files,
+
+            "description": self.description
         }
 
     @staticmethod
@@ -105,7 +111,9 @@ class Task:
             reviewer_fullname=json_dict["reviewer_fullname"],
 
             date=json_dict["date"] if json_dict.get("date") else None,
-            data_files=json_dict["data_files"] if json_dict.get("data_files") else None
+            data_files=json_dict["data_files"] if json_dict.get("data_files") else None,
+
+            description=json_dict["description"] if json_dict.get("description") else None
         )
 
     def __dict__(self):
