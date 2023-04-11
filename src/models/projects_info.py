@@ -166,10 +166,10 @@ class Project(ABC):
 
             customer_company=json_dict["customer_company"],
             customer_name=json_dict["customer_name"],
-            customer_url=json_dict["customer_url"] if json_dict.get("customer_url") else None,
+            customer_url=json_dict["customer_url"] if json_dict.get("customer_url") else "",
             customer_phone=json_dict["customer_phone"],
             customer_email=json_dict["customer_email"],
-            customer_address=json_dict["customer_address"] if json_dict.get("customer_address") else None,
+            customer_address=json_dict["customer_address"] if json_dict.get("customer_address") else "",
 
             extended_properties=json_dict["extended_properties"] if json_dict.get("extended_properties") else None
         )
@@ -177,14 +177,14 @@ class Project(ABC):
 
 @attr.s(slots=True, frozen=True)
 class ModelProject:
-    model_type = attr.ib(default=None, validator=attr.validators.instance_of(str))
-    models_used = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    model_type = attr.ib(default="", validator=attr.validators.instance_of(str))
+    models_used = attr.ib(default="", validator=attr.validators.instance_of(str))
 
-    data_type = attr.ib(default=None, validator=attr.validators.instance_of(str))
-    data_format = attr.ib(default=None, validator=attr.validators.instance_of(str))
-    domain = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    data_type = attr.ib(default="", validator=attr.validators.instance_of(str))
+    data_format = attr.ib(default="", validator=attr.validators.instance_of(str))
+    domain = attr.ib(default="", validator=attr.validators.instance_of(str))
 
-    cost = attr.ib(default=None, validator=attr.validators.instance_of(int))
+    cost = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
     def __iter__(self):
         yield from {
@@ -215,12 +215,12 @@ class ModelProject:
     @staticmethod
     def from_json(json_dict: dict):
         return ModelProject(
-            model_type=json_dict["model_type"] if json_dict.get("model_type") else None,
-            models_used=json_dict["models_used"] if json_dict.get("models_used") else None,
-            data_type=json_dict["data_type"] if json_dict.get("data_type") else None,
-            data_format=json_dict["data_format"] if json_dict.get("data_format") else None,
-            domain=json_dict["domain"] if json_dict.get("domain") else None,
-            cost=json_dict["cost"] if json_dict.get("cost") else None
+            model_type=json_dict["model_type"] if json_dict.get("model_type") else "",
+            models_used=json_dict["models_used"] if json_dict.get("models_used") else "",
+            data_type=json_dict["data_type"] if json_dict.get("data_type") else "",
+            data_format=json_dict["data_format"] if json_dict.get("data_format") else "",
+            domain=json_dict["domain"] if json_dict.get("domain") else "",
+            cost=json_dict["cost"] if json_dict.get("cost") else 0
         )
 
 
@@ -267,6 +267,13 @@ class ProjectsInfo:
             for project in self.projects:
                 if project.id == project_id:
                     return project
+
+    def update_project(self, project_to_update: Project):
+        if len(self.projects) > 0:
+            for project in self.projects:
+                if project.id == project_to_update.id:
+                    project = project_to_update
+                    break
 
     def save(self):
         utils.to_file(json.dumps(self,

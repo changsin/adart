@@ -170,40 +170,51 @@ def create_tasks():
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
 
 
-def add_model_task():
+def update_task():
+    st.sidebar.write("Coming soon")
+
+
+def add_task():
     selected_project = select_project(is_sidebar=True)
     if selected_project:
-        with st.form("Create a Data Project"):
-            task_name = st.text_input("**Task Name:**")
-            date = st.date_input("**Date:**")
-            task_stage = st.selectbox("Task type", ModelTaskType.get_all_types())
+        if selected_project.extended_properties:
+            add_model_task(selected_project)
+        else:
+            st.sidebar.write("Add data task is coming soon")
 
-            uploaded_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
 
+def add_model_task(selected_project: Project):
+    with st.form("Create a Model Project"):
+        task_name = st.text_input("**Task Name:**")
+        date = st.date_input("**Date:**")
+        task_stage = st.selectbox("Task type", ModelTaskType.get_all_types())
+
+        uploaded_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
+
+        tasks_info = get_tasks_info()
+        new_task_id = tasks_info.get_next_task_id()
+
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
+        if uploaded_files:
+            # Save the uploaded file
+            for file in uploaded_files:
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+
+        submitted = st.form_submit_button("Add Model Task")
+        if submitted:
+            new_task = Task(new_task_id, task_name, selected_project.id, task_stage, date=date)
             tasks_info = get_tasks_info()
-            new_task_id = tasks_info.get_next_task_id()
+            tasks_info.add(new_task)
+            tasks_info.save()
 
-            save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
-            if not os.path.exists(save_folder):
-                os.mkdir(save_folder)
-
-            if uploaded_files:
-                # Save the uploaded file
-                for file in uploaded_files:
-                    with open(os.path.join(save_folder, file.name), "wb") as f:
-                        f.write(file.getbuffer())
-
-            submitted = st.form_submit_button("Add Model Task")
-            if submitted:
-                new_task = Task(new_task_id, task_name, selected_project.id, task_stage, date=date)
-                tasks_info = get_tasks_info()
-                tasks_info.add(new_task)
-                tasks_info.save()
-
-                st.markdown("## Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+            st.markdown("## Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
-def delete_tasks():
+def delete_task():
     selected_project = select_project(is_sidebar=True)
     if not selected_project:
         return
@@ -229,9 +240,10 @@ def delete_tasks():
 def main():
     menu = {
         "Create Tasks": lambda: create_tasks(),
-        "Review Images": lambda: app.main(),
-        "Delete Tasks": lambda: delete_tasks(),
-        "Add Model Task": lambda: add_model_task()
+        "Review Task": lambda: app.main(),
+        "Update Task": lambda: update_task(),
+        "Add Task": lambda: add_task(),
+        "Delete Task": lambda: delete_task(),
     }
 
     # Create a sidebar with menu options
