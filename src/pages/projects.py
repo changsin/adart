@@ -149,6 +149,8 @@ def create_model_project():
                                          MULTI_SELECT_SEP.join(domain),
                                          cost=cost)
 
+            print("address: {}".format(company_address))
+
             new_project = Project(new_project_id, project_name, {}, {},
                                   0, 0, str(datetime.datetime.now()),
                                   customer_company=company_name,
@@ -214,7 +216,10 @@ def update_model_project(selected_project: Project):
     with st.form("Update Model Validation Project"):
         project_name = st.text_input("**Name:**", selected_project.name)
 
+        # selected project might have already been deserialized.
         model_project_props = selected_project.extended_properties
+        if type(model_project_props) == dict:
+            model_project_props = ModelProject.from_json(selected_project.extended_properties)
 
         company_name = st.text_input("**Company Name:**", selected_project.customer_company)
         company_url = st.text_input("**Company URL:**", selected_project.customer_url)
@@ -223,14 +228,14 @@ def update_model_project(selected_project: Project):
         company_contact_person_email = st.text_input("**Contact person email:**",
                                                      selected_project.customer_email)
         company_contact_person_phone = st.text_input("**Contact person phone number:**",
-                                                     selected_project.customer_phone)
+                                                     value=selected_project.customer_phone)
 
         default_options = None
         if model_project_props.model_type:
             default_options = [model_type for model_type in model_project_props.model_type.split(MULTI_SELECT_SEP)]
         model_type = st.multiselect("Model type",
-                                    default=default_options,
-                                    options=["Object recognition", "Object detection", "Motion detection", "NLP"])
+                                    options=["Object recognition", "Object detection", "Motion detection", "NLP"],
+                                    default=default_options)
         models_used = st.text_input("Models used (YOLOv5, etc. separated by commas)",
                                     model_project_props.models_used)
 
@@ -238,15 +243,19 @@ def update_model_project(selected_project: Project):
         default_index = default_options.index(model_project_props.data_type)
         data_type = st.radio("Data type", default_options,
                              index=default_index)
-        default_options = [data_format for data_format in model_project_props.data_format.split(MULTI_SELECT_SEP)]
+
+        default_options = None
+        if model_project_props.data_format:
+            default_options = [data_format for data_format in model_project_props.data_format.split(MULTI_SELECT_SEP)]
         data_format = st.multiselect("Data format", ["image", "video", "audio", "text", "number"],
                                      default=default_options)
 
         default_options = None
-        if model_project_props.model_type:
+        if model_project_props.domain:
             default_options = [domain for domain in model_project_props.domain.split(MULTI_SELECT_SEP)]
-        domain = st.multiselect("Domain", default=default_options,
-                                options=DomainCode.get_all_types())
+        domain = st.multiselect("Domain",
+                                options=DomainCode.get_all_types(),
+                                default=default_options)
 
         cost = st.number_input("Cost",
                                value=int(model_project_props.cost),
@@ -270,8 +279,8 @@ def update_model_project(selected_project: Project):
             selected_project.customer_name = company_contact_person
             selected_project.customer_url = company_url
             selected_project.customer_email = company_contact_person_email
-            selected_project.customer_phone = company_contact_person_phone,
-            selected_project.customer_address = company_address,
+            selected_project.customer_phone = company_contact_person_phone
+            selected_project.customer_address = company_address
             selected_project.extended_properties = model_project_props
 
             projects_info = get_projects_info()

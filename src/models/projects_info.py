@@ -89,7 +89,7 @@ class Project(ABC):
         }.items()
 
     def __str__(self):
-        return json.dumps(dict(self), ensure_ascii=False)
+        return json.dumps(dict(self), default=utils.default, ensure_ascii=False)
 
     def to_json(self):
         return {
@@ -270,10 +270,13 @@ class ProjectsInfo:
 
     def update_project(self, project_to_update: Project):
         if len(self.projects) > 0:
-            for project in self.projects:
+            index_to_update = None
+            for index, project in enumerate(self.projects):
                 if project.id == project_to_update.id:
-                    project = project_to_update
+                    index_to_update = index
                     break
+
+            self.projects[index_to_update] = project_to_update
 
     def save(self):
         utils.to_file(json.dumps(self,

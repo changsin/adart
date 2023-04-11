@@ -38,6 +38,7 @@ class Task:
 
     # new - mainly for model validations
     date = attr.ib(default=None)
+    data_files = attr.ib(default=None, validator=attr.validators.instance_of(dict))
 
     def __iter__(self):
         yield from {
@@ -55,10 +56,13 @@ class Task:
 
             "reviewer_id": self.reviewer_id,
             "reviewer_fullname": self.reviewer_fullname,
+
+            "date": self.date,
+            "data_files": self.data_files
         }.items()
 
     def __str__(self):
-        return json.dumps(dict(self), ensure_ascii=False)
+        return json.dumps(dict(self), default=utils.default, ensure_ascii=False)
 
     def to_json(self):
         return {
@@ -76,6 +80,9 @@ class Task:
 
             "reviewer_id": self.reviewer_id,
             "reviewer_fullname": self.reviewer_fullname,
+
+            "date": self.date,
+            "data_files": self.data_files
         }
 
     @staticmethod
@@ -97,6 +104,9 @@ class Task:
 
             reviewer_id=json_dict["reviewer_id"],
             reviewer_fullname=json_dict["reviewer_fullname"],
+
+            date=json_dict["date"],
+            data_files=json_dict["data_files"]
         )
 
     def __dict__(self):
