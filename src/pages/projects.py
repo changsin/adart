@@ -4,6 +4,7 @@ import os
 import shutil
 from pathlib import Path
 
+import pandas as pd
 import streamlit as st
 
 spec = importlib.util.find_spec("src")
@@ -28,10 +29,23 @@ from src.common.constants import (
     DomainCode
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
-from src.home import select_project, get_projects_info, get_tasks_info
+from src.home import select_project, get_projects_info, get_tasks_info, get_df_tasks
 from src.models.projects_info import Project, ModelProject
 
 MULTI_SELECT_SEP = ';'
+
+
+def create_project():
+    menu = {
+        "data": lambda: create_data_project(),
+        "model": lambda: create_model_project(),
+    }
+
+    # Create a sidebar with menu options
+    selected_project_type = st.sidebar.selectbox("Project type", list(menu.keys()))
+    if selected_project_type:
+        # Call the selected method based on the user's selection
+        menu[selected_project_type]()
 
 
 def create_data_project():
@@ -173,33 +187,6 @@ def create_model_project():
             st.markdown("## Project {} {} created".format(new_project_id, project_name))
 
 
-def delete_project():
-    selected_project = select_project(is_sidebar=True)
-
-    if selected_project:
-        delete_confirmed = st.sidebar.button("Are you sure you want to delete the project {}-{}?"
-                                             .format(selected_project.id, selected_project.name))
-        if delete_confirmed:
-            # Delete the artifacts first
-            folder_path = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-            if os.path.exists(folder_path):
-                shutil.rmtree(folder_path)
-
-            # Then all the tasks
-            tasks_info = get_tasks_info()
-            for selected_task in tasks_info.tasks:
-                if selected_task.project_id == selected_project.id:
-                    tasks_info.tasks.remove(selected_task)
-            tasks_info.save()
-
-            # Finally delete the project itself
-            projects_info = get_projects_info()
-            projects_info.projects.remove(selected_project)
-
-            st.markdown("## Deleted project {} {}".format(selected_project.id, selected_project.name))
-            projects_info.save()
-
-
 def update_project():
     selected_project = select_project(is_sidebar=True)
     if selected_project:
@@ -293,23 +280,58 @@ def update_model_project(selected_project: Project):
             st.markdown("## Project {} {} updated".format(selected_project.id, project_name))
 
 
-def create_project():
-    menu = {
-        "data": lambda: create_data_project(),
-        "model": lambda: create_model_project(),
-    }
+def view_project():
+    selected_project = select_project(is_sidebar=True)
 
-    # Create a sidebar with menu options
-    selected_project_type = st.sidebar.selectbox("Project type", list(menu.keys()))
-    if selected_project_type:
-        # Call the selected method based on the user's selection
-        menu[selected_project_type]()
+    if selected_project:
+        st.markdown("# Project")
+
+        extended_props = selected_project.extended_properties
+        df_project = pd.DataFrame.from_dict(selected_project)
+        st.dataframe(df_project)
+
+        if extended_props:
+            st.markdown("## Model validation information")
+            st.dataframe(pd.DataFrame.from_dict(extended_props,
+                                                orient='index'))
+
+        st.markdown("# Tasks")
+        df_tasks = get_df_tasks(selected_project.id)
+        st.dataframe(df_tasks.transpose())
+
+
+def delete_project():
+    selected_project = select_project(is_sidebar=True)
+
+    if selected_project:
+        delete_confirmed = st.sidebar.button("Are you sure you want to delete the project {}-{}?"
+                                             .format(selected_project.id, selected_project.name))
+        if delete_confirmed:
+            # Delete the artifacts first
+            folder_path = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+            if os.path.exists(folder_path):
+                shutil.rmtree(folder_path)
+
+            # Then all the tasks
+            tasks_info = get_tasks_info()
+            for selected_task in tasks_info.tasks:
+                if selected_task.project_id == selected_project.id:
+                    tasks_info.tasks.remove(selected_task)
+            tasks_info.save()
+
+            # Finally delete the project itself
+            projects_info = get_projects_info()
+            projects_info.projects.remove(selected_project)
+
+            st.markdown("## Deleted project {} {}".format(selected_project.id, selected_project.name))
+            projects_info.save()
 
 
 def main():
     menu = {
         "Create Project": lambda: create_project(),
         "Update Project": lambda: update_project(),
+        "View Project": lambda: view_project(),
         "Delete Project": lambda: delete_project()
     }
 
