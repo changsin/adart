@@ -169,7 +169,7 @@ def create_model_project():
             projects_info.add(new_project)
             projects_info.save()
 
-            st.write("Project {} {} created".format(new_project_id, project_name))
+            st.markdown("## Project {} {} created".format(new_project_id, project_name))
 
 
 def delete_project():
@@ -287,7 +287,7 @@ def update_model_project(selected_project: Project):
             projects_info.update_project(selected_project)
             projects_info.save()
 
-            st.write("Project {} {} updated".format(selected_project.id, project_name))
+            st.markdown("## Project {} {} updated".format(selected_project.id, project_name))
 
 
 def create_project():

@@ -1,10 +1,13 @@
 import copy
+import datetime as dt
 import importlib.util
 import json
 import os.path
 import random
 import shutil
-from datetime import datetime
+
+import pandas as pd
+import streamlit as st
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -18,7 +21,6 @@ from src.common.constants import (
     ADQ_WORKING_FOLDER,
     ModelTaskType
 )
-from src.common.charts import *
 from src.home import (
     get_tasks_info,
     select_project,
@@ -29,7 +31,6 @@ from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
 from src.common import utils
 import src.viewer.app as app
-
 
 
 def calculate_sample_count(count, percent):
@@ -212,12 +213,12 @@ def add_model_task(selected_project: Project):
         submitted = st.form_submit_button("Add Model Task")
         if submitted:
             new_task = Task(new_task_id, task_name, selected_project.id, task_stage,
-                            date=datetime.strftime(date, "%Y %B %d %A"), data_files=data_files)
+                            date=dt.datetime.strftime(date, "%Y %B %d %A"), data_files=data_files)
             tasks_info = get_tasks_info()
             tasks_info.add(new_task)
             tasks_info.save()
 
-            st.markdown("## Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+            st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
 def delete_task():
