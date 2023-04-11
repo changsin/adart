@@ -1,11 +1,10 @@
 import json
+from enum import Enum
 
 import attr
 
 import src.common.utils as utils
 from src.common.constants import ADQ_WORKING_FOLDER, TASKS, JSON_EXT
-
-from enum import Enum
 
 
 class TaskState(Enum):
@@ -38,7 +37,7 @@ class Task:
 
     # new - mainly for model validations
     date = attr.ib(default=None)
-    data_files = attr.ib(default=None, validator=attr.validators.instance_of(dict))
+    data_files = attr.ib(default=None)
 
     def __iter__(self):
         yield from {
@@ -105,8 +104,8 @@ class Task:
             reviewer_id=json_dict["reviewer_id"],
             reviewer_fullname=json_dict["reviewer_fullname"],
 
-            date=json_dict["date"],
-            data_files=json_dict["data_files"]
+            date=json_dict["date"] if json_dict.get("date") else None,
+            data_files=json_dict["data_files"] if json_dict.get("data_files") else None
         )
 
     def __dict__(self):

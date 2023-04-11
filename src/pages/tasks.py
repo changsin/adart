@@ -4,6 +4,7 @@ import json
 import os.path
 import random
 import shutil
+from datetime import datetime
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -198,15 +199,20 @@ def add_model_task(selected_project: Project):
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
+        saved_filenames = []
         if uploaded_files:
             # Save the uploaded file
             for file in uploaded_files:
                 with open(os.path.join(save_folder, file.name), "wb") as f:
                     f.write(file.getbuffer())
+                saved_filenames.append(file.name)
+        data_files = dict()
+        data_files[save_folder] = saved_filenames
 
         submitted = st.form_submit_button("Add Model Task")
         if submitted:
-            new_task = Task(new_task_id, task_name, selected_project.id, task_stage, date=date)
+            new_task = Task(new_task_id, task_name, selected_project.id, task_stage,
+                            date=datetime.strftime(date, "%Y %B %d %A"), data_files=data_files)
             tasks_info = get_tasks_info()
             tasks_info.add(new_task)
             tasks_info.save()
