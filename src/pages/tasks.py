@@ -293,7 +293,7 @@ def review_task():
 
 def review_model_task(selected_project):
     selected_task, selected_index = select_task(selected_project.id)
-    if selected_task:
+    if selected_task and selected_task.data_files and len(selected_task.data_files) > 0:
         for folder, files in selected_task.data_files.items():
             for file in files:
                 basename, extension = os.path.splitext(file)
