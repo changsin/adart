@@ -296,6 +296,7 @@ def review_model_task(selected_project):
     if selected_task and selected_task.data_files and len(selected_task.data_files) > 0:
         for folder, files in selected_task.data_files.items():
             for file in files:
+                st.write("📄{}".format(file))
                 basename, extension = os.path.splitext(file)
                 if extension.lower() == ".pdf":
                     pdf_file = open(os.path.join(folder, file), "rb").read()
@@ -304,8 +305,14 @@ def review_model_task(selected_project):
                     st.write(f'<iframe src="{pdf_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
                 elif extension.lower() in SUPPORTED_IMAGE_FILE_EXTENSIONS:
                     st.image(os.path.join(folder, file))
-                else:
-                    st.write("📄{}".format(file))
+                elif extension.lower() in [".docx", ".doc"]:
+                    word_file = open(os.path.join(folder, file), "rb").read()
+                    # Embed the Word document in an iframe using HTML tags
+                    word_url = "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + b64encode(
+                        word_file).decode("utf-8")
+                    st.markdown(f'<iframe https://view.officeapps.live.com/op/embed.aspx?src="{word_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
+    else:
+        st.write("No uploaded files to review")
 
 
 def delete_task():
