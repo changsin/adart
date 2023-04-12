@@ -4,7 +4,6 @@ import os
 import shutil
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 spec = importlib.util.find_spec("src")
@@ -29,7 +28,7 @@ from src.common.constants import (
     DomainCode
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
-from src.home import select_project, get_projects_info, get_tasks_info, get_df_tasks
+from src.home import select_project, get_projects_info, get_tasks_info
 from src.models.projects_info import Project, ModelProject
 
 MULTI_SELECT_SEP = ';'
@@ -280,26 +279,6 @@ def update_model_project(selected_project: Project):
             st.markdown("## Project {} {} updated".format(selected_project.id, project_name))
 
 
-def view_project():
-    selected_project = select_project(is_sidebar=True)
-
-    if selected_project:
-        st.markdown("# Project")
-
-        extended_props = selected_project.extended_properties
-        df_project = pd.DataFrame.from_dict(selected_project)
-        st.dataframe(df_project)
-
-        if extended_props:
-            st.markdown("## Model validation information")
-            st.dataframe(pd.DataFrame.from_dict(extended_props,
-                                                orient='index'))
-
-        st.markdown("# Tasks")
-        df_tasks = get_df_tasks(selected_project.id)
-        st.dataframe(df_tasks.transpose())
-
-
 def delete_project():
     selected_project = select_project(is_sidebar=True)
 
@@ -331,7 +310,6 @@ def main():
     menu = {
         "Create Project": lambda: create_project(),
         "Update Project": lambda: update_project(),
-        "View Project": lambda: view_project(),
         "Delete Project": lambda: delete_project()
     }
 

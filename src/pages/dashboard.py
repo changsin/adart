@@ -14,12 +14,29 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common import constants, utils
-from src.home import get_projects_info
+from src.home import get_projects_info, select_project, get_df_tasks
 
 
-def main():
-    st.write("Dashboard")
+def view_project():
+    selected_project = select_project(is_sidebar=True)
 
+    if selected_project:
+        st.markdown("# Project")
+
+        extended_props = selected_project.extended_properties
+        df_project = pd.DataFrame.from_dict(selected_project)
+        st.dataframe(df_project)
+
+        if extended_props:
+            st.markdown("## Model validation information")
+            st.dataframe(pd.DataFrame.from_dict(extended_props,
+                                                orient='index'))
+
+        st.markdown("# Tasks")
+        df_tasks = get_df_tasks(selected_project.id)
+        st.dataframe(df_tasks.transpose())
+
+def dashboard():
     st.subheader("**Projects**")
     df_projects = pd.DataFrame(columns=constants.PROJECT_COLUMNS)
 
@@ -43,6 +60,21 @@ def main():
         df_tasks = df_tasks[constants.TASK_COLUMNS]
 
     AgGrid(df_tasks)
+
+
+def main():
+    st.markdown("# Dashboard")
+    dashboard()
+
+    menu = {
+        "View Project": lambda: view_project(),
+    }
+
+    # Create a sidebar with menu options
+    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
+    if selected_action:
+        # Call the selected method based on the user's selection
+        menu[selected_action]()
 
 
 if __name__ == '__main__':

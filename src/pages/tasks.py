@@ -5,6 +5,7 @@ import json
 import os.path
 import random
 import shutil
+from base64 import b64encode
 
 import pandas as pd
 import streamlit as st
@@ -19,6 +20,7 @@ if spec is None:
 
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
+    SUPPORTED_IMAGE_FILE_EXTENSIONS,
     ModelTaskType
 )
 from src.home import (
@@ -128,9 +130,17 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def create_tasks():
+def add_task():
     selected_project = select_project(is_sidebar=True)
-    if selected_project and len(selected_project.label_files) > 0:
+    if selected_project:
+        if selected_project.extended_properties:
+            add_model_task(selected_project)
+        else:
+            create_data_tasks(selected_project)
+
+
+def create_data_tasks(selected_project: Project):
+    if len(selected_project.label_files) > 0:
         dart_labels_dict = metrics.load_label_files(selected_project.label_files)
         images_per_label_file_dict = dict()
         if dart_labels_dict.items() is not None:
@@ -175,76 +185,6 @@ def create_tasks():
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
 
 
-def update_model_task(selected_project):
-    selected_task, selected_index = select_task(selected_project.id)
-    if not selected_task:
-        return
-
-    with st.form("Update a Model Task"):
-        task_name = st.text_input("**Task Name:**", selected_task.name)
-        description = st.text_area("Description", selected_task.description)
-        selected_date = dt.datetime.now()
-        if selected_task.date:
-            selected_date = dt.datetime.strptime(selected_task.date, DATE_FORMAT)
-        date = st.date_input("**Date:**", selected_date)
-        default_index = ModelTaskType.get_all_types().index(selected_task.state_name)
-        task_stage = st.selectbox("Task type", ModelTaskType.get_all_types(), index=default_index)
-
-        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(selected_task.id))
-
-        uploaded_files = utils.generate_file_tree(save_folder, "*")
-        if uploaded_files and len(uploaded_files) > 0:
-            with st.expander("{}".format(selected_task.id)):
-                for file in uploaded_files[save_folder]:
-                    st.markdown("📄{}".format(file))
-
-        new_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
-
-        data_files = dict()
-        if new_files:
-            # Save the uploaded file
-            for file in new_files:
-                with open(os.path.join(save_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
-                uploaded_files[save_folder].append(file.name)
-
-        data_files[save_folder] = uploaded_files
-
-        submitted = st.form_submit_button("Update Model Task")
-        if submitted:
-            selected_task.name = task_name
-            selected_task.description = description
-            selected_task.date = dt.datetime.strftime(date, DATE_FORMAT)
-            selected_task.state_name = task_stage
-            selected_task.data_files = data_files
-
-            tasks_info = get_tasks_info()
-            tasks_info.update_task(selected_task)
-            tasks_info.save()
-
-            st.markdown("### Updated Task ({}) ({}) in Project ({})".format(selected_task.id,
-                                                                            task_name,
-                                                                            selected_project.id))
-
-
-def update_task():
-    selected_project = select_project(is_sidebar=True)
-    if selected_project:
-        if selected_project.extended_properties:
-            update_model_task(selected_project)
-        else:
-            st.sidebar.write("Update data task is coming soon")
-
-
-def add_task():
-    selected_project = select_project(is_sidebar=True)
-    if selected_project:
-        if selected_project.extended_properties:
-            add_model_task(selected_project)
-        else:
-            st.sidebar.write("Add data task is coming soon")
-
-
 def add_model_task(selected_project: Project):
     with st.form("Create a Model Task"):
         task_name = st.text_input("**Task Name:**")
@@ -284,6 +224,90 @@ def add_model_task(selected_project: Project):
             st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
+def update_model_task(selected_project):
+    selected_task, selected_index = select_task(selected_project.id)
+    if not selected_task:
+        return
+
+    with st.form("Update a Model Task"):
+        task_name = st.text_input("**Task Name:**", selected_task.name)
+        description = st.text_area("Description", selected_task.description)
+        selected_date = dt.datetime.now()
+        if selected_task.date:
+            selected_date = dt.datetime.strptime(selected_task.date, DATE_FORMAT)
+        date = st.date_input("**Date:**", selected_date)
+        default_index = ModelTaskType.get_all_types().index(selected_task.state_name)
+        task_stage = st.selectbox("Task type", ModelTaskType.get_all_types(), index=default_index)
+
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(selected_task.id))
+
+        uploaded_files = utils.generate_file_tree(save_folder, "*")
+        if uploaded_files and len(uploaded_files) > 0:
+            with st.expander("{}".format(selected_task.id)):
+                for file in uploaded_files[save_folder]:
+                    st.markdown("📄{}".format(file))
+
+        new_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
+
+        if new_files:
+            # Save the uploaded file
+            for file in new_files:
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                uploaded_files[save_folder].append(file.name)
+
+        submitted = st.form_submit_button("Update Model Task")
+        if submitted:
+            selected_task.name = task_name
+            selected_task.description = description
+            selected_task.date = dt.datetime.strftime(date, DATE_FORMAT)
+            selected_task.state_name = task_stage
+            selected_task.data_files = uploaded_files
+
+            tasks_info = get_tasks_info()
+            tasks_info.update_task(selected_task)
+            tasks_info.save()
+
+            st.markdown("### Updated Task ({}) ({}) in Project ({})".format(selected_task.id,
+                                                                            task_name,
+                                                                            selected_project.id))
+
+
+def update_task():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        if selected_project.extended_properties:
+            update_model_task(selected_project)
+        else:
+            st.sidebar.write("Update data task is coming soon")
+
+
+def review_task():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        if selected_project.extended_properties:
+            review_model_task(selected_project)
+        else:
+            app.main()
+
+
+def review_model_task(selected_project):
+    selected_task, selected_index = select_task(selected_project.id)
+    if selected_task:
+        for folder, files in selected_task.data_files.items():
+            for file in files:
+                basename, extension = os.path.splitext(file)
+                if extension.lower() == ".pdf":
+                    pdf_file = open(os.path.join(folder, file), "rb").read()
+                    # Embed the PDF file in an iframe
+                    pdf_url = "data:application/pdf;base64," + b64encode(pdf_file).decode("utf-8")
+                    st.write(f'<iframe src="{pdf_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
+                elif extension.lower() in SUPPORTED_IMAGE_FILE_EXTENSIONS:
+                    st.image(os.path.join(folder, file))
+                else:
+                    st.write("📄{}".format(file))
+
+
 def delete_task():
     selected_project = select_project(is_sidebar=True)
     if not selected_project:
@@ -309,10 +333,9 @@ def delete_task():
 
 def main():
     menu = {
-        "Create Tasks": lambda: create_tasks(),
-        "Review Task": lambda: app.main(),
-        "Update Task": lambda: update_task(),
         "Add Task": lambda: add_task(),
+        "Update Task": lambda: update_task(),
+        "Review Task": lambda: review_task(),
         "Delete Task": lambda: delete_task(),
     }
 
