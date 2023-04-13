@@ -139,7 +139,7 @@ def plot_file_info(title: str, files_dict: dict):
         level = folder.count(os.sep)
         indent = '-' * level
         # st.markdown('{}📁({}) {}/'.format(indent, len(files), folder))
-        with st.expander('📁({}) {}/'.format(len(files), folder)):
+        with st.expander('📁({}) {}/'.format(len(files), folder.replace(constants.ADQ_WORKING_FOLDER, ""))):
             for file in files:
                 file_stat = os.stat(os.path.join(folder, file))
                 dt_cdatetime = dt.datetime.fromtimestamp(file_stat.st_ctime)

@@ -64,14 +64,24 @@ def get_tasks_info():
     return TasksInfo.from_json(json_tasks)
 
 
-def get_df_tasks(project_id):
+def get_df_tasks(project_id: int):
     tasks_info = get_tasks_info()
     if tasks_info.num_count > 0:
         df_tasks = pd.DataFrame(tasks_info.to_json()[constants.TASKS])
         return df_tasks[df_tasks['project_id'] == project_id]
 
 
-def select_task(project_id):
+def get_tasks(project_id: int) -> list:
+    tasks_info = get_tasks_info()
+    tasks_to_return = []
+    for task in tasks_info.tasks:
+        if task.project_id == project_id:
+            tasks_to_return.append(task)
+
+    return tasks_to_return
+
+
+def select_task(project_id: int):
     tasks_info = get_tasks_info()
     if tasks_info.num_count > 0:
         df_tasks = pd.DataFrame(tasks_info.to_json()[constants.TASKS])

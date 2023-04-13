@@ -13,7 +13,7 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common.charts import *
-from src.home import select_project
+from src.home import select_project, get_tasks
 from src.models.adq_labels import AdqLabels
 from src.models.dart_labels import DartLabels
 
@@ -24,14 +24,22 @@ def show_file_metrics():
     selected_project = select_project()
 
     if selected_project:
+        data_files = dict()
         if len(selected_project.data_files) > 0:
-            st.markdown("# Image Files Info")
-            chart_images_ctime, chart_images_file_size = plot_file_info("### Created date time",
-                                                                        selected_project.data_files)
-            if chart_images_ctime:
-                display_chart(selected_project.id, "data_files_ctime", chart_images_ctime)
-            if chart_images_file_size:
-                display_chart(selected_project.id, "image_file_sizes", chart_images_file_size)
+            st.markdown("# Files Info")
+            data_files = selected_project.data_files
+        else:
+            tasks = get_tasks(selected_project.id)
+            if tasks and len(tasks) > 0:
+                for task in tasks:
+                    for folder, files in task.data_files.items():
+                        data_files[folder] = files
+
+        chart_files_ctime, chart_file_sizes = plot_file_info("### Created date time", data_files)
+        if chart_files_ctime:
+            display_chart(selected_project.id, "files_ctime", chart_files_ctime)
+        if chart_file_sizes:
+            display_chart(selected_project.id, "file_sizes", chart_file_sizes)
 
         if len(selected_project.label_files) > 0:
             st.markdown("# Label Files Info")
