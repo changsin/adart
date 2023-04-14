@@ -36,6 +36,21 @@ def view_project():
         df_tasks = get_df_tasks(selected_project.id)
         st.dataframe(df_tasks.transpose())
 
+
+# def model_validation_dashboard():
+#     projects_info = get_projects_info()
+#     model_projects = []
+#     for project in projects_info.projects:
+#         if project.extended_properties:
+#             model_projects.append(project)
+#
+#     for model_project in model_projects:
+#         model_tasks = get_tasks(model_project.id)
+#
+#         for model_task in model_tasks:
+#             model_task.
+
+
 def dashboard():
     st.subheader("**Projects**")
     df_projects = pd.DataFrame(columns=constants.PROJECT_COLUMNS)

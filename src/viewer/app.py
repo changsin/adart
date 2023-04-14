@@ -3,21 +3,14 @@ import os
 import streamlit as st
 
 from src.common.constants import ADQ_WORKING_FOLDER, ErrorType
-from src.home import select_project, select_task
+from src.home import select_task
 from src.pages.metrics import load_label_file
 from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import DartImageManager, DartImageDirManager
+from src.models.projects_info import Project
 
 
-def main(labels=ErrorType.get_all_types()):
-    selected_project = select_project(is_sidebar=True)
-    if not selected_project:
-        return
-
-    if selected_project.extended_properties:
-        st.sidebar.write("Not a data project")
-        return
-
+def main(selected_project: Project, labels=ErrorType.get_all_types()):
     selected_task, selected_index = select_task(selected_project.id)
     if selected_task:
         task_folder = os.path.join(ADQ_WORKING_FOLDER,

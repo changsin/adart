@@ -288,7 +288,7 @@ def review_task():
         if selected_project.extended_properties:
             review_model_task(selected_project)
         else:
-            app.main()
+            app.main(selected_project)
 
 
 def review_model_task(selected_project):
