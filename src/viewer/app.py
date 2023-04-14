@@ -125,6 +125,6 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                     )
                     im.set_annotation(i, select_label)
 
-
-if __name__ == "__main__":
-    main()
+#
+# if __name__ == "__main__":
+#     main()

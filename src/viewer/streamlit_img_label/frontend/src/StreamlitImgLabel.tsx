@@ -79,14 +79,14 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     hasRotatingPoint: false,
                 })
             );
-            canvas.add(
+            canvasTmp.add(
                 new fabric.Text(label, {
                     left: left,
-                    top: top,
+                    top: top + 20,
                     fontFamily: "Arial",
                     fontSize: 14,
                     fontWeight: "bold",
-                    fill: "black",
+                    fill: boxColor,
                 })
             );
         });
@@ -154,7 +154,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             canvas.add(
                 new fabric.Text(label, {
                     left: left,
-                    top: top,
+                    top: top + 20,
                     fontFamily: "Arial",
                     fontSize: 14,
                     fontWeight: "bold",
@@ -241,7 +241,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     className={mode === "dark" ? styles.dark : ""}
                     onClick={addBoxHandler}
                 >
-                    Add bounding box
+                    Mark Untagged
                 </button>
                 <button
                     className={mode === "dark" ? styles.dark : ""}

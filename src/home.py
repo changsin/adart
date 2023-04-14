@@ -127,17 +127,20 @@ def main():
     st.session_state[constants.PROJECTS] = projects_info
 
 
-def get_token(username: str, password: str):
-    # if user == 'Admin' and password == "1234":
-    #     return "token"
-    token = api.get_access_token("https://192.168.12.74" + "/api/v1/login/access-token", username, password)
-    print("access token is {}".format(token))
-    return token
+def get_token(url, username: str, password: str):
+    if "http://localhost" == url:
+        if username == 'Admin' and password == "1234":
+            return "token"
+    else:
+        token = api.get_access_token(url + "/api/v1/login/access-token", username, password)
+        print("access token is {}".format(token))
+        return token
 
 
 def login():
     selected_url = st.selectbox("Select server", [
-        "https://192.168.12.74"
+        "http://192.168.12.74",
+        "http://localhost"
     ])
 
     col1, col2 = st.columns(2)
@@ -148,7 +151,7 @@ def login():
 
     login_button = col2.button("Login")
     if login_button:
-        token = get_token(username, password)
+        token = get_token(selected_url, username, password)
 
         if username and password and not token:
             col2.warning("Please check your credentials")
