@@ -28,7 +28,11 @@ from src.common.constants import (
     DomainCode
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
-from src.home import select_project, get_projects_info, get_tasks_info
+from src.home import (
+    is_authenticated,
+    login,
+    logout,
+    select_project)
 from src.models.projects_info import Project, ModelProject
 
 MULTI_SELECT_SEP = ';'
@@ -321,4 +325,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if not is_authenticated():
+        login()
+    else:
+        main()
+        logout()

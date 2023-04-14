@@ -21,13 +21,14 @@ if spec is None:
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
-    ModelTaskType
-)
+    ModelTaskType)
 from src.home import (
+    is_authenticated,
     get_tasks_info,
+    login,
+    logout,
     select_project,
-    select_task
-)
+    select_task)
 from src.pages import metrics
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
@@ -355,4 +356,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if not is_authenticated():
+        login()
+    else:
+        main()
+        logout()

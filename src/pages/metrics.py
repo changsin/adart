@@ -1,8 +1,7 @@
-from collections import namedtuple
 import importlib.util
+from collections import namedtuple
 
 import shapely
-
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -13,7 +12,11 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common.charts import *
-from src.home import select_project, get_tasks
+from src.home import (
+    is_authenticated,
+    login,
+    logout,
+    select_project)
 from src.models.adq_labels import AdqLabels
 from src.models.dart_labels import DartLabels
 
@@ -267,4 +270,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if not is_authenticated():
+        login()
+    else:
+        main()
+        logout()

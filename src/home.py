@@ -14,6 +14,8 @@ from src.common import utils
 from src.models.projects_info import ProjectsInfo
 from src.models.tasks_info import TasksInfo
 
+import src.common.api as api
+
 
 def get_projects_info():
     if not os.path.exists(constants.ADQ_WORKING_FOLDER):
@@ -125,5 +127,54 @@ def main():
     st.session_state[constants.PROJECTS] = projects_info
 
 
+def get_token(username: str, password: str):
+    # if user == 'Admin' and password == "1234":
+    #     return "token"
+    token = api.get_access_token("https://192.168.12.74" + "/api/v1/login/access-token", username, password)
+    print("access token is {}".format(token))
+    return token
+
+
+def login():
+    selected_url = st.selectbox("Select server", [
+        "https://192.168.12.74"
+    ])
+
+    col1, col2 = st.columns(2)
+    col1.title("ADaRT App")
+    col1.write('Brought to you by TW')
+    username = col2.text_input('User', key='user', value="")
+    password = col2.text_input('Password', type="password", value="")
+
+    login_button = col2.button("Login")
+    if login_button:
+        token = get_token(username, password)
+
+        if username and password and not token:
+            col2.warning("Please check your credentials")
+            return False
+        else:
+            st.session_state['token'] = token
+            return True
+
+
+def logout():
+    button_label = st.empty()
+    # button_label.text = "Log out"
+    logout_clicked = st.sidebar.button("Logout")
+    if logout_clicked:
+        button_label.text = "Logged out"
+        st.session_state['token'] = None
+
+
+def is_authenticated():
+    return st.session_state.get('token')
+
+
 if __name__ == '__main__':
-    main()
+    if not is_authenticated():
+        login()
+    else:
+        main()
+        logout()
+

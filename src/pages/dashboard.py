@@ -14,7 +14,13 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common import constants, utils
-from src.home import get_projects_info, select_project, get_df_tasks
+from src.home import (
+    get_df_tasks,
+    get_projects_info,
+    is_authenticated,
+    login,
+    logout,
+    select_project)
 
 
 def view_project():
@@ -93,4 +99,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if not is_authenticated():
+        login()
+    else:
+        main()
+        logout()
