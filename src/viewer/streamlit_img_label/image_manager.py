@@ -99,6 +99,7 @@ class DartImageManager:
         resized_rect["height"] = rect["height"] / self._resized_ratio_h
         if "label" in rect:
             resized_rect["label"] = rect["label"]
+        resized_rect["shapeType"] = "rectangle"
         return resized_rect
 
     def get_resized_rects(self):
@@ -114,11 +115,13 @@ class DartImageManager:
         rect["width"] = int(rect["width"] * self._resized_ratio_w)
         rect["top"] = int(rect["top"] * self._resized_ratio_h)
         rect["height"] = int(rect["height"] * self._resized_ratio_h)
-        left, top, width, height = (
+        left, top, width, height, label, shapeType = (
             rect["left"],
             rect["top"],
             rect["width"],
             rect["height"],
+            rect["label"],
+            rect["shapeType"]
         )
 
         raw_image = np.asarray(self._img).astype("uint8")

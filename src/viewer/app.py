@@ -96,7 +96,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         img = im.get_img()
         resized_img = im.resizing_img()
         resized_rects = im.get_resized_rects()
-        rects = st_img_label(resized_img, box_color="red", rects=resized_rects)
+        rects = st_img_label(resized_img, box_color="red", shape_props=resized_rects)
 
         def annotate():
             im.save_annotation()

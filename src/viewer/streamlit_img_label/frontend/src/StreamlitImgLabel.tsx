@@ -113,6 +113,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // const { canvasWidth, canvasHeight, imageData }: PythonArgs = props.args
     const { canvasWidth, canvasHeight, imageData, shapes, boxColor }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
+    console.log(props)
 
   
     /*

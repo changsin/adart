@@ -18,7 +18,7 @@ else:
     _component_func = components.declare_component("st_img_label", path=build_dir)
 
 
-def st_img_label(resized_img, box_color="blue", rects=[], key=None):
+def st_img_label(resized_img, box_color="blue", shape_props=[], key=None):
     """Create a new instance of "st_img_label".
 
     Parameters
@@ -56,16 +56,16 @@ def st_img_label(resized_img, box_color="blue", rects=[], key=None):
     component_value = _component_func(
         canvasWidth=canvasWidth,
         canvasHeight=canvasHeight,
-        rects=rects,
+        shapes=shape_props,
         boxColor=box_color,
         imageData=imageData,
         key=key,
     )
     # Return a cropped image using the box from the frontend
     if component_value:
-        return component_value["rects"]
+        return component_value["shapes"]
     else:
-        return rects
+        return shape_props
 
 
 # Add some test code to play with the component while it's in development.
@@ -155,7 +155,7 @@ if not _RELEASE:
     img = im.get_img()
     resized_img = im.resizing_img()
     resized_rects = im.get_resized_rects()
-    rects = st_img_label(resized_img, box_color="red", rects=resized_rects)
+    rects = st_img_label(resized_img, box_color="red", shape_props=resized_rects)
 
     def annotate():
         im.save_annotation()
