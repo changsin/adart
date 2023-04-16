@@ -139,7 +139,7 @@ def get_token(url, username: str, password: str):
 
 def login():
     selected_url = st.selectbox("Select server", [
-        "http://192.168.12.74",
+        "http://192.168.45.252",
         "http://localhost"
     ])
 

@@ -7,29 +7,114 @@ import {
 import { fabric } from "fabric"
 import styles from "./StreamlitImgLabel.module.css"
 
+// interface RectProps {
+//     top: number
+//     left: number
+//     width: number
+//     height: number
+//     label: string
+//     shape: "rectangle" | "spline"
+//     radius?: number // Only used if shape is "spline"
+// }
+
+// interface SplineProps {
+//     points: {x: number, y: number}[]
+//     label: string
+// }
+
 interface RectProps {
     top: number
     left: number
     width: number
     height: number
     label: string
+    shapeType: "rectangle"
 }
+
+interface SplineProps {
+    points: Array<{ x: number; y: number }>
+    radius: number
+    label: string
+    shapeType: "spline"
+}
+
+type ShapeProps = RectProps | SplineProps
 
 interface PythonArgs {
     canvasWidth: number
     canvasHeight: number
-    rects: RectProps[]
+    shapes: ShapeProps[]
     boxColor: string
     imageData: Uint8ClampedArray
 }
 
+function getSplinePath(points: number[][], radius: number): string {
+    const path = new Path2D();
+    const firstPoint = points[0];
+    path.moveTo(firstPoint[0] + radius, firstPoint[1]);
+  
+    for (let i = 1; i < points.length - 2; i++) {
+      const currentPoint = points[i];
+      const nextPoint = points[i + 1];
+      const cp = [
+        currentPoint[0] + (nextPoint[0] - currentPoint[0]) / 2,
+        currentPoint[1] + (nextPoint[1] - currentPoint[1]) / 2,
+      ];
+  
+      path.arcTo(cp[0], cp[1], nextPoint[0] + radius, nextPoint[1], radius);
+    }
+  
+    // Draw the last two points as a straight line
+    const secondLastPoint = points[points.length - 2];
+    const lastPoint = points[points.length - 1];
+    path.lineTo(lastPoint[0], lastPoint[1]);
+    path.lineTo(secondLastPoint[0], secondLastPoint[1]);
+  
+    // Draw arcs for the rounded corners
+    path.arcTo(
+      lastPoint[0] - radius,
+      lastPoint[1],
+      lastPoint[0] - radius,
+      lastPoint[1] + radius,
+      radius
+    );
+    path.arcTo(
+      lastPoint[0] - radius,
+      lastPoint[1] + 2 * radius,
+      lastPoint[0],
+      lastPoint[1] + 2 * radius,
+      radius
+    );
+    path.arcTo(
+      lastPoint[0] + radius,
+      lastPoint[1] + 2 * radius,
+      lastPoint[0] + radius,
+      lastPoint[1] + radius,
+      radius
+    );
+    path.arcTo(
+      lastPoint[0] + radius,
+      lastPoint[1],
+      lastPoint[0],
+      lastPoint[1],
+      radius
+    );
+  
+    // Close the path
+    path.closePath();
+  
+    return path.toString();
+  }
+  
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
-    const { canvasWidth, canvasHeight, imageData }: PythonArgs = props.args
+    // const { canvasWidth, canvasHeight, imageData }: PythonArgs = props.args
+    const { canvasWidth, canvasHeight, imageData, shapes, boxColor }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
 
+  
     /*
      * Translate Python image data to a JavaScript Image
      */
@@ -54,48 +139,105 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         dataUri = ""
     }
 
-    // Initialize canvas on mount and add a rectangle
+    // Initialize canvas on mount and add shapes
     useEffect(() => {
-        const { rects, boxColor }: PythonArgs = props.args
+        if (!canvas) {
+        // Create a new canvas if it doesn't exist yet
         const canvasTmp = new fabric.Canvas("c", {
             enableRetinaScaling: false,
             backgroundImage: dataUri,
             uniScaleTransform: true,
         })
+        setCanvas(canvasTmp)
 
-        rects.forEach((rect) => {
-            const { top, left, width, height, label } = rect
-            canvasTmp.add(
-                new fabric.Rect({
-                    left,
-                    top,
-                    fill: "",
-                    width,
-                    height,
-                    objectCaching: true,
-                    stroke: boxColor,
-                    strokeWidth: 1,
-                    strokeUniform: true,
-                    hasRotatingPoint: false,
-                })
-            );
-            canvasTmp.add(
-                new fabric.Text(label, {
-                    left: left,
-                    top: top + 20,
-                    fontFamily: "Arial",
-                    fontSize: 14,
-                    fontWeight: "bold",
-                    fill: boxColor,
-                })
-            );
-        });
-        setLabels(rects.map((rect) => rect.label))
+        // Add shapes to the canvas
+        shapes.forEach((shape) => {
+            if (shape.shapeType === "rectangle") {
+                const { top, left, width, height, label } = shape
+                canvasTmp.add(
+                    new fabric.Rect({
+                        left,
+                        top,
+                        fill: "",
+                        width,
+                        height,
+                        objectCaching: true,
+                        stroke: boxColor,
+                        strokeWidth: 1,
+                        strokeUniform: true,
+                        hasRotatingPoint: false,
+                    })
+                )
+                canvasTmp.add(
+                    new fabric.Text(label, {
+                        left: left,
+                        top: top + 20,
+                        fontFamily: "Arial",
+                        fontSize: 14,
+                        fontWeight: "bold",
+                        fill: boxColor,
+                    })
+                )
+            } else if (shape.shapeType === "spline") {
+                const { points, radius, label } = shape
+                const spline = new fabric.Path(
+                    getSplinePath(
+                      shape.points.map(({ x, y }) => [x, y]),
+                      shape.radius
+                    ),
+                    {
+                      fill: "",
+                      stroke: boxColor,
+                      strokeWidth: 1,
+                      strokeUniform: true,
+                      hasRotatingPoint: false,
+                    }
+                  );
+                // const spline = new fabric.Path(getSplinePath(props.points.map(({x, y}) => [x, y]), props.radius), {
+                //     left: props.left,
+                //     top: props.top,
+                //     fill: "",
+                //     objectCaching: true,
+                //     stroke: props.boxColor,
+                //     strokeWidth: 1,
+                //     strokeUniform: true,
+                //     hasRotatingPoint: false,
+                //     lockUniScaling: true,
+                //   });
+                canvasTmp.add(spline)
+                // const path = getSplinePath(points, radius)
+                // canvasTmp.add(
+                //     new fabric.Path(path, {
+                //         fill: "",
+                //         stroke: boxColor,
+                //         strokeWidth: 1,
+                //         objectCaching: true,
+                //         hasRotatingPoint: false,
+                //     })
+                // )
+                canvasTmp.add(
+                    new fabric.Text(label, {
+                        left: points[0].x,
+                        top: points[0].y - 20,
+                        fontFamily: "Arial",
+                        fontSize: 14,
+                        fontWeight: "bold",
+                        fill: boxColor,
+                    })
+                )
+            } else {
+                console.warn(`Invalid shape "${shape}" specified". Skipping...`)
+                return
+            }
+        })
 
         setCanvas(canvasTmp)
+        // Set labels
+        setLabels(shapes.map((shape) => shape.label))
+
         Streamlit.setFrameHeight()
-        // eslint-disable-next-line
-    }, [canvasHeight, canvasWidth, dataUri])
+        }
+    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, boxColor])
 
     // Create defualt bounding box
     const defaultBox = () => ({
@@ -131,39 +273,39 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         sendCoordinates(labels.filter((label, i) => i !== selectIndex))
     }
 
-    // Reset the bounding boxes
-    const resetHandler = () => {
-        clearHandler()
-        const { rects, boxColor }: PythonArgs = props.args
-        rects.forEach((rect) => {
-            const { top, left, width, height, label } = rect;
-            canvas.add(
-                new fabric.Rect({
-                    left,
-                    top,
-                    fill: "",
-                    width,
-                    height,
-                    objectCaching: true,
-                    stroke: boxColor,
-                    strokeWidth: 1,
-                    strokeUniform: true,
-                    hasRotatingPoint: false,
-                })
-            );
-            canvas.add(
-                new fabric.Text(label, {
-                    left: left,
-                    top: top + 20,
-                    fontFamily: "Arial",
-                    fontSize: 14,
-                    fontWeight: "bold",
-                    fill: "black",
-                })
-            );
-        });
-        sendCoordinates(labels)
-    }
+    // // Reset the bounding boxes
+    // const resetHandler = () => {
+    //     clearHandler()
+    //     const { rects, boxColor }: PythonArgs = props.args
+    //     rects.forEach((rect) => {
+    //         const { top, left, width, height, label } = rect;
+    //         canvas.add(
+    //             new fabric.Rect({
+    //                 left,
+    //                 top,
+    //                 fill: "",
+    //                 width,
+    //                 height,
+    //                 objectCaching: true,
+    //                 stroke: boxColor,
+    //                 strokeWidth: 1,
+    //                 strokeUniform: true,
+    //                 hasRotatingPoint: false,
+    //             })
+    //         );
+    //         canvas.add(
+    //             new fabric.Text(label, {
+    //                 left: left,
+    //                 top: top + 20,
+    //                 fontFamily: "Arial",
+    //                 fontSize: 14,
+    //                 fontWeight: "bold",
+    //                 fill: "black",
+    //             })
+    //         );
+    //     });
+    //     sendCoordinates(labels)
+    // }
 
     // Remove all the bounding boxes
     const clearHandler = () => {
@@ -249,12 +391,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 >
                     Remove select
                 </button>
-                <button
+                {/* <button
                     className={mode === "dark" ? styles.dark : ""}
                     onClick={resetHandler}
                 >
                     Reset
-                </button>
+                </button> */}
                 <button
                     className={mode === "dark" ? styles.dark : ""}
                     onClick={clearHandler}

@@ -52,6 +52,7 @@ class DartImageManager:
             rect["width"] = int(width)
             rect["height"] = int(height)
             rect["label"] = label_object.label
+            rect["shapeType"] = "rectangle"
 
             converted_rects.append(rect)
 
