@@ -150,8 +150,10 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
     ori_folder = os.path.join(target_folder, "origin")
     if not os.path.exists(ori_folder):
         os.mkdir(ori_folder)
-    shutil.copy(anno_file,
-                os.path.join(ori_folder, os.path.basename(anno_file)))
+    ori_filename = os.path.join(ori_folder, os.path.basename(anno_file))
+    if anno_file != ori_filename:
+        print("Copying {} to {}".format(anno_file, os.path.join(ori_folder, os.path.basename(anno_file))))
+        shutil.copy(anno_file, ori_filename)
 
     # directly write to the destination
     target_filename = os.path.join(target_folder, fname + '.json')

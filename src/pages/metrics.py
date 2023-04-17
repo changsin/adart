@@ -85,12 +85,16 @@ def load_label_file(folder: str, label_file: str) -> DartLabels:
                                   label_file)
     # check if it is already in DartLabels format
     # TODO: find a better way of checking the format
-    if json_labels.get('images') and type(json_labels.get('images')[0]['height']) == int:
-        return DartLabels.from_json(json_labels)
+    print(json_labels)
+    if json_labels:
+        if json_labels.get('images') and type(json_labels.get('images')[0]['height']) == int:
+            return DartLabels.from_json(json_labels)
+        else:
+            adq_labels = AdqLabels.from_json(json_labels)
+            # convert to dart label format for easier processing
+            return DartLabels.from_adq_labels(adq_labels)
     else:
-        adq_labels = AdqLabels.from_json(json_labels)
-        # convert to dart label format for easier processing
-        return DartLabels.from_adq_labels(adq_labels)
+        st.warning("label file {}/{} does not!".format(folder, label_file))
 
 
 def load_label_files(label_files_dict: dict) -> dict:

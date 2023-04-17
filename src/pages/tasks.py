@@ -21,6 +21,9 @@ if spec is None:
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
+    SUPPORTED_LABEL_FORMATS,
+    CVAT_XML,
+    STRADVISION_XML,
     ModelTaskType)
 from src.home import (
     is_authenticated,
@@ -193,10 +196,9 @@ def add_task():
 
 
 def add_data_task(selected_project: Project):
-    with st.form("Add a Data Task"):
+    with st.form("Add Data Task"):
         task_name = st.text_input("**Task Name:**")
-        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
-                   "*", ""]
+        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
         selected_file_types = st.selectbox("**Image file types**",
                                            options,
                                            index=len(options) - 1)
@@ -225,7 +227,7 @@ def add_data_task(selected_project: Project):
                 saved_filenames.append(file.name)
             data_files[save_folder] = saved_filenames
 
-        label_files = dict()
+        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
         if uploaded_label_files:
             # Save the uploaded files in origin folder
             ori_folder = os.path.join(save_folder, "origin")
@@ -238,11 +240,13 @@ def add_data_task(selected_project: Project):
                     f.write(file.getbuffer())
                 saved_filenames.append(os.path.join(ori_folder, file.name))
 
-            print(saved_filenames)
-            converted_filename = from_strad_vision_xml("11", saved_filenames, save_folder)
+            if labels_format_type == STRADVISION_XML:
+                converted_filename = from_strad_vision_xml("11", saved_filenames, save_folder)
+            elif labels_format_type == CVAT_XML:
+                # There should be only 1 per folder
+                converted_filename = convert_CVAT_to_Form("NN", saved_filenames[0], save_folder)
 
-            # label_files[save_folder] = [converted_filename]
-
+        # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Task")
         if submitted:
             new_task = Task(new_task_id, task_name, selected_project.id, "Created",
