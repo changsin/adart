@@ -20,3 +20,9 @@ This is done through Electron following (How to Convert a Streamlit App to an .E
 >npm install
 >npm run build
 ```
+
+# Dependencies
+
+```commandline
+>pip install python-jwt passlib pydantic
+```

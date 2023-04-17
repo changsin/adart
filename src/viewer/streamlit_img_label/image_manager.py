@@ -115,14 +115,13 @@ class DartImageManager:
         rect["width"] = int(rect["width"] * self._resized_ratio_w)
         rect["top"] = int(rect["top"] * self._resized_ratio_h)
         rect["height"] = int(rect["height"] * self._resized_ratio_h)
-        left, top, width, height, label, shapeType = (
+        left, top, width, height = (
             rect["left"],
             rect["top"],
             rect["width"],
-            rect["height"],
-            rect["label"],
-            rect["shapeType"]
+            rect["height"]
         )
+        rect["shapeType"] = "rectangle"
 
         raw_image = np.asarray(self._img).astype("uint8")
         prev_img = np.zeros(raw_image.shape, dtype="uint8")
