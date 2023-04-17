@@ -34,9 +34,14 @@ from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
 from src.common import utils
 import src.viewer.app as app
+from src.common.convert_lib import (
+    convert_CVAT_to_Form,
+    convert_PASCAL_to_Form,
+    from_strad_vision_xml)
 
 
 DATE_FORMAT = "%Y %B %d %A"
+LABEL_FILE_EXTENSIONS = ['json', 'xml']
 
 
 def calculate_sample_count(count, percent):
@@ -131,14 +136,6 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def add_task():
-    selected_project = select_project(is_sidebar=True)
-    if selected_project:
-        if selected_project.extended_properties:
-            add_model_task(selected_project)
-        else:
-            create_data_tasks(selected_project)
-
 
 def create_data_tasks(selected_project: Project):
     if len(selected_project.label_files) > 0:
@@ -186,8 +183,80 @@ def create_data_tasks(selected_project: Project):
                     sample_data(selected_project, dart_labels_dict, df_sample_count)
 
 
+def add_task():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        if selected_project.extended_properties:
+            add_model_task(selected_project)
+        else:
+            add_data_task(selected_project)
+
+
+def add_data_task(selected_project: Project):
+    with st.form("Add a Data Task"):
+        task_name = st.text_input("**Task Name:**")
+        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
+                   "*", ""]
+        selected_file_types = st.selectbox("**Image file types**",
+                                           options,
+                                           index=len(options) - 1)
+        uploaded_data_files = st.file_uploader("Upload data files",
+                                               selected_file_types,
+                                               accept_multiple_files=True)
+
+        uploaded_label_files = st.file_uploader("Upload label files",
+                                                LABEL_FILE_EXTENSIONS,
+                                                accept_multiple_files=True)
+
+        tasks_info = get_tasks_info()
+        new_task_id = tasks_info.get_next_task_id()
+
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
+        data_files = dict()
+        if uploaded_data_files:
+            # Save the uploaded files
+            saved_filenames = []
+            for file in uploaded_data_files:
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                saved_filenames.append(file.name)
+            data_files[save_folder] = saved_filenames
+
+        label_files = dict()
+        if uploaded_label_files:
+            # Save the uploaded files in origin folder
+            ori_folder = os.path.join(save_folder, "origin")
+            if not os.path.exists(ori_folder):
+                os.mkdir(ori_folder)
+
+            saved_filenames = []
+            for file in uploaded_label_files:
+                with open(os.path.join(ori_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                saved_filenames.append(os.path.join(ori_folder, file.name))
+
+            print(saved_filenames)
+            converted_filename = from_strad_vision_xml("11", saved_filenames, save_folder)
+
+            # label_files[save_folder] = [converted_filename]
+
+        submitted = st.form_submit_button("Add Data Task")
+        if submitted:
+            new_task = Task(new_task_id, task_name, selected_project.id, "Created",
+                            date=str(dt.datetime.now()),
+                            anno_file_name=converted_filename)
+            tasks_info = get_tasks_info()
+            tasks_info.add(new_task)
+            tasks_info.save()
+
+            st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+
+
 def add_model_task(selected_project: Project):
-    with st.form("Create a Model Task"):
+    with st.form("Add a Model Task"):
         task_name = st.text_input("**Task Name:**")
         description = st.text_area("Description")
         date = st.date_input("**Date:**")
@@ -332,7 +401,8 @@ def delete_task():
 
             task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
                                                  str(selected_project.id),
-                                                 str(selected_index))
+                                                 str(selected_task.id))
+            print("Deleting folder {}".format(task_folder_to_delete))
             if os.path.exists(task_folder_to_delete):
                 shutil.rmtree(task_folder_to_delete)
             st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))

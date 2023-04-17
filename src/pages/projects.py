@@ -18,7 +18,7 @@ from src.common.constants import (
     SUPPORTED_AUDIO_FILE_EXTENSIONS,
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
     SUPPORTED_VIDEO_FILE_EXTENSIONS,
-    SUPPORTED_FORMATS,
+    SUPPORTED_LABEL_FORMATS,
 
     ADQ_WORKING_FOLDER,
     PASCAL_VOC_XML,
@@ -29,6 +29,8 @@ from src.common.constants import (
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import (
+    get_projects_info,
+    get_tasks_info,
     is_authenticated,
     login,
     logout,
@@ -65,7 +67,7 @@ def create_data_project():
                                            index=len(options) - 1)
 
         labels_folder = st.text_input("**Labels folder:**")
-        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_FORMATS)
+        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
         submitted = st.form_submit_button("Create project")
 
         if submitted:

@@ -121,7 +121,7 @@ class DartLabels:
         group_id = attr.ib(validator=attr.validators.instance_of(str))
         points = attr.ib(validator=attr.validators.instance_of(list))
         # a list of attribute_name and attribute_value pairs
-        attributes = attr.ib(default=[], validator=attr.validators.instance_of(dict))
+        attributes = attr.ib(default=dict(), validator=attr.validators.instance_of(dict))
         verification_result = attr.ib(default=None)
 
         # {

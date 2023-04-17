@@ -145,10 +145,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 if (shape.shapeType === "rectangle") {
                     const { top, left, width, height, label } = shape
 
-                    console.log("rendering rectangle")
-                    console.log(shape)
-                    canvas.add(
-                        new fabric.Rect({
+                    const annotation = new fabric.Rect({
                             left,
                             top,
                             fill: "",
@@ -158,11 +155,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             stroke: boxColor,
                             strokeWidth: 1,
                             strokeUniform: true,
-                            hasRotatingPoint: false,
+                            hasRotatingPoint: false
                         })
-                    )
-                    canvas.add(
-                        new fabric.Text(label, {
+                    const text = new fabric.Text(label, {
                             left: left,
                             top: top + 20,
                             fontFamily: "Arial",
@@ -170,7 +165,74 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             fontWeight: "bold",
                             fill: boxColor,
                         })
-                    )
+                    const selectedAnnotation = new fabric.Rect({
+                            left,
+                            top,
+                            fill: "",
+                            width,
+                            height,
+                            objectCaching: true,
+                            stroke: boxColor,
+                            strokeWidth: 10,
+                            strokeUniform: true,
+                            hasRotatingPoint: false,
+                            selectable: false,
+                            visible: false,
+                            lockMovementX: true, // Set lockMovementX to true
+                            lockMovementY: true // Set lockMovementY to true
+                        })
+                    canvas.add(annotation)
+                    canvas.add(text)
+                    canvas.add(selectedAnnotation)
+
+                    annotation.on("mousedown", () => {
+                        canvas.discardActiveObject(); // Deselect any previously selected object
+                        console.log("selectedAnnotation")
+                        if (selectedAnnotation.visible) {
+                            // If the annotation is already selected, deselect it
+                            annotation.trigger("deselected"); // Manually trigger the deselected event
+                            selectedAnnotation.visible = false;
+                          } else {
+                            // Otherwise, select the annotation
+                            selectedAnnotation.set({
+                              left: left,
+                              top: top,
+                              width: width,
+                              height: height,
+                              visible: true,
+                            });
+                            canvas.setActiveObject(selectedAnnotation);
+                            annotation.trigger("selected"); // Manually trigger the selected event
+                        }
+                    });
+
+                    annotation.on("mouseup", (event) => {
+                        if (!event.target) {
+                          // If no object is clicked, deselect any selected object
+                          const activeObject = canvas.getActiveObject();
+                          if (activeObject === selectedAnnotation) {
+                            annotation.trigger("deselected"); // Manually trigger the deselected event
+                            selectedAnnotation.visible = false;
+                          }
+                        }
+                    });
+                      
+                    // Add a click event listener to show the highlight rectangle
+                    annotation.on("selected", () => {
+                        selectedAnnotation.set({
+                        left: left,
+                        top: top,
+                        width: width,
+                        height: height,
+                        visible: true,
+                        });
+                        canvas.setActiveObject(selectedAnnotation);
+                    });
+                
+                    // Add a click event listener to hide the highlight rectangle
+                    annotation.on("deselected", () => {
+                        selectedAnnotation.visible = false;
+                    });
                 } else if (shape.shapeType === "spline") {
                     const { points, radius, label } = shape
                     const spline = new fabric.Path(
@@ -337,22 +399,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         }))
         Streamlit.setComponentValue({ rects })
     }
-
-    // Update the bounding boxes when modified
-    useEffect(() => {
-        if (!canvas) {
-            return
-        }
-        const handleEvent = () => {
-            canvas.renderAll()
-            sendCoordinates(labels)
-        }
-
-        canvas.on("object:modified", handleEvent)
-        return () => {
-            canvas.off("object:modified")
-        }
-    })
 
     // Adjust the theme according to the system
     const onSelectMode = (mode: string) => {

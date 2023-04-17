@@ -6,6 +6,8 @@ import xml.etree.ElementTree as ET
 
 import streamlit as st
 
+POINT_SEP = ':'
+
 
 # function name : collect_org_annofile_as_list
 #
@@ -160,6 +162,153 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
 
     return target_filename
 
+
+def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_folder: str) -> str:
+    if img_annof_relation != '11':
+        return
+
+    output_jdict = dict()
+    output_jdict['mode'] = 'annotation'
+    output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
+    output_jdict['template_version'] = "0.1"
+
+    output_jdict_imgs = list()
+
+    for image_id, xml_file in enumerate(anno_file_list):
+        xml_structure = ET.parse(xml_file)
+
+        cur_img = dict()
+        cur_img['image_id'] = str(image_id)
+        cur_img['name'] = os.path.splitext(os.path.basename(xml_file))[0]
+
+        print("Converting {}".format(cur_img['name']))
+
+        root = xml_structure.getroot()
+
+        cur_img['width'] = int(root.get('imageWidth'))
+        cur_img['height'] = int(root.get('imageHeight'))
+
+        label_objects = []
+
+        # Find the VP element
+        el_vanishing_point = root.find('VP')
+
+        # Check if VP exists in the XML file
+        if el_vanishing_point:
+            vanishing_point_dict = dict()
+
+            vanishing_point_dict['label'] = 'VP'
+            vanishing_point_dict['type'] = 'VP'
+
+            # Extract the VP coordinates
+            x_ratio = float(el_vanishing_point.get('x_ratio'))
+            y_ratio = float(el_vanishing_point.get('y_ratio'))
+            vanishing_point_dict['points'] = [x_ratio, y_ratio]
+
+            # Add as an object (i.e., an annotation)
+            label_objects.append(vanishing_point_dict)
+
+        # Polygons, Boundarys, and Splines
+        el_splines = root.find('Splines')
+        if el_splines:
+            for el_spline in el_splines.findall('Spline'):
+                spline_dict = dict()
+                spline_dict['label'] = 'spline'
+                spline_dict['type'] = 'spline'
+
+                points = []
+                for point in el_spline.findall('Point'):
+                    x = point.get('x')
+                    y = point.get('y')
+                    r = point.get('r')
+                    points.append((float(x), float(y), float(r)))
+                spline_dict['points'] = points
+
+                attributes_dict = dict()
+                # Iterate over the attributes of the element
+                for attr_name, attr_value in el_spline.attrib.items():
+                    attributes_dict[attr_name] = attr_value
+
+                # Specific to Spline, it can have occlusion element
+                # Add it as an attribute
+                el_occlusion = el_spline.findall('Occlusion')
+                if el_occlusion:
+                    occlusion_dict = dict()
+                    for attr_name, attr_value in el_occlusion[0].attrib.items():
+                        occlusion_dict[attr_name] = attr_value
+                    attributes_dict['occlusion'] = occlusion_dict
+
+                spline_dict['attributes'] = attributes_dict
+
+                label_objects.append(spline_dict)
+
+        el_polygons = root.find('Polygons')
+        if el_polygons:
+            for polygon in el_polygons.findall('Polygon'):
+                polygon_dict = dict()
+                polygon_dict['label'] = 'polygon'
+                polygon_dict['type'] = 'polygon'
+
+                points = []
+                for point in polygon.findall('Point'):
+                    x = point.get('x')
+                    y = point.get('y')
+                    points.append((float(x), float(y)))
+
+                polygon_dict['points'] = points
+
+                attributes_dict = dict()
+                # Iterate over the attributes of the element
+                for attr_name, attr_value in polygon.attrib.items():
+                    attributes_dict[attr_name] = attr_value
+                polygon_dict['attributes'] = attributes_dict
+
+                label_objects.append(polygon_dict)
+
+        el_boundaries = root.find('Boundarys')
+        if el_boundaries:
+            for boundary in el_boundaries.findall('Boundary'):
+                boundary_dict = dict()
+                boundary_dict['label'] = 'boundary'
+                boundary_dict['type'] = 'boundary'
+
+                points = []
+                for point in boundary.findall('Point'):
+                    x = point.get('x')
+                    y = point.get('y')
+                    r = point.get('r')
+                    points.append((float(x), float(y), int(r)))
+
+                boundary_dict['points'] = points
+
+                attributes_dict = dict()
+                # Iterate over the attributes of the element
+                for attr_name, attr_value in boundary.attrib.items():
+                    attributes_dict[attr_name] = attr_value
+                attributes_dict['attributes'] = attributes_dict
+
+                label_objects.append(boundary_dict)
+
+        cur_img['objects'] = label_objects
+        output_jdict_imgs.append(cur_img)
+
+    output_jdict['images'] = output_jdict_imgs
+
+    # take the folder name as the fname
+    fname = os.path.basename(os.path.dirname(anno_file_list[0]))
+
+    # directly write to the destination
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+
+    st.write("Converted {}".format(fname))
+
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+
+    return target_filename
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
 def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):
