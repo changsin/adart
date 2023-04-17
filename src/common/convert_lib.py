@@ -181,7 +181,7 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
 
         cur_img = dict()
         cur_img['image_id'] = str(image_id)
-        cur_img['name'] = os.path.splitext(os.path.basename(xml_file))[0]
+        cur_img['name'] = os.path.splitext(os.path.basename(xml_file))[0] + '.jpg'
 
         print("Converting {}".format(cur_img['name']))
 

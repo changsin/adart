@@ -116,12 +116,12 @@ class DartLabels:
     class Object:
         label = attr.ib(validator=attr.validators.instance_of(str))
         type = attr.ib(validator=attr.validators.instance_of(str))
-        occluded = attr.ib(validator=attr.validators.instance_of(str))
-        z_order = attr.ib(validator=attr.validators.instance_of(str))
-        group_id = attr.ib(validator=attr.validators.instance_of(str))
-        points = attr.ib(validator=attr.validators.instance_of(list))
+        points = attr.ib(default=None)
         # a list of attribute_name and attribute_value pairs
-        attributes = attr.ib(default=dict(), validator=attr.validators.instance_of(dict))
+        attributes = attr.ib(default=None)
+        occluded = attr.ib(default=None)
+        z_order = attr.ib(default=None)
+        group_id = attr.ib(default=None)
         verification_result = attr.ib(default=None)
 
         # {
@@ -153,11 +153,11 @@ class DartLabels:
             yield from {
                 "label": self.label,
                 "type": self.type,
+                "points": self.points,
+                "attributes": self.attributes,
                 "occluded": self.occluded,
                 "z_order": self.z_order,
                 "group_id": self.group_id,
-                "points": self.points,
-                "attributes": self.attributes,
                 "verification_result": self.verification_result,
             }.items()
 
@@ -168,11 +168,11 @@ class DartLabels:
             return {
                 "label": self.label,
                 "type": self.type,
+                "points": self.points,
+                "attributes": self.attributes,
                 "occluded": self.occluded,
                 "z_order": self.z_order,
                 "group_id": self.group_id,
-                "points": self.points,
-                "attributes": self.attributes,
                 "verification_result": self.verification_result,
             }
 
@@ -180,13 +180,13 @@ class DartLabels:
         def from_json(json_dict):
             return DartLabels.Object(label=json_dict['label'],
                                      type=json_dict['type'],
-                                     occluded=json_dict['occluded'],
-                                     z_order=json_dict['z_order'],
-                                     group_id=json_dict['group_id'],
-                                     points=json_dict['points'],
-                                     attributes=json_dict['attributes'],
-                                     verification_result=json_dict['verification_result']
-                                     if json_dict.get('verification_result') else None)
+                                     points=json_dict.get('points', None),
+                                     attributes=json_dict.get('attributes', None),
+                                     occluded=json_dict.get('occluded', None),
+                                     z_order=json_dict.get('z_order', None),
+                                     group_id=json_dict.get('group_id', None),
+                                     verification_result=json_dict.get('verification_result', None)
+                                     )
 
         @staticmethod
         def from_adq_object(adq_object: AdqLabels.Object):
@@ -201,9 +201,9 @@ class DartLabels:
 
             return DartLabels.Object(label=adq_object.label,
                                      type=adq_object.type,
+                                     points=points,
+                                     attributes=attributes,
                                      occluded=adq_object.occluded,
                                      z_order=adq_object.z_order,
                                      group_id=adq_object.group_id,
-                                     points=points,
-                                     attributes=attributes,
                                      verification_result=adq_object.verification_result)

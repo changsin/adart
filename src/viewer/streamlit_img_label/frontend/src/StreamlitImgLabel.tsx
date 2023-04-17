@@ -16,9 +16,14 @@ interface RectProps {
     shapeType: "rectangle"
 }
 
+interface SplinePoint {
+    x: number;
+    y: number;
+    r: number;
+}
+
 interface SplineProps {
-    points: Array<{ x: number; y: number }>
-    radius: number
+    points: SplinePoint[]
     label: string
     shapeType: "spline"
 }
@@ -33,64 +38,42 @@ interface PythonArgs {
     imageData: Uint8ClampedArray
 }
 
-function getSplinePath(points: number[][], radius: number): string {
-    const path = new Path2D();
-    const firstPoint = points[0];
-    path.moveTo(firstPoint[0] + radius, firstPoint[1]);
-  
-    for (let i = 1; i < points.length - 2; i++) {
-      const currentPoint = points[i];
-      const nextPoint = points[i + 1];
-      const cp = [
-        currentPoint[0] + (nextPoint[0] - currentPoint[0]) / 2,
-        currentPoint[1] + (nextPoint[1] - currentPoint[1]) / 2,
-      ];
-  
-      path.arcTo(cp[0], cp[1], nextPoint[0] + radius, nextPoint[1], radius);
-    }
-  
-    // Draw the last two points as a straight line
-    const secondLastPoint = points[points.length - 2];
-    const lastPoint = points[points.length - 1];
-    path.lineTo(lastPoint[0], lastPoint[1]);
-    path.lineTo(secondLastPoint[0], secondLastPoint[1]);
-  
-    // Draw arcs for the rounded corners
-    path.arcTo(
-      lastPoint[0] - radius,
-      lastPoint[1],
-      lastPoint[0] - radius,
-      lastPoint[1] + radius,
-      radius
-    );
-    path.arcTo(
-      lastPoint[0] - radius,
-      lastPoint[1] + 2 * radius,
-      lastPoint[0],
-      lastPoint[1] + 2 * radius,
-      radius
-    );
-    path.arcTo(
-      lastPoint[0] + radius,
-      lastPoint[1] + 2 * radius,
-      lastPoint[0] + radius,
-      lastPoint[1] + radius,
-      radius
-    );
-    path.arcTo(
-      lastPoint[0] + radius,
-      lastPoint[1],
-      lastPoint[0],
-      lastPoint[1],
-      radius
-    );
-  
-    // Close the path
-    path.closePath();
-  
-    return path.toString();
+function getSplinePath(points: SplinePoint[]): string {
+  const path = ["M", points[0].x, points[0].y];
+
+  for (let i = 1; i < points.length - 2; i++) {
+    const xc = (points[i].x + points[i + 1].x) / 2;
+    const yc = (points[i].y + points[i + 1].y) / 2;
+    const radius = (points[i].r + points[i + 1].r) / 2;
+    const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
+    const controlX = xc - radius * Math.sin(angle);
+    const controlY = yc + radius * Math.cos(angle);
+    path.push("Q", points[i].x, points[i].y, controlX, controlY);
   }
-  
+
+  // curve through the last two points
+  const secondLast = points[points.length - 2];
+  const last = points[points.length - 1];
+  const radius = (secondLast.r + last.r) / 2;
+  const angle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
+  const controlX = last.x + radius * Math.sin(angle);
+  const controlY = last.y - radius * Math.cos(angle);
+  path.push("Q", secondLast.x, secondLast.y, controlX, controlY);
+
+  return path.join(" ");
+}
+
+function createSplinePath(points: SplinePoint[], color: string): fabric.Path {
+  const pathData = getSplinePath(points);
+  const options = {
+    fill: "",
+    stroke: color,
+    strokeWidth: 2,
+  };
+  const path = new fabric.Path(pathData, options);
+  return path;
+}
+
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
@@ -234,21 +217,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         selectedAnnotation.visible = false;
                     });
                 } else if (shape.shapeType === "spline") {
-                    const { points, radius, label } = shape
-                    const spline = new fabric.Path(
-                        getSplinePath(
-                        shape.points.map(({ x, y }) => [x, y]),
-                        shape.radius
-                        ),
-                        {
-                        fill: "",
-                        stroke: boxColor,
-                        strokeWidth: 1,
-                        strokeUniform: true,
-                        hasRotatingPoint: false,
-                        }
-                    );
-                    canvas.add(spline)
+                    const { points, label } = shape
+                    const splinePath = createSplinePath(points, boxColor);
+                    canvas.add(splinePath);
 
                     canvas.add(
                         new fabric.Text(label, {
