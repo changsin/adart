@@ -1,6 +1,8 @@
 import glob
 import json
 import os
+import struct
+import cv2
 
 import streamlit as st
 
@@ -87,3 +89,31 @@ def step_size(value):
         return 10000.0
     else:
         return 100.0
+
+
+def get_resolution(filename: str) -> (int, int):
+    width, height = 0, 0
+    # Read the image using opencv-python
+    img = cv2.imread(filename)
+    if img is not None:
+        # Get the width and height of the image
+        height, width, _ = img.shape
+
+    return width, height
+
+    # if ext.lower() == '.jpg':
+    #     with open(filename, 'rb') as f:
+    #         # Jump to the start of the frame (SOI marker) and read 4 bytes
+    #         f.seek(2)
+    #         b = f.read(4)
+    #         # Check if it's the start of a frame
+    #         assert b == b'\xff\xc0' or b == b'\xff\xc2', "Not a valid JPEG file"
+    #         # Read the image height and width from the frame header
+    #         return struct.unpack('>HH', f.read(4))
+    # elif ext.lower() == 'bmp':
+    #     with open(filename, 'rb') as f:
+    #         # Jump to the start of the header and read 8 bytes
+    #         f.seek(18)
+    #         header_data = f.read(8)
+    #         # Unpack the width and height from the header
+    #         return struct.unpack('<ii', header_data[4:])

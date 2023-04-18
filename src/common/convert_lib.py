@@ -3,7 +3,7 @@ import json
 import os
 import shutil
 import xml.etree.ElementTree as ET
-
+from src.common import utils
 import streamlit as st
 
 POINT_SEP = ':'
@@ -161,6 +161,80 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
         json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
     st.write("Converted {}".format(anno_file))
+
+    return target_filename
+
+
+def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: str) -> str:
+    if img_annof_relation != '11':
+        return
+
+    output_jdict = dict()
+    output_jdict['mode'] = 'annotation'
+    output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
+    output_jdict['template_version'] = "0.1"
+
+    output_jdict_imgs = list()
+
+    for image_id, anno_json_file in enumerate(anno_file_list):
+        with open(anno_json_file, 'r', encoding='utf-8') as jf:
+            jdict = json.load(jf)
+
+        cur_img = dict()
+        cur_img['image_id'] = str(image_id)
+        cur_img['name'] = os.path.basename(jdict['fileName'])
+
+        image_dir = os.path.dirname(os.path.dirname(anno_json_file))
+        image_filename = os.path.join(image_dir, cur_img['name'])
+        width, height = utils.get_resolution(image_filename)
+
+        cur_img['width'] = int(width)
+        cur_img['height'] = int(height)
+
+        object_dict = dict()
+        annotation = jdict['annotation']
+        bbox_x, bbox_y = annotation['bbox_x'], annotation['bbox_y']
+        bbox_w, bbox_h = annotation['bbox_w'], annotation['bbox_h']
+        bbox_xM, bbox_yM = annotation['bbox_xM'], annotation['bbox_yM']
+
+        object_dict['points'] = [int(bbox_x), int(bbox_y), int(bbox_x) + int(bbox_w), int(bbox_y) + int(bbox_h)]
+        object_dict['label'] = annotation['classes']
+        object_dict['group_id'] = annotation['bbox_id']
+        object_dict['type'] = 'box'
+
+        attributes_dict = dict()
+        attributes_dict['targetType'] = jdict['targetType']
+        attributes_dict['plane'] = jdict['plane']
+        attributes_dict['prcStep'] = jdict['prcStep']
+        attributes_dict['madeDate'] = jdict['madeDate']
+        attributes_dict['fileType'] = jdict['fileType']
+        attributes_dict['bbox_xM'] = int(bbox_xM)
+        attributes_dict['bbox_yM'] = int(bbox_yM)
+
+        for key, value in jdict['img_attr'].items():
+            attributes_dict[key] = value
+
+        object_dict['attributes'] = attributes_dict
+
+        cur_img['objects'] = [object_dict]
+
+        output_jdict_imgs.append(cur_img)
+
+    output_jdict['images'] = output_jdict_imgs
+
+    # take the folder name as the fname
+    fname = os.path.basename(os.path.dirname(anno_file_list[0]))
+
+    # directly write to the destination
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+
+    st.write("Converted {}".format(fname))
+
+    target_filename = os.path.join(target_folder, fname + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
     return target_filename
 

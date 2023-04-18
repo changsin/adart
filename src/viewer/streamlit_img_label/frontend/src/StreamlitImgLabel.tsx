@@ -61,43 +61,111 @@ interface PythonArgs {
     imageData: Uint8ClampedArray
 }
 
-function getSplinePath(points: SplinePoint[]): string {
-  const path = ["M", points[0].x, points[0].y];
-
-  for (let i = 1; i < points.length - 2; i++) {
-    const xc = (points[i].x + points[i + 1].x) / 2;
-    const yc = (points[i].y + points[i + 1].y) / 2;
-    const radius = (points[i].r + points[i + 1].r) / 2;
-    const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
-    const controlX = xc - radius * Math.sin(angle);
-    const controlY = yc + radius * Math.cos(angle);
-    path.push("Q", points[i].x, points[i].y, controlX, controlY);
+interface SplineSegment {
+    startPoint: SplinePoint;
+    endPoint: SplinePoint;
+    width: number;
   }
+  
+function getSplineSegments(points: SplinePoint[]): SplineSegment[] {
+    const segments: SplineSegment[] = [];
+  
+    for (let i = 1; i < points.length - 2; i++) {
+      const xc = (points[i].x + points[i + 1].x) / 2;
+      const yc = (points[i].y + points[i + 1].y) / 2;
+      const width = (points[i].r + points[i + 1].r) / 2;
+      const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
+  
+      const segment: SplineSegment = {
+        startPoint: { x: points[i].x, y: points[i].y, r: points[i].r},
+        endPoint: { x: xc, y: yc, r: width },
+        width: width
+      };
+  
+      segments.push(segment);
+  
+      const controlX = xc - width * Math.sin(angle);
+      const controlY = yc + width * Math.cos(angle);
+  
+      segment.endPoint = { x: points[i + 1].x, y: points[i + 1].y, r: width };
+      segment.width = (points[i + 1].r + points[i + 2].r) / 2;
+  
+      segment.startPoint = { x: controlX, y: controlY, r: width };
+      segments.push(segment);
+    }
+  
+    // handle last segment separately
+    const secondLast = points[points.length - 2];
+    const last = points[points.length - 1];
+    const width = (secondLast.r + last.r) / 2;
+    const angle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
+    const xc = (secondLast.x + last.x) / 2;
+    const yc = (secondLast.y + last.y) / 2;
+  
+    const segment: SplineSegment = {
+      startPoint: { x: secondLast.x, y: secondLast.y, r: width },
+      endPoint: { x: xc, y: yc, r: width },
+      width: width
+    };
+  
+    segments.push(segment);
+  
+    const controlX = xc + width * Math.sin(angle);
+    const controlY = yc - width * Math.cos(angle);
+  
+    segment.endPoint = { x: last.x, y: last.y, r: width };
+    segment.width = width;
+  
+    segment.startPoint = { x: controlX, y: controlY, r: width };
+    segments.push(segment);
+  
+    return segments;
+  }
+
+function getSplinePaths(points: SplinePoint[]): string {
+    const path = ["M", points[0].x, points[0].y];
+
+    for (let i = 1; i < points.length - 2; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        const width = (points[i].r + points[i + 1].r) / 2;
+        const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
+        const controlX = xc - width * Math.sin(angle);
+        const controlY = yc + width * Math.cos(angle);
+        path.push("Q", points[i].x, points[i].y, controlX, controlY);
+    }
 
   // curve through the last two points
   const secondLast = points[points.length - 2];
   const last = points[points.length - 1];
-  const radius = (secondLast.r + last.r) / 2;
+  const width = (secondLast.r + last.r) / 2;
   const angle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
-  const controlX = last.x + radius * Math.sin(angle);
-  const controlY = last.y - radius * Math.cos(angle);
+  const controlX = last.x + width * Math.sin(angle);
+  const controlY = last.y - width * Math.cos(angle);
   path.push("Q", secondLast.x, secondLast.y, controlX, controlY);
 
   return path.join(" ");
 }
 
-let opacity = 0.3;
+let opacity = 0.7;
 
-function createSplinePath(points: SplinePoint[], color: string): fabric.Path {
-  const pathData = getSplinePath(points);
-  const options = {
-    fill: "",
-    stroke: color,
-    strokeWidth: 2,
-    opacity: opacity
-  };
-  const path = new fabric.Path(pathData, options);
-  return path;
+function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
+    const segments = getSplineSegments(points);
+
+    const paths = segments.map((segment) => {
+      const pathData = `M ${segment.startPoint.x} ${segment.startPoint.y} Q ${segment.endPoint.x} ${segment.endPoint.y} ${segment.startPoint.x} ${segment.startPoint.y}`;
+      const options = {
+        fill: "",
+        stroke: color,
+        strokeWidth: segment.width,
+        opacity: opacity
+      };
+      return new fabric.Path(pathData, options);
+    });
+  
+    const group = new fabric.Group(paths);
+  
+    return group;
 }
 
 const StreamlitImgLabel = (props: ComponentProps) => {

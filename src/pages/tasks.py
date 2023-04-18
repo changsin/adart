@@ -24,6 +24,7 @@ from src.common.constants import (
     SUPPORTED_LABEL_FORMATS,
     CVAT_XML,
     STRADVISION_XML,
+    GPR_JSON,
     ModelTaskType)
 from src.home import (
     is_authenticated,
@@ -40,6 +41,7 @@ import src.viewer.app as app
 from src.common.convert_lib import (
     convert_CVAT_to_Form,
     convert_PASCAL_to_Form,
+    from_gpr_json,
     from_strad_vision_xml)
 
 
@@ -137,7 +139,6 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         tasks_info.save()
 
     return sampled
-
 
 
 def create_data_tasks(selected_project: Project):
@@ -245,6 +246,8 @@ def add_data_task(selected_project: Project):
             elif labels_format_type == CVAT_XML:
                 # There should be only 1 per folder
                 converted_filename = convert_CVAT_to_Form("NN", saved_filenames[0], save_folder)
+            elif labels_format_type == GPR_JSON:
+                converted_filename = from_gpr_json("11", saved_filenames, save_folder)
 
         # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Task")

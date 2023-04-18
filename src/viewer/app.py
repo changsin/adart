@@ -8,6 +8,7 @@ from src.models.projects_info import Project
 from src.pages.metrics import load_label_file
 from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import DartImageManager
+import pandas as pd
 
 
 def main(selected_project: Project, labels=ErrorType.get_all_types()):
@@ -20,7 +21,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                                       os.path.basename(selected_task.anno_file_name))
         image_filenames = [image.name for image in dart_labels.images]
 
-        if "img_files" not in st.session_state:
+        if not st.session_state.get('image_index'):
             st.session_state["img_files"] = image_filenames
             st.session_state["image_index"] = 0
         else:
@@ -54,20 +55,27 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                 next_image()
 
         def go_to_image():
-            file_index = st.session_state["img_files"].index(st.session_state["img_file"])
-            st.session_state["image_index"] = file_index
+            image_index = st.session_state["img_files"].index(st.session_state["img_file"])
+            st.session_state["image_index"] = image_index
+
+        def pick_color(label: str, default_color: str) -> str:
+            color_dict = {
+                'boundary': 'blue',
+                'spline': 'green',
+                'polygon': 'purple'
+            }
+
+            return color_dict.get(label, default_color)
 
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         st.sidebar.write("Total files:", n_files)
 
-        st.sidebar.selectbox(
-            "Files",
-            st.session_state["img_files"],
-            index=st.session_state["image_index"],
-            on_change=go_to_image,
-            key="img_file",
-        )
+        st.sidebar.selectbox("Files",
+                             st.session_state["img_files"],
+                             index=st.session_state["image_index"],
+                             on_change=go_to_image,
+                             key="img_file")
         col1, col2 = st.sidebar.columns(2)
         with col1:
             st.button(label="< Previous", on_click=previous_image)
@@ -77,11 +85,30 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         st.sidebar.button(label="Refresh", on_click=refresh)
 
         # Main content: review images
-        im = DartImageManager(task_folder, dart_labels.images[st.session_state["image_index"]])
+        image_index = st.session_state['image_index']
+
+        im = DartImageManager(task_folder, dart_labels.images[image_index])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
+        shape_color = pick_color(resized_shapes[0].get('label'), 'red')
 
-        shapes = st_img_label(resized_img, shape_color="green", shape_props=resized_shapes)
+        st.markdown("### {} {}".format(image_index, st.session_state['img_files'][image_index]))
+        shapes = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
+
+        if dart_labels.images[image_index].objects[0].attributes:
+            df_attributes = pd.DataFrame.from_dict(dart_labels.images[st.session_state["image_index"]]
+                                                   .objects[0].attributes,
+                                                   orient='index')
+
+            # Display the dataframe as an HTML table with custom styling using st.write()
+            st.write(df_attributes.style.set_table_styles(
+                [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
+                 {'selector': 'td', 'props': [('text-align', 'center')]}])
+                     .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
+                     .to_html(), unsafe_allow_html=True)
+        else:
+            df_attributes = pd.DataFrame(dart_labels.images[st.session_state["image_index"]])
+            st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 
         if shapes:
             preview_imgs = im.init_annotation(shapes)
