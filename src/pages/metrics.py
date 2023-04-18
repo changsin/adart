@@ -12,11 +12,15 @@ if spec is None:
     sys.path.append(str(path_root))
 
 from src.common.charts import *
+from src.common.constants import (
+    ADQ_WORKING_FOLDER
+)
 from src.home import (
     is_authenticated,
     login,
     logout,
-    select_project)
+    select_project,
+    get_tasks)
 from src.models.adq_labels import AdqLabels
 from src.models.dart_labels import DartLabels
 
@@ -35,8 +39,17 @@ def show_file_metrics():
             tasks = get_tasks(selected_project.id)
             if tasks and len(tasks) > 0:
                 for task in tasks:
-                    for folder, files in task.data_files.items():
-                        data_files[folder] = files
+                    if task.data_files:
+                        for folder, files in task.data_files.items():
+                            data_files[folder] = files
+                    if task.anno_file_name:
+                        task_folder = os.path.join(ADQ_WORKING_FOLDER,
+                                                   str(selected_project.id),
+                                                   str(task.id))
+                        dart_labels = load_label_file(task_folder,
+                                                      os.path.basename(task.anno_file_name))
+                        image_filenames = [image.name for image in dart_labels.images]
+                        data_files[task_folder] = image_filenames
 
         chart_files_ctime, chart_file_sizes = plot_file_info("### Created date time", data_files)
         if chart_files_ctime:
