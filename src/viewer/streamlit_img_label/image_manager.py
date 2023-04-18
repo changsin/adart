@@ -95,13 +95,16 @@ class DartImageManager:
         return resized_img
 
     def _resize_shape(self, shape):
-        resized_shape = {}
-        if shape["shapeType"] == "rectangle":
-            resized_shape["left"] = shape["left"] / self._resized_ratio_w
-            resized_shape["width"] = shape["width"] / self._resized_ratio_w
-            resized_shape["top"] = shape["top"] / self._resized_ratio_h
-            resized_shape["height"] = shape["height"] / self._resized_ratio_h
-        elif shape["shapeType"] == "spline":
+        if not shape:
+            return shape
+
+        resized_shape = dict()
+        if shape['shapeType'] == 'rectangle':
+            resized_shape['left'] = shape['left'] / self._resized_ratio_w
+            resized_shape['width'] = shape['width'] / self._resized_ratio_w
+            resized_shape['top'] = shape['top'] / self._resized_ratio_h
+            resized_shape['height'] = shape['height'] / self._resized_ratio_h
+        elif shape['shapeType'] == 'spline':
             # TODO: this does not work as the shape is this
             # {'points': [{'x': 280.8194885253906, 'y': 741.2059936523438, 'r': 9.136979103088379},
             #             {'x': 846.8262939453125, 'y': 487.18505859375, 'r': 2.020742893218994},
@@ -113,14 +116,21 @@ class DartImageManager:
             #             {'x': 553.114990234375, 'y': 622.3895874023438, 'r': 6.357065200805664},
             #             {'x': 730.9495239257812, 'y': 543.1196899414062, 'r': 3.205587863922119}], 'label': 'spline',
             #  'shapeType': 'spline'}
+            resized_points = []
+            for point in shape['points']:
+                resized_point = dict()
+                resized_point['x'] = int(point['x'] / self._resized_ratio_w)
+                resized_point['y'] = int(point['y'] / self._resized_ratio_h)
+                # TODO: do something about r
+                resized_point['r'] = int(point['r'] / self._resized_ratio_w)
 
-            shape["x"] = int(shape["x"] / self._resized_ratio_w)
-            shape["y"] = int(shape["y"] / self._resized_ratio_h)
-            # TODO: do something about r
+                resized_points.append(resized_point)
 
-        if "label" in shape:
-            resized_shape["label"] = shape["label"]
-        resized_shape["shapeType"] = shape["shapeType"]
+            resized_shape['points'] = resized_points
+
+        if 'label' in shape:
+            resized_shape['label'] = shape['label']
+        resized_shape['shapeType'] = shape['shapeType']
         return resized_shape
 
     def get_resized_shapes(self):
@@ -134,34 +144,44 @@ class DartImageManager:
     def _chop_shape_img(self, shape):
         raw_image = np.asarray(self._img).astype("uint8")
         prev_img = np.zeros(raw_image.shape, dtype="uint8")
-        if shape["shapeType"] == "rectangle":
-            shape["left"] = int(shape["left"] * self._resized_ratio_w)
-            shape["width"] = int(shape["width"] * self._resized_ratio_w)
-            shape["top"] = int(shape["top"] * self._resized_ratio_h)
-            shape["height"] = int(shape["height"] * self._resized_ratio_h)
-            left, top, width, height = (
-                shape["left"],
-                shape["top"],
-                shape["width"],
-                shape["height"]
-            )
-            prev_img[top: top + height, left: left + width] = raw_image[
-                                                              top: top + height, left: left + width
-                                                              ]
-            prev_img = prev_img[top: top + height, left: left + width]
-        elif shape["shapeType"] == "spline":
-            shape["x"] = int(shape["x"] * self._resized_ratio_w)
-            shape["y"] = int(shape["y"] * self._resized_ratio_h)
-            # TODO: not sure what to do with radius
-
-            x, y, r = (shape['x'], shape['y'], shape['r'])
-            prev_img[x: x, y: y] = raw_image[x: x, y: y]
-            prev_img = prev_img[x: x, y: y]
-
         label = ""
-        if "label" in shape:
-            label = shape["label"]
-        return (Image.fromarray(prev_img), label)
+
+        if shape:
+            if shape['shapeType'] == 'rectangle':
+                shape['left'] = int(shape['left'] * self._resized_ratio_w)
+                shape['width'] = int(shape['width'] * self._resized_ratio_w)
+                shape['top'] = int(shape['top'] * self._resized_ratio_h)
+                shape['height'] = int(shape['height'] * self._resized_ratio_h)
+                left, top, width, height = (
+                    shape['left'],
+                    shape['top'],
+                    shape['width'],
+                    shape['height']
+                )
+                prev_img[top: top + height, left: left + width] = raw_image[
+                                                                  top: top + height, left: left + width
+                                                                  ]
+                prev_img = prev_img[top: top + height, left: left + width]
+            elif shape['shapeType'] == 'spline':
+                resized_points = []
+                for point in shape['points']:
+                    resized_point = dict()
+                    resized_point['x'] = int(point['x'] / self._resized_ratio_w)
+                    resized_point['y'] = int(point['y'] / self._resized_ratio_h)
+                    # TODO: do something about r
+                    resized_point['r'] = int(point['r'] / self._resized_ratio_w)
+
+                    resized_points.append(resized_point)
+
+                # shape['points'] = resized_points
+                # x, y, r = (shape['x'], shape['y'], shape['r'])
+                # prev_img[x: x, y: y] = raw_image[x: x, y: y]
+                # prev_img = prev_img[x: x, y: y]
+
+            if "label" in shape:
+                label = shape["label"]
+
+        return Image.fromarray(prev_img), label
 
     def init_annotation(self, shapes):
         """init annotation for current rects.

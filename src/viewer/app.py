@@ -79,11 +79,11 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         # Main content: review images
         im = DartImageManager(task_folder, dart_labels.images[st.session_state["image_index"]])
         resized_img = im.resizing_img()
-        resized_rects = im.get_resized_shapes()
-        rects = st_img_label(resized_img, box_color="red", shape_props=resized_rects)
+        resized_shapes = im.get_resized_shapes()
+        shapes = st_img_label(resized_img, box_color="red", shape_props=resized_shapes)
 
-        if rects:
-            preview_imgs = im.init_annotation(rects)
+        if shapes:
+            preview_imgs = im.init_annotation(shapes)
 
             for i, prev_img in enumerate(preview_imgs):
                 prev_img[0].thumbnail((200, 200))

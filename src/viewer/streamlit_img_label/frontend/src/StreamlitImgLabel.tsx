@@ -220,17 +220,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     const { points, label } = shape
                     const splinePath = createSplinePath(points, boxColor);
                     canvas.add(splinePath);
-
-                    canvas.add(
-                        new fabric.Text(label, {
-                            left: points[0].x,
-                            top: points[0].y - 20,
-                            fontFamily: "Arial",
-                            fontSize: 14,
-                            fontWeight: "bold",
-                            fill: boxColor,
-                        })
-                    )
                 } else {
                     console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                     return
@@ -320,32 +309,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     })
                 )
             } else if (shape.shapeType === "spline") {
-                const { points, radius, label } = shape
-                const spline = new fabric.Path(
-                    getSplinePath(
-                      shape.points.map(({ x, y }) => [x, y]),
-                      shape.radius
-                    ),
-                    {
-                      fill: "",
-                      stroke: boxColor,
-                      strokeWidth: 1,
-                      strokeUniform: true,
-                      hasRotatingPoint: false,
-                    }
-                  );
-                canvasTmp.add(spline)
-
-                canvasTmp.add(
-                    new fabric.Text(label, {
-                        left: points[0].x,
-                        top: points[0].y - 20,
-                        fontFamily: "Arial",
-                        fontSize: 14,
-                        fontWeight: "bold",
-                        fill: boxColor,
-                    })
-                )
+                const { points, label } = shape
+                const splinePath = createSplinePath(points, boxColor);
+                canvas.add(splinePath);
             } else {
                 console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                 return
@@ -367,6 +333,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         const rects = canvas.getObjects().map((rect, i) => ({
             ...rect.getBoundingRect(),
             label: returnLabels[i],
+            shapeType: 'rectangle'
         }))
         Streamlit.setComponentValue({ rects })
     }
