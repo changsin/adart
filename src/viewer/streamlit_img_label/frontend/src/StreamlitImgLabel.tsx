@@ -28,13 +28,36 @@ interface SplineProps {
     shapeType: "spline"
 }
 
-type ShapeProps = RectProps | SplineProps
+interface BoundaryPoint {
+    x: number;
+    y: number;
+    r: number;
+}
+
+interface BoundaryProps {
+    points: BoundaryPoint[]
+    label: string
+    shapeType: "boundary"
+}
+
+interface PolygonPoint {
+    x: number;
+    y: number;
+}
+
+interface PolygonProps {
+    points: PolygonPoint[]
+    label: string
+    shapeType: "polygon"
+}
+
+type ShapeProps = RectProps | SplineProps | BoundaryProps | PolygonProps
 
 interface PythonArgs {
     canvasWidth: number
     canvasHeight: number
     shapes: ShapeProps[]
-    boxColor: string
+    shapeColor: string
     imageData: Uint8ClampedArray
 }
 
@@ -63,12 +86,15 @@ function getSplinePath(points: SplinePoint[]): string {
   return path.join(" ");
 }
 
+let opacity = 0.3;
+
 function createSplinePath(points: SplinePoint[], color: string): fabric.Path {
   const pathData = getSplinePath(points);
   const options = {
     fill: "",
     stroke: color,
     strokeWidth: 2,
+    opacity: opacity
   };
   const path = new fabric.Path(pathData, options);
   return path;
@@ -78,8 +104,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
-    // const { canvasWidth, canvasHeight, imageData }: PythonArgs = props.args
-    const { canvasWidth, canvasHeight, shapes, boxColor, imageData }: PythonArgs = props.args
+    const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
   
     /*
@@ -120,9 +145,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // Add shapes to the canvas
     useEffect(() => {
         if (canvas) {
-            const { shapes, boxColor }: PythonArgs = props.args
-            // console.log("shapes")
-            // console.log(shapes)
+            const { shapes, shapeColor }: PythonArgs = props.args
             // Add shapes to the canvas
             shapes.forEach((shape) => {
                 if (shape.shapeType === "rectangle") {
@@ -135,10 +158,11 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             width,
                             height,
                             objectCaching: true,
-                            stroke: boxColor,
+                            stroke: shapeColor,
                             strokeWidth: 1,
                             strokeUniform: true,
-                            hasRotatingPoint: false
+                            hasRotatingPoint: false,
+                            opacity: opacity
                         })
                     const text = new fabric.Text(label, {
                             left: left,
@@ -146,7 +170,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             fontFamily: "Arial",
                             fontSize: 14,
                             fontWeight: "bold",
-                            fill: boxColor,
+                            fill: shapeColor,
+                            opacity: opacity
                         })
                     const selectedAnnotation = new fabric.Rect({
                             left,
@@ -155,14 +180,15 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             width,
                             height,
                             objectCaching: true,
-                            stroke: boxColor,
+                            stroke: shapeColor,
                             strokeWidth: 10,
                             strokeUniform: true,
                             hasRotatingPoint: false,
                             selectable: false,
                             visible: false,
                             lockMovementX: true, // Set lockMovementX to true
-                            lockMovementY: true // Set lockMovementY to true
+                            lockMovementY: true, // Set lockMovementY to true
+                            opacity: opacity
                         })
                     canvas.add(annotation)
                     canvas.add(text)
@@ -216,10 +242,19 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     annotation.on("deselected", () => {
                         selectedAnnotation.visible = false;
                     });
-                } else if (shape.shapeType === "spline") {
+                } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     const { points, label } = shape
-                    const splinePath = createSplinePath(points, boxColor);
+                    const splinePath = createSplinePath(points, shapeColor);
                     canvas.add(splinePath);
+                } else if (shape.shapeType === "polygon") {
+                    const { points, label } = shape
+                    const polygon = new fabric.Polygon(points, {
+                        fill: 'purple',
+                        stroke: 'black',
+                        opacity: opacity,
+                        strokeWidth: 2,
+                    });
+                    canvas.add(polygon);
                 } else {
                     console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                     return
@@ -234,9 +269,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
         Streamlit.setFrameHeight()
 
-    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, boxColor])
+    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args])
 
-    // Create defualt bounding box
+    // Create a default bounding box
     const defaultBox = () => ({
         left: canvasWidth * 0.15 + newBBoxIndex * 3,
         top: canvasHeight * 0.15 + newBBoxIndex * 3,
@@ -253,7 +288,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 ...box,
                 fill: "",
                 objectCaching: true,
-                stroke: props.args.boxColor,
+                stroke: props.args.shapeColor,
                 strokeWidth: 1,
                 strokeUniform: true,
                 hasRotatingPoint: false,
@@ -292,7 +327,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         width,
                         height,
                         objectCaching: true,
-                        stroke: boxColor,
+                        stroke: shapeColor,
                         strokeWidth: 1,
                         strokeUniform: true,
                         hasRotatingPoint: false,
@@ -305,12 +340,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         fontFamily: "Arial",
                         fontSize: 14,
                         fontWeight: "bold",
-                        fill: boxColor,
+                        fill: shapeColor,
                     })
                 )
             } else if (shape.shapeType === "spline") {
                 const { points, label } = shape
-                const splinePath = createSplinePath(points, boxColor);
+                const splinePath = createSplinePath(points, shapeColor);
                 canvas.add(splinePath);
             } else {
                 console.warn(`Invalid shape "${shape}" specified". Skipping...`)

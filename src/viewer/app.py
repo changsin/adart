@@ -80,7 +80,8 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         im = DartImageManager(task_folder, dart_labels.images[st.session_state["image_index"]])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
-        shapes = st_img_label(resized_img, box_color="red", shape_props=resized_shapes)
+
+        shapes = st_img_label(resized_img, shape_color="green", shape_props=resized_shapes)
 
         if shapes:
             preview_imgs = im.init_annotation(shapes)

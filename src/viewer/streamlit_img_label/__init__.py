@@ -18,17 +18,17 @@ else:
     _component_func = components.declare_component("st_img_label", path=build_dir)
 
 
-def st_img_label(resized_img, box_color="blue", shape_props=[], key=None):
+def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
     """Create a new instance of "st_img_label".
 
     Parameters
     ----------
     img_file: PIL.Image
         The image to be croppepd
-    box_color: string
+    shape_color: string
         The color of the cropper's bounding box. Defaults to blue.
-    rects: list
-        list of bounding boxes that already exists.
+    shape_props: list
+        list of shapes that already exists.
     key: str or None
         An optional key that uniquely identifies this component. If this is
         None, and the component's arguments are changed, the component will
@@ -57,7 +57,7 @@ def st_img_label(resized_img, box_color="blue", shape_props=[], key=None):
         canvasWidth=canvasWidth,
         canvasHeight=canvasHeight,
         shapes=shape_props,
-        boxColor=box_color,
+        shapeColor=shape_color,
         imageData=imageData,
         key=key,
     )

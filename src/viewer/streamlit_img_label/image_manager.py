@@ -22,7 +22,7 @@ class DartImageManager:
 
     def __init__(self, image_folder, image_labels: DartLabels.Image):
         """initiate module"""
-        self.image_lables = image_labels
+        self.image_labels = image_labels
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
         self._shapes = []
         self._load_shapes()
@@ -39,31 +39,43 @@ class DartImageManager:
 
     def _load_shapes(self):
         converted_shapes = []
-        for label_object in self.image_lables.objects:
+        for label_object in self.image_labels.objects:
             shape = dict()
-            if label_object.type == "box":
+            if label_object.type == 'box':
                 left, top, right, bottom = label_object.points
                 width = right - left
                 height = bottom - top
-                shape["left"] = int(left)
-                shape["top"] = int(top)
-                shape["width"] = int(width)
-                shape["height"] = int(height)
-                shape["label"] = label_object.label
-                shape["shapeType"] = "rectangle"
-            elif label_object.type == "spline":
-                spline_points = []
+                shape['left'] = int(left)
+                shape['top'] = int(top)
+                shape['width'] = int(width)
+                shape['height'] = int(height)
+                shape['label'] = label_object.label
+                shape['shapeType'] = 'rectangle'
+            elif label_object.type == 'spline' or label_object.type == 'boundary':
+                points = []
                 for point in label_object.points:
                     x, y, r = point
-                    spline_point = dict()
-                    spline_point["x"] = x
-                    spline_point["y"] = y
-                    spline_point["r"] = r
-                    spline_points.append(spline_point)
+                    point_dict = dict()
+                    point_dict['x'] = x
+                    point_dict['y'] = y
+                    point_dict['r'] = r
+                    points.append(point_dict)
 
-                shape["points"] = spline_points
-                shape["label"] = label_object.label
-                shape["shapeType"] = label_object.type
+                shape['points'] = points
+                shape['label'] = label_object.label
+                shape['shapeType'] = label_object.type
+            elif label_object.type == 'polygon':
+                points = []
+                for point in label_object.points:
+                    x, y = point
+                    point_dict = dict()
+                    point_dict['x'] = x
+                    point_dict['y'] = y
+                    points.append(point_dict)
+
+                shape['points'] = points
+                shape['label'] = label_object.label
+                shape['shapeType'] = label_object.type
 
             converted_shapes.append(shape)
 
@@ -92,6 +104,7 @@ class DartImageManager:
 
         self._resized_ratio_w = self._img.width / resized_img.width
         self._resized_ratio_h = self._img.height / resized_img.height
+
         return resized_img
 
     def _resize_shape(self, shape):
@@ -104,8 +117,7 @@ class DartImageManager:
             resized_shape['width'] = shape['width'] / self._resized_ratio_w
             resized_shape['top'] = shape['top'] / self._resized_ratio_h
             resized_shape['height'] = shape['height'] / self._resized_ratio_h
-        elif shape['shapeType'] == 'spline':
-            # TODO: this does not work as the shape is this
+        elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
             # {'points': [{'x': 280.8194885253906, 'y': 741.2059936523438, 'r': 9.136979103088379},
             #             {'x': 846.8262939453125, 'y': 487.18505859375, 'r': 2.020742893218994},
             #             {'x': 830.8540649414062, 'y': 493.4678955078125, 'r': 2.344829797744751},
@@ -123,6 +135,17 @@ class DartImageManager:
                 resized_point['y'] = int(point['y'] / self._resized_ratio_h)
                 # TODO: do something about r
                 resized_point['r'] = int(point['r'] / self._resized_ratio_w)
+
+                resized_points.append(resized_point)
+
+            resized_shape['points'] = resized_points
+
+        elif shape['shapeType'] == 'polygon':
+            resized_points = []
+            for point in shape['points']:
+                resized_point = dict()
+                resized_point['x'] = int(point['x'] / self._resized_ratio_w)
+                resized_point['y'] = int(point['y'] / self._resized_ratio_h)
 
                 resized_points.append(resized_point)
 
@@ -162,7 +185,7 @@ class DartImageManager:
                                                                   top: top + height, left: left + width
                                                                   ]
                 prev_img = prev_img[top: top + height, left: left + width]
-            elif shape['shapeType'] == 'spline':
+            elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
                 resized_points = []
                 for point in shape['points']:
                     resized_point = dict()
@@ -173,6 +196,14 @@ class DartImageManager:
 
                     resized_points.append(resized_point)
 
+            elif shape['shapeType'] == 'polygon':
+                resized_points = []
+                for point in shape['points']:
+                    resized_point = dict()
+                    resized_point['x'] = int(point['x'] / self._resized_ratio_w)
+                    resized_point['y'] = int(point['y'] / self._resized_ratio_h)
+
+                    resized_points.append(resized_point)
                 # shape['points'] = resized_points
                 # x, y, r = (shape['x'], shape['y'], shape['r'])
                 # prev_img[x: x, y: y] = raw_image[x: x, y: y]
