@@ -1,40 +1,42 @@
 import importlib.util
 import os.path
+from pathlib import Path
 
 spec = importlib.util.find_spec("src")
 if spec is None:
     import sys
-    from pathlib import Path
 
-    path_root = Path(__file__).parents[1]
+    path_root = Path(__file__).parent.parent if Path(__file__).parent.name == 'src' else Path(__file__).parent
     sys.path.append(str(path_root))
 
 from src.common.charts import *
 from src.common import utils
 from src.models.projects_info import ProjectsInfo
 from src.models.tasks_info import TasksInfo
-
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    PROJECTS,
+    TASKS,
+    JSON_EXT
+)
 import src.common.api as api
 
 
 def get_projects_info():
-    if not os.path.exists(constants.ADQ_WORKING_FOLDER):
-        os.mkdir(constants.ADQ_WORKING_FOLDER)
+    if not os.path.exists(ADQ_WORKING_FOLDER):
+        os.mkdir(ADQ_WORKING_FOLDER)
 
-    if st.session_state.get(constants.PROJECTS):
-        return st.session_state[constants.PROJECTS]
+    projects_info_filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
+    json_projects = utils.from_file(projects_info_filename, "{\"num_count\":0,\"projects\":[]}")
 
-    json_projects = utils.from_file("{\"num_count\":0,\"projects\":[]}",
-                                    # os.path.join(os.getcwd(), "data"),
-                                    constants.ADQ_WORKING_FOLDER,
-                                    constants.PROJECTS + constants.JSON_EXT)
-    return ProjectsInfo.from_json(json_projects)
+    projects_info = ProjectsInfo.from_json(json_projects)
+    return projects_info
 
 
 def select_project(is_sidebar=True):
     projects_info = get_projects_info()
     if projects_info.num_count > 0:
-        df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
+        df_projects = pd.DataFrame(projects_info.to_json()[PROJECTS])
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
@@ -57,19 +59,18 @@ def select_project(is_sidebar=True):
 
 
 def get_tasks_info():
-    if st.session_state.get(constants.TASKS):
-        return st.session_state[constants.TASKS]
+    if st.session_state.get(TASKS):
+        return st.session_state[TASKS]
 
-    json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
-                                 constants.ADQ_WORKING_FOLDER,
-                                 constants.TASKS + constants.JSON_EXT)
+    tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
+    json_tasks = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
     return TasksInfo.from_json(json_tasks)
 
 
 def get_df_tasks(project_id: int):
     tasks_info = get_tasks_info()
     if tasks_info.num_count > 0:
-        df_tasks = pd.DataFrame(tasks_info.to_json()[constants.TASKS])
+        df_tasks = pd.DataFrame(tasks_info.to_json()[TASKS])
         return df_tasks[df_tasks['project_id'] == project_id]
 
 
@@ -86,7 +87,7 @@ def get_tasks(project_id: int) -> list:
 def select_task(project_id: int):
     tasks_info = get_tasks_info()
     if tasks_info.num_count > 0:
-        df_tasks = pd.DataFrame(tasks_info.to_json()[constants.TASKS])
+        df_tasks = pd.DataFrame(tasks_info.to_json()[TASKS])
         df_tasks = df_tasks[["id", "name", "project_id"]]
         df_filtered = df_tasks[df_tasks['project_id'] == project_id]
         options = ["{}-{}".format(task_id, name)
@@ -104,27 +105,9 @@ def select_task(project_id: int):
             task_id, _ = selected_task.split('-', maxsplit=1)
             return tasks_info.get_task_by_id(int(task_id)), selected_index
     else:
-        st.markdown("**No project is created!**")
+        st.markdown("**No task is created!**")
 
     return None, None
-
-
-def main():
-    if not os.path.exists(constants.ADQ_WORKING_FOLDER):
-        os.mkdir(constants.ADQ_WORKING_FOLDER)
-
-    st.set_page_config(page_title="DaRT")
-    st.header("**ADaRT** - AI Data Reviewing Tool")
-    st.subheader("Under Construction")
-    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
-
-    json_projects = utils.from_file("{\"num_count\":0,\"projects\":[]}",
-                                    # os.path.join(os.getcwd(), "data"),
-                                    constants.ADQ_WORKING_FOLDER,
-                                    constants.PROJECTS + constants.JSON_EXT)
-    projects_info = ProjectsInfo.from_json(json_projects)
-
-    st.session_state[constants.PROJECTS] = projects_info
 
 
 def get_token(url, username: str, password: str):
@@ -171,10 +154,18 @@ def logout():
     if logout_clicked:
         button_label.text = "Logged out"
         st.session_state['token'] = None
+        st.session_state['projects'] = None
 
 
 def is_authenticated():
     return st.session_state.get('token')
+
+
+def main():
+    st.set_page_config(page_title="DaRT")
+    st.header("**ADaRT** - AI Data Reviewing Tool")
+    st.subheader("Under Construction")
+    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
 
 
 if __name__ == '__main__':

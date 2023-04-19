@@ -13,7 +13,7 @@ interface RectProps {
     width: number
     height: number
     label: string
-    shapeType: "rectangle"
+    shapeType: "box"
 }
 
 interface SplinePoint {
@@ -216,7 +216,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             const { shapes, shapeColor }: PythonArgs = props.args
             // Add shapes to the canvas
             shapes.forEach((shape) => {
-                if (shape.shapeType === "rectangle") {
+                if (shape.shapeType === "box") {
                     const { top, left, width, height, label } = shape
 
                     const annotation = new fabric.Rect({
@@ -384,7 +384,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         })
 
         shapes.forEach((shape) => {
-            if (shape.shapeType === "rectangle") {
+            if (shape.shapeType === "box") {
                 const { top, left, width, height, label } = shape
 
                 canvasTmp.add(
@@ -436,7 +436,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         const rects = canvas.getObjects().map((rect, i) => ({
             ...rect.getBoundingRect(),
             label: returnLabels[i],
-            shapeType: 'rectangle'
+            shapeType: 'box'
         }))
         Streamlit.setComponentValue({ rects })
     }

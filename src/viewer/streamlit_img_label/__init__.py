@@ -23,7 +23,7 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
 
     Parameters
     ----------
-    img_file: PIL.Image
+    resized_img: PIL.Image
         The image to be croppepd
     shape_color: string
         The color of the cropper's bounding box. Defaults to blue.
@@ -64,6 +64,8 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
 
     # Return a cropped image using the box from the frontend
     if component_value:
+        print("component_value {}".format(component_value))
         return component_value["rects"]
     else:
+        print("shape_props {}".format(shape_props))
         return shape_props

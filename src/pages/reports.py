@@ -41,13 +41,17 @@ def show_file_metrics():
                     if task.data_files:
                         for folder, files in task.data_files.items():
                             data_files[folder] = files
-                    if task.anno_file_name:
+                    elif task.anno_file_name:
                         task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                                    str(selected_project.id),
                                                    str(task.id))
                         dart_labels = DataLabels.load(task.anno_file_name)
                         image_filenames = [image.name for image in dart_labels.images]
                         data_files[task_folder] = image_filenames
+
+        if len(data_files) == 0:
+            st.warning("No data files")
+            return
 
         chart_files_ctime, chart_file_sizes = plot_file_info("### Created date time", data_files)
         if chart_files_ctime:
@@ -95,35 +99,37 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
         for image in dart_labels.images:
             count = len(image.objects)
             for ob_id1 in range(count):
-                label = image.objects[ob_id1].label
+                object_cur = image.objects[ob_id1]
+                label = object_cur.label
                 if class_labels.get(label):
                     class_labels[label] += 1
                 else:
                     class_labels[label] = 1
 
-                xtl1, ytl1, xbr1, ybr1 = image.objects[ob_id1].points
-                rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
-                width1 = rect1.xmax - rect1.xmin
-                height1 = rect1.ymax - rect1.ymin
+                if object_cur.type == 'box':
+                    xtl1, ytl1, xbr1, ybr1 = object_cur.points
+                    rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
+                    width1 = rect1.xmax - rect1.xmin
+                    height1 = rect1.ymax - rect1.ymin
 
-                if dimensions.get(image.name):
-                    dimensions[image.name].append((width1, height1, image.objects[ob_id1].label))
-                else:
-                    dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
+                    if dimensions.get(image.name):
+                        dimensions[image.name].append((width1, height1, image.objects[ob_id1].label))
+                    else:
+                        dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
 
-                for ob_id2 in range(ob_id1 + 1, count):
-                    xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
-                    rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
+                    for ob_id2 in range(ob_id1 + 1, count):
+                        xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
+                        rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
 
-                    overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
+                        overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
 
-                    if overlap_area > 0:
-                        overlap_percent = format(overlap_area/max_area, '.2f')
-                        overlap_percent = float(overlap_percent) * 100
-                        if overlap_areas.get(overlap_percent):
-                            overlap_areas[overlap_percent] += 1
-                        else:
-                            overlap_areas[overlap_percent] = 1
+                        if overlap_area > 0:
+                            overlap_percent = format(overlap_area/max_area, '.2f')
+                            overlap_percent = float(overlap_percent) * 100
+                            if overlap_areas.get(overlap_percent):
+                                overlap_areas[overlap_percent] += 1
+                            else:
+                                overlap_areas[overlap_percent] = 1
 
     return class_labels, overlap_areas, dimensions
 
@@ -186,11 +192,15 @@ def calculate_overlapping_rect(a, b):
 def show_label_metrics():
     selected_project = select_project()
     if selected_project:
-        if not selected_project.label_files:
-            st.write("No labels!")
-            return
+        data_label_files = dict()
 
-        class_labels, overlap_areas, dimensions = get_label_metrics(selected_project.label_files)
+        tasks = get_tasks(selected_project.id)
+        if tasks and len(tasks) > 0:
+            for task in tasks:
+                if task.anno_file_name:
+                    data_label_files['.'] = [task.anno_file_name]
+
+        class_labels, overlap_areas, dimensions = get_label_metrics(data_label_files)
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
@@ -202,31 +212,31 @@ def show_label_metrics():
         if chart_overlap_areas:
             display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
 
-        # create DataFrame from dictionary
-        df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
-                                     columns=['filename', 'width', 'height', 'class'])
-        chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
-            x='width',
-            y='height',
-            color='class',
-            tooltip=['class', 'width', 'height', 'filename']
-            ).properties(
-                title="Label Dimensions"
+        if dimensions:
+            df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
+                                         columns=['filename', 'width', 'height', 'class'])
+            chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
+                x='width',
+                y='height',
+                color='class',
+                tooltip=['class', 'width', 'height', 'filename']
+                ).properties(
+                    title="Label Dimensions"
+                )
+
+            # make the chart interactive
+            chart_dimensions = chart_dimensions.interactive()
+            chart_dimensions = chart_dimensions.properties(
+                width=600,
+                height=400
+            ).add_selection(
+                alt.selection_interval(bind='scales', encodings=['x', 'y'])
+            ).add_selection(
+                alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
             )
 
-        # make the chart interactive
-        chart_dimensions = chart_dimensions.interactive()
-        chart_dimensions = chart_dimensions.properties(
-            width=600,
-            height=400
-        ).add_selection(
-            alt.selection_interval(bind='scales', encodings=['x', 'y'])
-        ).add_selection(
-            alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-        )
-
-        if chart_dimensions:
-            display_chart(selected_project.id, "dimensions", chart_dimensions)
+            if chart_dimensions:
+                display_chart(selected_project.id, "dimensions", chart_dimensions)
 
         show_download_charts_button(selected_project.id)
 

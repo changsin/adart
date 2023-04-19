@@ -108,9 +108,7 @@ def create_data_project():
                             if not os.path.exists(ori_folder):
                                 os.mkdir(ori_folder)
 
-                            json_data = utils.from_file("{}",
-                                                        folder,
-                                                        file)
+                            json_data = utils.from_file(os.path.join(folder, file))
                             if not json_data:
                                 st.write("Skipping {} - empty file".format(file))
                                 continue
@@ -124,7 +122,9 @@ def create_data_project():
 
                             target_filenames.append(os.path.basename(target_filename))
 
-            label_files_dict = {target_folder: target_filenames}
+            label_files_dict = dict()
+            if len(target_filenames) > 0:
+                label_files_dict = {target_folder: target_filenames}
             new_project = Project(project_id, name, data_files, label_files_dict,
                                   1, 1, str(datetime.datetime.now()), description=description)
             projects_info.add(new_project)

@@ -25,6 +25,7 @@ class DartImageManager:
         self.image_labels = image_labels
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
         self._shapes = []
+        self._current_shapes = []
         self._load_shapes()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
@@ -50,7 +51,7 @@ class DartImageManager:
                 shape['width'] = int(width)
                 shape['height'] = int(height)
                 shape['label'] = label_object.label
-                shape['shapeType'] = 'rectangle'
+                shape['shapeType'] = 'box'
             elif label_object.type == 'spline' or label_object.type == 'boundary':
                 points = []
                 for point in label_object.points:
@@ -112,7 +113,7 @@ class DartImageManager:
             return shape
 
         resized_shape = dict()
-        if shape['shapeType'] == 'rectangle':
+        if shape['shapeType'] == 'box':
             resized_shape['left'] = shape['left'] / self._resized_ratio_w
             resized_shape['width'] = shape['width'] / self._resized_ratio_w
             resized_shape['top'] = shape['top'] / self._resized_ratio_h
@@ -166,11 +167,15 @@ class DartImageManager:
 
     def _chop_shape_img(self, shape):
         raw_image = np.asarray(self._img).astype("uint8")
-        prev_img = np.zeros(raw_image.shape, dtype="uint8")
+        width, height, alpha = raw_image.shape
+        width = width if width > 0 else 1
+        height = height if height > 0 else 1
+        prev_img = np.zeros((width, height, alpha), dtype="uint8")
+
         label = ""
 
         if shape:
-            if shape['shapeType'] == 'rectangle':
+            if shape['shapeType'] == 'box':
                 shape['left'] = int(shape['left'] * self._resized_ratio_w)
                 shape['width'] = int(shape['width'] * self._resized_ratio_w)
                 shape['top'] = int(shape['top'] * self._resized_ratio_h)
@@ -181,9 +186,10 @@ class DartImageManager:
                     shape['width'],
                     shape['height']
                 )
-                prev_img[top: top + height, left: left + width] = raw_image[
-                                                                  top: top + height, left: left + width
-                                                                  ]
+                print("left {} top {} width {} height {} shape {} ratio_w {} ratio_h {}".format(left, top, width, height, shape, self._resized_ratio_w, self._resized_ratio_h))
+                width = width if width > 0 else 1
+                height = height if height > 0 else 1
+                prev_img[top: top + height, left: left + width] = raw_image[top: top + height, left: left + width]
                 prev_img = prev_img[top: top + height, left: left + width]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
                 resized_points = []
@@ -211,12 +217,10 @@ class DartImageManager:
 
             if "label" in shape:
                 label = shape["label"]
-
-        print(prev_img.shape)
         return Image.fromarray(prev_img), label
 
     def init_annotation(self, shapes):
-        """init annotation for current rects.
+        """init annotation for current shapes.
 
         Args:
             shapes(list): the bounding boxes of the image.

@@ -1,7 +1,7 @@
 import attr
 
-from src.models.adq_labels import AdqLabels
 import src.common.utils as utils
+from src.models.adq_labels import AdqLabels
 
 
 @attr.s(slots=True, frozen=False)
@@ -68,14 +68,14 @@ class DataLabels:
         :param label_files_dict: label files with key=folder value=label filename
         :return: a dictionary with key=label filename value=DartLabels
         """
-        label_objects_dict = {}
+        objects_dict = {}
 
         if label_files_dict and len(label_files_dict.items()) > 0:
             for folder, label_files in label_files_dict.items():
                 for label_file in label_files:
-                    label_objects_dict[label_file] = DataLabels.load(folder, label_file)
+                    objects_dict[label_file] = DataLabels.load(label_file)
 
-        return label_objects_dict
+        return objects_dict
 
     @attr.s(slots=True, frozen=False)
     class Image:
