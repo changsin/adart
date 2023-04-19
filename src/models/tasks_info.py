@@ -41,32 +41,6 @@ class Task:
 
     description = attr.ib(default=None)
 
-    def __iter__(self):
-        yield from {
-            "id": self.id,
-            "name": self.name,
-
-            "project_id": self.project_id,
-            "state_id": self.state_id,
-            "state_name": self.state_name,
-            "count": self.count,
-            "anno_file_name": self.anno_file_name,
-
-            "annotator_id": self.annotator_id,
-            "annotator_fullname": self.annotator_fullname,
-
-            "reviewer_id": self.reviewer_id,
-            "reviewer_fullname": self.reviewer_fullname,
-
-            "date": self.date,
-            "data_files": self.data_files,
-
-            "description": self.description
-        }.items()
-
-    def __str__(self):
-        return json.dumps(dict(self), default=utils.default, ensure_ascii=False)
-
     def to_json(self):
         return {
             "id": self.id,
@@ -116,24 +90,12 @@ class Task:
             description=json_dict["description"] if json_dict.get("description") else None
         )
 
-    def __dict__(self):
-        return vars(self)
-
 
 @attr.s(slots=True, frozen=False)
 class TasksInfo:
     num_count = attr.ib(validator=attr.validators.instance_of(int))
     # NB: add as a json dict to make manipulating in pandas dataframe easier
     tasks = attr.ib(validator=attr.validators.instance_of(list))
-
-    def __iter__(self):
-        yield from {
-            "num_count": self.num_count,
-            "tasks": self.tasks
-        }.items()
-
-    def __str__(self):
-        return json.dumps(self.to_json(), ensure_ascii=False)
 
     def add(self, task: Task):
         self.tasks.append(task)

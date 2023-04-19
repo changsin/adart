@@ -28,11 +28,10 @@ def view_project():
 
     if selected_project:
         st.markdown("# Project")
-
-        extended_props = selected_project.extended_properties
-        df_project = pd.DataFrame.from_dict(selected_project)
+        df_project = pd.DataFrame.from_dict(selected_project.to_json())
         st.dataframe(df_project)
 
+        extended_props = selected_project.extended_properties
         if extended_props:
             st.markdown("## Model validation information")
             st.dataframe(pd.DataFrame.from_dict(extended_props,

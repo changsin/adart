@@ -47,50 +47,6 @@ class Project(ABC):
 
     extended_properties = attr.ib(default=None)
 
-    def __iter__(self):
-        yield from {
-            "id": self.id,
-            "name": self.name,
-
-            "data_files": self.data_files,
-            "label_files": self.label_files,
-
-            "annotation_type_id": self.annotation_type_id,
-            "file_format_id": self.file_format_id,
-
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-
-            "description": self.description,
-
-            "progress": self.progress,
-            "task_total_count": self.task_total_count,
-            "task_done_count": self.task_done_count,
-            "total_count": self.total_count,
-            "sample_count": self.sample_count,
-
-            # TODO: for backward-compatibility
-            "per_task_count": self.per_task_count,
-            "dir_name": self.per_task_count,
-
-            "annotation_classes": self.annotation_classes,
-            "annotation_errors": self.annotation_errors,
-            "dataset_name": self.dataset_name,
-            "domain_id": self.domain_id,
-
-            "customer_company": self.customer_company,
-            "customer_name": self.customer_name,
-            "customer_url": self.customer_url,
-            "customer_phone": self.customer_phone,
-            "customer_email": self.customer_email,
-            "customer_address": self.customer_address,
-
-            "extended_properties": self.extended_properties
-        }.items()
-
-    def __str__(self):
-        return json.dumps(dict(self), default=utils.default, ensure_ascii=False)
-
     def to_json(self):
         return {
             "id": self.id,
@@ -186,19 +142,6 @@ class ModelProject:
 
     cost = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
-    def __iter__(self):
-        yield from {
-            "model_type": self.model_type,
-            "models_used": self.models_used,
-            "data_type": self.data_type,
-            "data_format": self.data_format,
-            "domain": self.domain,
-            "cost": self.cost
-        }.items()
-
-    def __str__(self):
-        return json.dumps(dict(self), ensure_ascii=False)
-
     def to_json(self):
         return {
             "model_type": self.model_type,
@@ -208,9 +151,6 @@ class ModelProject:
             "domain": self.domain,
             "cost": self.cost
         }
-
-    def __dict__(self):
-        return vars(self)
 
     @staticmethod
     def from_json(json_dict: dict):
@@ -230,15 +170,6 @@ class ProjectsInfo:
     # NB: add as a json dict to make manipulating in pandas dataframe easier
     projects = attr.ib(validator=attr.validators.instance_of(list))
 
-    def __iter__(self):
-        yield from {
-            "num_count": self.num_count,
-            "projects": self.projects
-        }.items()
-
-    def __str__(self):
-        return json.dumps(self.to_json(), ensure_ascii=False)
-
     def add(self, project: Project):
         self.projects.append(project)
         self.num_count = len(self.projects)
@@ -248,9 +179,6 @@ class ProjectsInfo:
             "num_count": self.num_count,
             "projects": [project.to_json() for project in self.projects]
         }
-
-    def __dict__(self):
-        return vars(self)
 
     def get_next_project_id(self) -> int:
         if len(self.projects) == 0:

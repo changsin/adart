@@ -1,5 +1,3 @@
-import json
-
 import attr
 
 from src.models.adq_labels import AdqLabels
@@ -17,17 +15,6 @@ class DartLabels:
     #     "twconverted": "96E7D8C8-44E4-4055-8487-85B3208E51A2",
     #     "template_version": "0.1",
     #     "images": [
-
-    def __iter__(self):
-        yield from {
-            "twconverted": self.twconverted,
-            "mode": self.mode,
-            "template_version": self.template_version,
-            "images": self.images
-        }.items()
-
-    def __str__(self):
-        return json.dumps(dict(self), ensure_ascii=False)
 
     def to_json(self):
         return {
@@ -72,18 +59,6 @@ class DartLabels:
         #
         # {
         #
-        def __iter__(self):
-            yield from {
-                "image_id": self.image_id,
-                "name": self.name,
-                "width": self.width,
-                "height": self.height,
-                "objects": self.objects
-            }.items()
-
-        def __str__(self):
-            return json.dumps(dict(self), ensure_ascii=False)
-
         def to_json(self):
             return {
                 "image_id": self.image_id,
@@ -148,21 +123,6 @@ class DartLabels:
         #     "comment": ""
         #   }
         # }
-
-        def __iter__(self):
-            yield from {
-                "label": self.label,
-                "type": self.type,
-                "points": self.points,
-                "attributes": self.attributes,
-                "occluded": self.occluded,
-                "z_order": self.z_order,
-                "group_id": self.group_id,
-                "verification_result": self.verification_result,
-            }.items()
-
-        def __str__(self):
-            return json.dumps(dict(self), ensure_ascii=False)
 
         def to_json(self):
             return {
