@@ -69,7 +69,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         st.sidebar.write("Total files:", n_files)
-        st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"], n_files))
+        st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
 
         st.sidebar.selectbox("Files",
                              st.session_state["img_files"],

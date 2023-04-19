@@ -64,8 +64,6 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
 
     # Return a cropped image using the box from the frontend
     if component_value:
-        print("component_value {}".format(component_value))
         return component_value["rects"]
     else:
-        print("shape_props {}".format(shape_props))
         return shape_props
