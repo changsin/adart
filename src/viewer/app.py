@@ -104,7 +104,6 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                 col1, col2 = st.columns(2)
                 with col1:
                     col1.image(prev_img[0])
-                    print(shapes[i])
                     st.dataframe(pd.DataFrame.from_dict(shapes[i], orient='index').transpose())
                 with col2:
                     default_index = 0

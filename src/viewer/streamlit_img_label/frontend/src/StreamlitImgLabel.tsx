@@ -259,7 +259,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                             opacity: opacity
                         })
                     canvas.add(annotation)
-                    canvas.add(text)
+                    // canvas.add(text)
                     canvas.add(selectedAnnotation)
 
                     annotation.on("mousedown", () => {
