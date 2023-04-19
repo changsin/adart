@@ -167,6 +167,44 @@ function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
     return group;
 }
 
+function createSplinePaths(points: SplinePoint[], color: string): fabric.Object | undefined {
+    // Create an empty path string
+    let path = "";
+    
+    // If there are less than two points, return null
+    if (points.length < 2) {
+      return undefined;
+    }
+    
+    // Move to the first point
+    path += `M ${points[0].x} ${points[0].y}`;
+    
+    // Create a spline through all the points
+    if (points.length === 2) {
+      // If there are only two points, create a straight line
+      path += ` L ${points[1].x} ${points[1].y}`;
+    } else {
+      // Otherwise, create a Bezier spline with the control points at each end
+      for (let i = 1; i < points.length - 2; i++) {
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+        path += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
+      }
+      // Add the last point to the path
+      path += ` Q ${points[points.length - 2].x} ${points[points.length - 2].y}, ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+    }
+    
+    // Create a Fabric.js path object from the path string
+    const spline = new fabric.Path(path, {
+      fill: "",
+      stroke: color,
+      strokeWidth: 2,
+    });
+  
+    // Return the spline object
+    return spline;
+  }
+  
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
@@ -318,8 +356,11 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     });
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     const { points, label } = shape
-                    const splinePath = createSplinePath(points, shapeColor);
-                    canvas.add(splinePath);
+                    const splinePath = createSplinePaths(points, shapeColor);
+                      // If the spline is an instance of fabric.Object, add it to the canvas
+                    if (splinePath && splinePath instanceof fabric.Object) {
+                        canvas.add(splinePath);
+                    }
                 } else if (shape.shapeType === "polygon") {
                     const { points, label } = shape
                     const polygon = new fabric.Polygon(points, {
