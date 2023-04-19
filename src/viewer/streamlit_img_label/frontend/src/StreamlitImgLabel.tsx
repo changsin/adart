@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react"
+import { Range, getTrackBackground } from 'react-range'
 import {
     ComponentProps,
     Streamlit,
@@ -147,8 +148,6 @@ function getSplinePaths(points: SplinePoint[]): string {
   return path.join(" ");
 }
 
-let opacity = 0.7;
-
 function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
     const segments = getSplineSegments(points);
 
@@ -158,7 +157,7 @@ function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
         fill: "",
         stroke: color,
         strokeWidth: segment.width,
-        opacity: opacity
+        opacity: 0.5
       };
       return new fabric.Path(pathData, options);
     });
@@ -174,7 +173,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
-  
+    const [opacity, setOpacity] = useState(1);
+
+    const handleOpacityChange = (value: number) => {
+        setOpacity(value);
+      };
+    
     /*
      * Translate Python image data to a JavaScript Image
      */
@@ -304,6 +308,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         visible: true,
                         });
                         canvas.setActiveObject(selectedAnnotation);
+
+                        sendSelectedShape(shape)
                     });
                 
                     // Add a click event listener to hide the highlight rectangle
@@ -334,8 +340,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         setLabels(shapes.map((shape) => shape.label))
 
         Streamlit.setFrameHeight()
-
-        sendCoordinates(labels)
 
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args])
 
@@ -430,6 +434,10 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         sendCoordinates([])
     }
 
+    const sendSelectedShape = (shape: ShapeProps) => {
+        Streamlit.setComponentValue({ shape })
+      }
+
     const sendCoordinates = (returnLabels: string[]) => {
         setLabels(returnLabels)
         const objects = canvas.getObjects()
@@ -443,7 +451,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
           console.warn('The length of the returnLabels array does not match the number of objects on the canvas.')
         }
       
-        Streamlit.setComponentValue({ rects })
+        // Streamlit.setComponentValue({ rects })
       }
 
     // Adjust the theme according to the system
@@ -509,6 +517,55 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 >
                     Clear all
                 </button>
+                <Range
+                    step={0.1}
+                    min={0}
+                    max={1}
+                    values={[opacity]}
+                    onChange={(values) => handleOpacityChange(values[0])}
+                    renderTrack={({ props, children }) => (
+                        <div
+                        {...props}
+                        style={{
+                            ...props.style,
+                            height: '6px',
+                            display: 'flex',
+                            width: '100%',
+                        }}
+                        >
+                        <div
+                            ref={props.ref}
+                            style={{
+                            height: '6px',
+                            width: '100%',
+                            borderRadius: '4px',
+                            background: getTrackBackground({
+                                values: [opacity],
+                                colors: ['#ccc', '#548BF4', '#ccc'],
+                                min: 0,
+                                max: 1,
+                            }),
+                            alignSelf: 'center',
+                            }}
+                        >
+                            {children}
+                        </div>
+                        </div>
+                    )}
+                    renderThumb={({ props }) => (
+                        <div
+                        {...props}
+                        style={{
+                            ...props.style,
+                            height: '16px',
+                            width: '16px',
+                            borderRadius: '50%',
+                            backgroundColor: '#548BF4',
+                            border: '1px solid #ccc',
+                        }}
+                        />
+                    )}
+                    />
             </div>
         </>
     )

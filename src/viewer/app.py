@@ -99,19 +99,20 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         if shapes:
             preview_imgs = im.init_annotation(shapes)
 
-            for i, prev_img in enumerate(preview_imgs):
-                prev_img[0].thumbnail((200, 200))
-                col1, col2 = st.columns(2)
-                with col1:
-                    col1.image(prev_img[0])
-                    st.dataframe(pd.DataFrame.from_dict(shapes[i], orient='index').transpose())
-                with col2:
-                    default_index = 0
+            if len(preview_imgs) > 0:
+                for i, prev_img in enumerate(preview_imgs):
+                    prev_img[0].thumbnail((200, 200))
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        col1.image(prev_img[0])
+                        st.dataframe(shapes)
+                    with col2:
+                        default_index = 0
 
-                    select_label = col2.selectbox(
-                        "Error", labels, key=f"error_{i}", index=default_index
-                    )
-                    im.set_annotation(i, select_label)
+                        select_label = col2.selectbox(
+                            "Error", labels, key=f"error_{i}", index=default_index
+                        )
+                        im.set_annotation(i, select_label)
 
         if data_labels.images[image_index].objects[0].attributes:
             df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
@@ -125,9 +126,9 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                  {'selector': 'td', 'props': [('text-align', 'center')]}])
                      .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
                      .to_html(), unsafe_allow_html=True)
-        else:
-            df_attributes = pd.DataFrame(data_labels.images[st.session_state["image_index"]].to_json())
-            st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
+        # else:
+        #     df_attributes = pd.DataFrame(data_labels.images[st.session_state["image_index"]].to_json())
+        #     st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 
 #
 # if __name__ == "__main__":

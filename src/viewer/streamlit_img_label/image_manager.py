@@ -229,7 +229,8 @@ class DartImageManager:
             prev_img(list): list of preview images with default label.
         """
         self._current_shapes = shapes
-        return [self._chop_shape_img(shape) for shape in self._current_shapes]
+        # return [self._chop_shape_img(shape) for shape in self._current_shapes]
+        return [self._chop_shape_img(shapes)]
 
     def set_annotation(self, index, label):
         """set the label of the image.
@@ -238,4 +239,5 @@ class DartImageManager:
             index(int): the index of the list of bounding boxes of the image.
             label(str): the label of the bounding box
         """
-        self._current_shapes[index]["label"] = label
+        # self._current_shapes[index]["label"] = label
+        # TODO: set the error category here
