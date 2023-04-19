@@ -333,9 +333,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         // Set labels
         setLabels(shapes.map((shape) => shape.label))
 
-        // setCanvas(canvasTmp)
-
         Streamlit.setFrameHeight()
+
+        sendCoordinates(labels)
 
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args])
 
@@ -430,16 +430,21 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         sendCoordinates([])
     }
 
-    // Send the coordinates of the rectangle back to streamlit.
     const sendCoordinates = (returnLabels: string[]) => {
         setLabels(returnLabels)
-        const rects = canvas.getObjects().map((rect, i) => ({
-            ...rect.getBoundingRect(),
-            label: returnLabels[i],
-            shapeType: 'box'
-        }))
+        const objects = canvas.getObjects()
+        const rects = objects.map((rect, i) => ({
+          ...rect.getBoundingRect(),
+          label: returnLabels[i],
+          shapeType: 'box'
+        })).filter(Boolean)
+        
+        if (returnLabels.length !== objects.length) {
+          console.warn('The length of the returnLabels array does not match the number of objects on the canvas.')
+        }
+      
         Streamlit.setComponentValue({ rects })
-    }
+      }
 
     // Adjust the theme according to the system
     const onSelectMode = (mode: string) => {

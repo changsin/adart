@@ -186,7 +186,8 @@ class DartImageManager:
                     shape['width'],
                     shape['height']
                 )
-                print("left {} top {} width {} height {} shape {} ratio_w {} ratio_h {}".format(left, top, width, height, shape, self._resized_ratio_w, self._resized_ratio_h))
+                top = top if top > 0 else 0
+                left = left if left > 0 else 0
                 width = width if width > 0 else 1
                 height = height if height > 0 else 1
                 prev_img[top: top + height, left: left + width] = raw_image[top: top + height, left: left + width]
