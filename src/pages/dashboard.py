@@ -1,3 +1,4 @@
+import os
 import importlib.util
 import importlib.util
 
@@ -69,10 +70,9 @@ def dashboard():
     AgGrid(df_projects)
 
     st.subheader("**Tasks**")
-    json_tasks = utils.from_file("{\"num_count\":0,\"tasks\":[]}",
-                                 # os.path.join(os.getcwd(), "data"),
-                                 constants.ADQ_WORKING_FOLDER,
-                                 constants.TASKS + constants.JSON_EXT)
+    json_tasks = utils.from_file(os.path.join(constants.ADQ_WORKING_FOLDER,
+                                              constants.TASKS + constants.JSON_EXT),
+                                 "{\"num_count\":0,\"tasks\":[]}")
 
     df_tasks = pd.DataFrame(columns=constants.TASK_COLUMNS)
     if len(json_tasks[constants.TASKS]) > 0:

@@ -3,7 +3,7 @@ import os
 import numpy as np
 from PIL import Image
 
-from src.models.dart_labels import DartLabels
+from src.models.data_labels import DataLabels
 
 """
 .. module:: streamlit_img_label
@@ -20,7 +20,7 @@ class DartImageManager:
         filename(str): the image file.
     """
 
-    def __init__(self, image_folder, image_labels: DartLabels.Image):
+    def __init__(self, image_folder, image_labels: DataLabels.Image):
         """initiate module"""
         self.image_labels = image_labels
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
@@ -212,6 +212,7 @@ class DartImageManager:
             if "label" in shape:
                 label = shape["label"]
 
+        print(prev_img.shape)
         return Image.fromarray(prev_img), label
 
     def init_annotation(self, shapes):

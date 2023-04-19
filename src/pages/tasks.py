@@ -18,6 +18,8 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
+import src.viewer.app as app
+from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
@@ -26,6 +28,10 @@ from src.common.constants import (
     STRADVISION_XML,
     GPR_JSON,
     ModelTaskType)
+from src.common.convert_lib import (
+    convert_CVAT_to_Form,
+    from_gpr_json,
+    from_strad_vision_xml)
 from src.home import (
     is_authenticated,
     get_tasks_info,
@@ -33,17 +39,9 @@ from src.home import (
     logout,
     select_project,
     select_task)
-from src.pages import metrics
+from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
-from src.common import utils
-import src.viewer.app as app
-from src.common.convert_lib import (
-    convert_CVAT_to_Form,
-    convert_PASCAL_to_Form,
-    from_gpr_json,
-    from_strad_vision_xml)
-
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml']
@@ -124,7 +122,10 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 
         # save the sample label file
         task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
-        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2), task_folder, label_filename)
+        if not os.path.exists(task_folder):
+            os.mkdir(task_folder)
+        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
+                      os.path.join(task_folder, label_filename))
 
         tasks_info = get_tasks_info()
         task_id = tasks_info.get_next_task_id()
@@ -143,7 +144,7 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 
 def create_data_tasks(selected_project: Project):
     if len(selected_project.label_files) > 0:
-        dart_labels_dict = metrics.load_label_files(selected_project.label_files)
+        dart_labels_dict = DataLabels.load(selected_project.label_files)
         images_per_label_file_dict = dict()
         if dart_labels_dict.items() is not None:
             for labels_file, dart_labels in dart_labels_dict.items():

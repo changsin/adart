@@ -24,24 +24,19 @@ def humanize_bytes(size):
         size /= ONE_K_BYTES
 
 
-def from_file(str_default, folder, filename):
-    full_path = os.path.join(folder, filename)
-    if os.path.exists(full_path) and os.path.getsize(full_path) > 0:
-        file = open(full_path, 'r', encoding='utf-8')
+def from_file(filename, default_json="{}"):
+    if os.path.exists(filename) and os.path.getsize(filename) > 0:
+        file = open(filename, 'r', encoding='utf-8')
         return json.load(file)
 
-    return json.loads(str_default)
+    return json.loads(default_json)
 
 
-def to_file(data, folder, filename):
+def to_file(data, filename):
     """
     save data to path
     """
-    if not os.path.exists(folder):
-        os.mkdir(folder)
-
-    full_path = os.path.join(folder, filename)
-    with open(full_path, 'w', encoding="utf-8") as json_file:
+    with open(filename, 'w', encoding="utf-8") as json_file:
         json_file.write(data)
 
 

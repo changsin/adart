@@ -1,10 +1,11 @@
 import attr
 
 from src.models.adq_labels import AdqLabels
+import src.common.utils as utils
 
 
 @attr.s(slots=True, frozen=False)
-class DartLabels:
+class DataLabels:
     twconverted = attr.ib(default=None, validator=attr.validators.instance_of(str))
     mode = attr.ib(default="annotation", validator=attr.validators.instance_of(str))
     template_version = attr.ib(default="0.1", validator=attr.validators.instance_of(str))
@@ -26,21 +27,55 @@ class DartLabels:
 
     @staticmethod
     def from_json(json_dict):
-        return DartLabels(
+        return DataLabels(
             twconverted=json_dict['twconverted'],
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
-            images=[DartLabels.Image.from_json(json_image) for json_image in json_dict['images']]
+            images=[DataLabels.Image.from_json(json_image) for json_image in json_dict['images']]
         )
 
     @staticmethod
     def from_adq_labels(adq_labels: AdqLabels):
-        return DartLabels(
+        return DataLabels(
             twconverted=adq_labels.twconverted,
             mode=adq_labels.mode,
             template_version=adq_labels.template_version,
-            images=[DartLabels.Image.from_adq_image(image) for image in adq_labels.images]
+            images=[DataLabels.Image.from_adq_image(image) for image in adq_labels.images]
         )
+
+    @staticmethod
+    def load(filename: str) -> 'DataLabels':
+        """
+        :param filename: label filename
+        :return: DartLabels object
+        """
+        json_labels = utils.from_file(filename)
+        # check if it is already in DartLabels format
+        # TODO: find a better way of checking the format
+        if json_labels:
+            if json_labels.get('images') and type(json_labels.get('images')[0]['height']) == int:
+                return DataLabels.from_json(json_labels)
+            else:
+                adq_labels = AdqLabels.from_json(json_labels)
+                # convert to dart label format for easier processing
+                return DataLabels.from_adq_labels(adq_labels)
+        else:
+            print("label file {} does not exist!".format(filename))
+
+    @staticmethod
+    def load_from_dict(label_files_dict: dict) -> dict:
+        """
+        :param label_files_dict: label files with key=folder value=label filename
+        :return: a dictionary with key=label filename value=DartLabels
+        """
+        label_objects_dict = {}
+
+        if label_files_dict and len(label_files_dict.items()) > 0:
+            for folder, label_files in label_files_dict.items():
+                for label_file in label_files:
+                    label_objects_dict[label_file] = DataLabels.load(folder, label_file)
+
+        return label_objects_dict
 
     @attr.s(slots=True, frozen=False)
     class Image:
@@ -70,22 +105,22 @@ class DartLabels:
 
         @staticmethod
         def from_json(json_dict):
-            return DartLabels.Image(
+            return DataLabels.Image(
                 image_id=json_dict['image_id'],
                 name=json_dict['name'],
                 width=json_dict['width'],
                 height=json_dict['height'],
-                objects=[DartLabels.Object.from_json(json_obj) for json_obj in json_dict['objects']]
+                objects=[DataLabels.Object.from_json(json_obj) for json_obj in json_dict['objects']]
             )
 
         @staticmethod
         def from_adq_image(adq_image: AdqLabels.Image):
-            return DartLabels.Image(
+            return DataLabels.Image(
                 image_id=adq_image.image_id,
                 name=adq_image.name,
                 width=int(adq_image.width),
                 height=int(adq_image.height),
-                objects=[DartLabels.Object.from_adq_object(obj) for obj in adq_image.objects])
+                objects=[DataLabels.Object.from_adq_object(obj) for obj in adq_image.objects])
 
     @attr.s(slots=True, frozen=False)
     class Object:
@@ -138,7 +173,7 @@ class DartLabels:
 
         @staticmethod
         def from_json(json_dict):
-            return DartLabels.Object(label=json_dict['label'],
+            return DataLabels.Object(label=json_dict['label'],
                                      type=json_dict['type'],
                                      points=json_dict.get('points', None),
                                      attributes=json_dict.get('attributes', None),
@@ -159,7 +194,7 @@ class DartLabels:
                 value = attribute["attribute_value"]
                 attributes[key] = value
 
-            return DartLabels.Object(label=adq_object.label,
+            return DataLabels.Object(label=adq_object.label,
                                      type=adq_object.type,
                                      points=points,
                                      attributes=attributes,

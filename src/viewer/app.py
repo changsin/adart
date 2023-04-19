@@ -1,14 +1,14 @@
 import os
 
+import pandas as pd
 import streamlit as st
 
 from src.common.constants import ADQ_WORKING_FOLDER, ErrorType
 from src.home import select_task
+from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
-from src.pages.metrics import load_label_file
 from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import DartImageManager
-import pandas as pd
 
 
 def main(selected_project: Project, labels=ErrorType.get_all_types()):
@@ -17,9 +17,8 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                    str(selected_project.id),
                                    str(selected_task.id))
-        dart_labels = load_label_file(task_folder,
-                                      os.path.basename(selected_task.anno_file_name))
-        image_filenames = [image.name for image in dart_labels.images]
+        data_labels = DataLabels.load(selected_task.anno_file_name)
+        image_filenames = [image.name for image in data_labels.images]
 
         if not st.session_state.get('image_index'):
             st.session_state["img_files"] = image_filenames
@@ -87,29 +86,15 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         # Main content: review images
         image_index = st.session_state['image_index']
 
-        im = DartImageManager(task_folder, dart_labels.images[image_index])
+        im = DartImageManager(task_folder, data_labels.images[image_index])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
         shape_color = pick_color(resized_shapes[0].get('label'), 'red')
 
         st.markdown("### {} {}".format(image_index, st.session_state['img_files'][image_index]))
+
+        # Display cutout boxes
         shapes = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
-
-        if dart_labels.images[image_index].objects[0].attributes:
-            df_attributes = pd.DataFrame.from_dict(dart_labels.images[st.session_state["image_index"]]
-                                                   .objects[0].attributes,
-                                                   orient='index')
-
-            # Display the dataframe as an HTML table with custom styling using st.write()
-            st.write(df_attributes.style.set_table_styles(
-                [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
-                 {'selector': 'td', 'props': [('text-align', 'center')]}])
-                     .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
-                     .to_html(), unsafe_allow_html=True)
-        else:
-            df_attributes = pd.DataFrame(dart_labels.images[st.session_state["image_index"]])
-            st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
-
         if shapes:
             preview_imgs = im.init_annotation(shapes)
 
@@ -118,6 +103,8 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                 col1, col2 = st.columns(2)
                 with col1:
                     col1.image(prev_img[0])
+                    print(shapes[i])
+                    st.dataframe(pd.DataFrame.from_dict(shapes[i], orient='index').transpose())
                 with col2:
                     default_index = 0
 
@@ -125,6 +112,22 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                         "Error", labels, key=f"error_{i}", index=default_index
                     )
                     im.set_annotation(i, select_label)
+
+        if data_labels.images[image_index].objects[0].attributes:
+            df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
+                                                   .objects[0].attributes,
+                                                   orient='index')
+            # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
+
+            # Display the dataframe as an HTML table with custom styling using st.write()
+            st.write(df_attributes.style.set_table_styles(
+                [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
+                 {'selector': 'td', 'props': [('text-align', 'center')]}])
+                     .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
+                     .to_html(), unsafe_allow_html=True)
+        else:
+            df_attributes = pd.DataFrame(data_labels.images[st.session_state["image_index"]].to_json())
+            st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 
 #
 # if __name__ == "__main__":

@@ -21,8 +21,7 @@ from src.home import (
     logout,
     select_project,
     get_tasks)
-from src.models.adq_labels import AdqLabels
-from src.models.dart_labels import DartLabels
+from src.models.data_labels import DataLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
@@ -46,8 +45,7 @@ def show_file_metrics():
                         task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                                    str(selected_project.id),
                                                    str(task.id))
-                        dart_labels = load_label_file(task_folder,
-                                                      os.path.basename(task.anno_file_name))
+                        dart_labels = DataLabels.load(task.anno_file_name)
                         image_filenames = [image.name for image in dart_labels.images]
                         data_files[task_folder] = image_filenames
 
@@ -87,45 +85,8 @@ def show_image_metrics():
         st.write("No image data")
 
 
-def load_label_file(folder: str, label_file: str) -> DartLabels:
-    """
-    :param folder: parent folder
-    :param label_file: label filename
-    :return: DartLabels object
-    """
-    json_labels = utils.from_file("{}",
-                                  folder,
-                                  label_file)
-    # check if it is already in DartLabels format
-    # TODO: find a better way of checking the format
-    if json_labels:
-        if json_labels.get('images') and type(json_labels.get('images')[0]['height']) == int:
-            return DartLabels.from_json(json_labels)
-        else:
-            adq_labels = AdqLabels.from_json(json_labels)
-            # convert to dart label format for easier processing
-            return DartLabels.from_adq_labels(adq_labels)
-    else:
-        st.warning("label file {}/{} does not!".format(folder, label_file))
-
-
-def load_label_files(label_files_dict: dict) -> dict:
-    """
-    :param label_files_dict: label files with key=folder value=label filename
-    :return: a dictionary with key=label filename value=DartLabels
-    """
-    label_objects_dict = {}
-
-    if label_files_dict and len(label_files_dict.items()) > 0:
-        for folder, label_files in label_files_dict.items():
-            for label_file in label_files:
-                label_objects_dict[label_file] = load_label_file(folder, label_file)
-
-    return label_objects_dict
-
-
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
-    label_objects_dict = load_label_files(label_files_dict)
+    label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 
     class_labels = dict()
     overlap_areas = dict()
@@ -272,9 +233,9 @@ def show_label_metrics():
 
 def main():
     menu = {
-        "Show file metrics": lambda: show_file_metrics(),
-        "Show image metrics": lambda: show_image_metrics(),
-        "Show label metrics": lambda: show_label_metrics()
+        "Show file info": lambda: show_file_metrics(),
+        "Show image info": lambda: show_image_metrics(),
+        "Show label info": lambda: show_label_metrics()
     }
 
     # Create a sidebar with menu options

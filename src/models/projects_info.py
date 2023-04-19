@@ -1,4 +1,5 @@
 import json
+import os.path
 from abc import ABC
 
 import attr
@@ -207,10 +208,12 @@ class ProjectsInfo:
             self.projects[index_to_update] = project_to_update
 
     def save(self):
+        if not os.path.exists(ADQ_WORKING_FOLDER):
+            os.mkdir(ADQ_WORKING_FOLDER)
+        filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT)
         utils.to_file(json.dumps(self,
                                  default=utils.default, indent=2),
-                      ADQ_WORKING_FOLDER,
-                      PROJECTS + JSON_EXT)
+                      filename)
 
     @staticmethod
     def from_json(json_dict):
