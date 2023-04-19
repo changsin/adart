@@ -26,63 +26,86 @@ from src.models.data_labels import DataLabels
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
+def get_data_files(selected_project):
+    data_files = dict()
+    if len(selected_project.data_files) > 0:
+        st.markdown("# Files Info")
+        data_files = selected_project.data_files
+    else:
+        tasks = get_tasks(selected_project.id)
+        if tasks and len(tasks) > 0:
+            for task in tasks:
+                if task.data_files:
+                    for folder, files in task.data_files.items():
+                        data_files[folder] = files
+                elif task.anno_file_name:
+                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
+                                               str(selected_project.id),
+                                               str(task.id))
+                    dart_labels = DataLabels.load(task.anno_file_name)
+                    image_filenames = [image.name for image in dart_labels.images]
+                    data_files[task_folder] = image_filenames
+
+    return data_files
+
+
+def get_label_files(selected_project):
+    label_files = dict()
+    if len(selected_project.label_files) > 0:
+        return selected_project.label_files
+    else:
+        tasks = get_tasks(selected_project.id)
+        if tasks and len(tasks) > 0:
+            for task in tasks:
+                if task.anno_file_name:
+                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
+                                               str(selected_project.id),
+                                               str(task.id))
+                    label_files[task_folder] = [os.path.basename(task.anno_file_name)]
+
+    return label_files
+
+
 def show_file_metrics():
     selected_project = select_project()
-
     if selected_project:
-        data_files = dict()
-        if len(selected_project.data_files) > 0:
-            st.markdown("# Files Info")
-            data_files = selected_project.data_files
-        else:
-            tasks = get_tasks(selected_project.id)
-            if tasks and len(tasks) > 0:
-                for task in tasks:
-                    if task.data_files:
-                        for folder, files in task.data_files.items():
-                            data_files[folder] = files
-                    elif task.anno_file_name:
-                        task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                                   str(selected_project.id),
-                                                   str(task.id))
-                        dart_labels = DataLabels.load(task.anno_file_name)
-                        image_filenames = [image.name for image in dart_labels.images]
-                        data_files[task_folder] = image_filenames
+        data_files = get_data_files(selected_project)
+        if data_files:
+            chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
+            col1, col2 = st.columns(2)
+            if chart_files_ctime:
+                display_chart(selected_project.id, "files_ctime", chart_files_ctime, column=col1)
 
-        if len(data_files) == 0:
-            st.warning("No data files")
-            return
+            if chart_file_sizes:
+                display_chart(selected_project.id, "file_sizes", chart_file_sizes, column=col2)
 
-        chart_files_ctime, chart_file_sizes = plot_file_info("### Created date time", data_files)
-        if chart_files_ctime:
-            display_chart(selected_project.id, "files_ctime", chart_files_ctime)
-        if chart_file_sizes:
-            display_chart(selected_project.id, "file_sizes", chart_file_sizes)
-
-        if len(selected_project.label_files) > 0:
-            st.markdown("# Label Files Info")
-            chart_labels_ctime, chart_label_file_sizes = plot_file_info("### Created date time",
-                                                                        selected_project.label_files)
-            if chart_labels_ctime:
-                display_chart(selected_project.id, "label_files_ctime", chart_labels_ctime)
-
-            if chart_label_file_sizes:
-                display_chart(selected_project.id, "label_file_sizes", chart_label_file_sizes)
+        # label_files = get_label_files(selected_project)
+        # if label_files:
+        #     chart_labels_ctime, chart_label_file_sizes = plot_file_info("Label files info",
+        #                                                                 label_files)
+        #     col1, col2 = st.columns(2)
+        #     with col1:
+        #         if chart_labels_ctime:
+        #             display_chart(selected_project.id, "label_files_ctime", chart_labels_ctime, column=col1)
+        #
+        #     with col2:
+        #         if chart_label_file_sizes:
+        #             display_chart(selected_project.id, "label_file_sizes", chart_label_file_sizes, column=col2)
 
         show_download_charts_button(selected_project.id)
 
 
 def show_image_metrics():
     selected_project = select_project()
-
-    if selected_project and selected_project.data_files:
+    if selected_project:
+        data_files = get_data_files(selected_project)
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
-                                                                              selected_project.data_files)
-        # Display the histogram in Streamlit
+                                                                              data_files)
+        col1, col2 = st.columns(2)
         if chart_aspect_ratios:
-            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios)
+            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios, column=col1)
         if chart_brightness:
-            display_chart(selected_project.id, "brightness", chart_brightness)
+            display_chart(selected_project.id, "brightness", chart_brightness, column=col2)
 
         show_download_charts_button(selected_project.id)
     else:
@@ -243,9 +266,9 @@ def show_label_metrics():
 
 def main():
     menu = {
-        "Show file info": lambda: show_file_metrics(),
-        "Show image info": lambda: show_image_metrics(),
-        "Show label info": lambda: show_label_metrics()
+        "Show file metrics": lambda: show_file_metrics(),
+        "Show image metrics": lambda: show_image_metrics(),
+        "Show label metrics": lambda: show_label_metrics()
     }
 
     # Create a sidebar with menu options

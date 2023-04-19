@@ -134,6 +134,7 @@ def plot_file_info(title: str, files_dict: dict):
     if files_dict is None or len(files_dict.items()) == 0:
         return
 
+    st.header(title)
     file_info_dict = dict()
     for folder, files in files_dict.items():
         level = folder.count(os.sep)
@@ -232,8 +233,11 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     return chart
 
 
-def display_chart(project_id, name, chart):
-    st.altair_chart(chart, use_container_width=True)
+def display_chart(project_id, name, chart, column=None):
+    if column:
+        column.altair_chart(chart, use_container_width=True)
+    else:
+        st.altair_chart(chart, use_container_width=True)
 
     # save to the session_state for later use
     charts = dict()

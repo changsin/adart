@@ -69,6 +69,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         st.sidebar.write("Total files:", n_files)
+        st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"], n_files))
 
         st.sidebar.selectbox("Files",
                              st.session_state["img_files"],
@@ -91,7 +92,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         resized_shapes = im.get_resized_shapes()
         shape_color = pick_color(resized_shapes[0].get('label'), 'red')
 
-        st.markdown("### {} {}".format(image_index, st.session_state['img_files'][image_index]))
+        st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
         # Display cutout boxes
         shapes = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
