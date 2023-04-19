@@ -1,8 +1,13 @@
-# DaRT (Data Reviewer Tool)
-This is a new data reviewing tool written in Python using Streamlit for UI.
+# ADaRT (AI Data Reviewing Tool)
+ADaRT is a data reviewing tool written in Streamlit and React.
 
 To run:
-1. streamlit run streamlit_app.py 
+1.  Run the following
+```markdown
+>cd src
+>pip install -r requirements.txt
+>streamlit run home.py
+```
 
 # streamlit_app example
 How to make a standalone executable from a streamlit app.
@@ -21,8 +26,3 @@ This is done through Electron following (How to Convert a Streamlit App to an .E
 >npm run build
 ```
 
-# Dependencies
-
-```commandline
->pip install python-jwt passlib pydantic
-```
