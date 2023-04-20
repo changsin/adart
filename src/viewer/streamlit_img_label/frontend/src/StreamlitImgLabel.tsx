@@ -68,112 +68,7 @@ interface PythonArgs {
     imageData: Uint8ClampedArray
 }
 
-interface SplineSegment {
-    startPoint: SplinePoint;
-    endPoint: SplinePoint;
-    width: number;
-  }
-  
-function getSplineSegments(points: SplinePoint[]): SplineSegment[] {
-    const segments: SplineSegment[] = [];
-  
-    for (let i = 1; i < points.length - 2; i++) {
-      const xc = (points[i].x + points[i + 1].x) / 2;
-      const yc = (points[i].y + points[i + 1].y) / 2;
-      const width = (points[i].r + points[i + 1].r) / 2;
-      const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
-  
-      const segment: SplineSegment = {
-        startPoint: { x: points[i].x, y: points[i].y, r: points[i].r},
-        endPoint: { x: xc, y: yc, r: width },
-        width: width
-      };
-  
-      segments.push(segment);
-  
-      const controlX = xc - width * Math.sin(angle);
-      const controlY = yc + width * Math.cos(angle);
-  
-      segment.endPoint = { x: points[i + 1].x, y: points[i + 1].y, r: width };
-      segment.width = (points[i + 1].r + points[i + 2].r) / 2;
-  
-      segment.startPoint = { x: controlX, y: controlY, r: width };
-      segments.push(segment);
-    }
-  
-    // handle last segment separately
-    const secondLast = points[points.length - 2];
-    const last = points[points.length - 1];
-    const width = (secondLast.r + last.r) / 2;
-    const angle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
-    const xc = (secondLast.x + last.x) / 2;
-    const yc = (secondLast.y + last.y) / 2;
-  
-    const segment: SplineSegment = {
-      startPoint: { x: secondLast.x, y: secondLast.y, r: width },
-      endPoint: { x: xc, y: yc, r: width },
-      width: width
-    };
-  
-    segments.push(segment);
-  
-    const controlX = xc + width * Math.sin(angle);
-    const controlY = yc - width * Math.cos(angle);
-  
-    segment.endPoint = { x: last.x, y: last.y, r: width };
-    segment.width = width;
-  
-    segment.startPoint = { x: controlX, y: controlY, r: width };
-    segments.push(segment);
-  
-    return segments;
-  }
-
-function getSplinePaths(points: SplinePoint[]): string {
-    const path = ["M", points[0].x, points[0].y];
-
-    for (let i = 1; i < points.length - 2; i++) {
-        const xc = (points[i].x + points[i + 1].x) / 2;
-        const yc = (points[i].y + points[i + 1].y) / 2;
-        const width = (points[i].r + points[i + 1].r) / 2;
-        const angle = Math.atan2(points[i + 1].y - points[i].y, points[i + 1].x - points[i].x);
-        const controlX = xc - width * Math.sin(angle);
-        const controlY = yc + width * Math.cos(angle);
-        path.push("Q", points[i].x, points[i].y, controlX, controlY);
-    }
-
-  // curve through the last two points
-  const secondLast = points[points.length - 2];
-  const last = points[points.length - 1];
-  const width = (secondLast.r + last.r) / 2;
-  const angle = Math.atan2(last.y - secondLast.y, last.x - secondLast.x);
-  const controlX = last.x + width * Math.sin(angle);
-  const controlY = last.y - width * Math.cos(angle);
-  path.push("Q", secondLast.x, secondLast.y, controlX, controlY);
-
-  return path.join(" ");
-}
-
-function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
-    const segments = getSplineSegments(points);
-
-    const paths = segments.map((segment) => {
-      const pathData = `M ${segment.startPoint.x} ${segment.startPoint.y} Q ${segment.endPoint.x} ${segment.endPoint.y} ${segment.startPoint.x} ${segment.startPoint.y}`;
-      const options = {
-        fill: "",
-        stroke: color,
-        strokeWidth: segment.width,
-        opacity: 0.5
-      };
-      return new fabric.Path(pathData, options);
-    });
-  
-    const group = new fabric.Group(paths);
-  
-    return group;
-}
-
-function createSplinePaths(points: SplinePoint[], color: string): fabric.Object | undefined {
+function createSplinePath(points: SplinePoint[], color: string): fabric.Object | undefined {
     // Create an empty path string
     let path = "";
     let default_width = 5;
@@ -231,7 +126,7 @@ function createSplinePaths(points: SplinePoint[], color: string): fabric.Object 
     return group;
   }
   
-  function drawControlPoints(canvas: fabric.Canvas, points: SplinePoint[], color: string): fabric.Object[] {
+  function drawControlPoints(points: SplinePoint[], color: string): fabric.Object[] {
     const controlPoints: fabric.Object[] = [];
 
     for (let i = 0; i < points.length; i++) {
@@ -249,8 +144,10 @@ function createSplinePaths(points: SplinePoint[], color: string): fabric.Object 
     return controlPoints;
 }
 
-function drawVanishingPoint(canvas: fabric.Canvas, x: number, y: number) {
+function drawVanishingPoint(canvas: fabric.Canvas, points: PolygonPoint[]) {
     if (!canvas) return;
+
+    const { x, y } = points[0]
 
     const x_offset = 40
     const y_offset = 20
@@ -422,12 +319,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     });
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     const { points, label } = shape
-                    const splinePath = createSplinePaths(points, shapeColor);
+                    const splinePath = createSplinePath(points, shapeColor);
                     // If the spline is an instance of fabric.Object, add it to the canvas
                     if (splinePath && splinePath instanceof fabric.Object) {
                         canvas.add(splinePath);
                     }
-                    const controlPoints = drawControlPoints(canvas, points, shapeColor)
+                    const controlPoints = drawControlPoints(points, shapeColor)
                     controlPoints.forEach(((point) => {
                         canvas.add(point)
                     }))
@@ -441,8 +338,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     });
                     canvas.add(polygon);
                 } else if (shape.shapeType === "VP") {
-                    const { x, y } = shape.points[0]
-                    drawVanishingPoint(canvas, x, y)
+                    drawVanishingPoint(canvas, shape.points)
                 } else {
                     console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                     return
@@ -531,10 +427,16 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         fill: shapeColor,
                     })
                 )
-            } else if (shape.shapeType === "spline") {
+            } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                 const { points, label } = shape
                 const splinePath = createSplinePath(points, shapeColor);
-                canvas.add(splinePath);
+                if (splinePath && splinePath instanceof fabric.Object) {
+                    canvas.add(splinePath);
+                }
+                const controlPoints = drawControlPoints(points, shapeColor)
+                controlPoints.forEach(((point) => {
+                    canvas.add(point)
+                }))
             } else {
                 console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                 return
