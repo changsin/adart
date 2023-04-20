@@ -162,8 +162,8 @@ def is_authenticated():
 
 
 def main():
-    st.set_page_config(page_title="DaRT")
-    st.header("**ADaRT** - AI Data Reviewing Tool")
+    st.set_page_config(page_title="ART", layout="wide")
+    st.header("**ART** - AI Reviewing Tool")
     st.subheader("Under Construction")
     st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
 

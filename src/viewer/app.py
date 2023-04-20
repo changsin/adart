@@ -90,7 +90,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
         im = DartImageManager(task_folder, data_labels.images[image_index])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
-        shape_color = pick_color(resized_shapes[0].get('label'), 'red')
+        shape_color = pick_color(resized_shapes[0].get('label'), 'green')
 
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 

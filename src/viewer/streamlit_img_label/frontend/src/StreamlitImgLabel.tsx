@@ -176,40 +176,78 @@ function createSplinePath(points: SplinePoint[], color: string): fabric.Object {
 function createSplinePaths(points: SplinePoint[], color: string): fabric.Object | undefined {
     // Create an empty path string
     let path = "";
-    
+    let default_width = 5;
+  
     // If there are less than two points, return null
     if (points.length < 2) {
       return undefined;
     }
-    
+  
+    const segments: fabric.Object[] = [];
+  
     // Move to the first point
     path += `M ${points[0].x} ${points[0].y}`;
-    
+  
     // Create a spline through all the points
     if (points.length === 2) {
       // If there are only two points, create a straight line
       path += ` L ${points[1].x} ${points[1].y}`;
+      const segment = new fabric.Path(path, {
+        fill: "",
+        stroke: color,
+        strokeWidth: points[1].r || default_width,
+      });
+      segments.push(segment);
     } else {
       // Otherwise, create a Bezier spline with the control points at each end
       for (let i = 1; i < points.length - 2; i++) {
         const xc = (points[i].x + points[i + 1].x) / 2;
         const yc = (points[i].y + points[i + 1].y) / 2;
-        path += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
+        const r = points[i].r;
+        const segmentPath = `M ${points[i].x} ${points[i].y} Q ${points[i].x} ${points[i].y}, ${xc} ${yc} T ${points[i + 1].x} ${points[i + 1].y}`;
+        const segment = new fabric.Path(segmentPath, {
+          fill: "",
+          stroke: color,
+          strokeWidth: r || default_width,
+        });
+        segments.push(segment);
       }
-    //   // Add the last point to the path
-    //   path += ` Q ${points[points.length - 2].x} ${points[points.length - 2].y}, ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+      // Add the last point to the path
+      path += ` Q ${points[points.length - 2].x} ${points[points.length - 2].y}, ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+      const lastSegment = new fabric.Path(path, {
+        fill: "",
+        stroke: color,
+        strokeWidth: points[points.length - 1].r || default_width,
+      });
+      segments.push(lastSegment);
     }
-    
+  
     // Create a Fabric.js path object from the path string
-    const spline = new fabric.Path(path, {
-      fill: "",
-      stroke: color,
-      strokeWidth: 2,
+    const group = new fabric.Group(segments, {
+      selectable: true,
     });
   
-    // Return the spline object
-    return spline;
+    // Return the group object
+    return group;
   }
+  
+  function drawControlPoints(canvas: fabric.Canvas, points: SplinePoint[], color: string): fabric.Object[] {
+    const controlPoints: fabric.Object[] = [];
+
+    for (let i = 0; i < points.length; i++) {
+        const x = points[i].x
+        const y = points[i].y
+        const x_offset = points[i].r / 2;
+        const line_x = new fabric.Line([x - x_offset, y, x + x_offset, y], {
+            stroke: 'black',
+            strokeWidth: 2,
+        });
+
+        controlPoints.push(line_x)
+    }
+
+    return controlPoints;
+}
 
 function drawVanishingPoint(canvas: fabric.Canvas, x: number, y: number) {
     if (!canvas) return;
@@ -385,10 +423,14 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     const { points, label } = shape
                     const splinePath = createSplinePaths(points, shapeColor);
-                      // If the spline is an instance of fabric.Object, add it to the canvas
+                    // If the spline is an instance of fabric.Object, add it to the canvas
                     if (splinePath && splinePath instanceof fabric.Object) {
                         canvas.add(splinePath);
                     }
+                    const controlPoints = drawControlPoints(canvas, points, shapeColor)
+                    controlPoints.forEach(((point) => {
+                        canvas.add(point)
+                    }))
                 } else if (shape.shapeType === "polygon" && polygonVisible === true) {
                     const { points, label } = shape
                     const polygon = new fabric.Polygon(points, {
