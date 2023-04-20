@@ -210,7 +210,7 @@ class ProjectsInfo:
     def save(self):
         if not os.path.exists(ADQ_WORKING_FOLDER):
             os.mkdir(ADQ_WORKING_FOLDER)
-        filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT)
+        filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
         utils.to_file(json.dumps(self,
                                  default=utils.default, indent=2),
                       filename)

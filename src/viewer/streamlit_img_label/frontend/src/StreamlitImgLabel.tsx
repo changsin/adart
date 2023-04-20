@@ -212,11 +212,15 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
     const [opacity, setOpacity] = useState(1);
+    const [polygonVisible, togglePolygon] = useState(false);
 
     const handleOpacityChange = (value: number) => {
         setOpacity(value);
       };
     
+    const togglePolygonVisibility = (value: boolean) => {
+        togglePolygon(value);
+      };
     /*
      * Translate Python image data to a JavaScript Image
      */
@@ -361,7 +365,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     if (splinePath && splinePath instanceof fabric.Object) {
                         canvas.add(splinePath);
                     }
-                } else if (shape.shapeType === "polygon") {
+                } else if (shape.shapeType === "polygon" && polygonVisible === true) {
                     const { points, label } = shape
                     const polygon = new fabric.Polygon(points, {
                         fill: 'purple',
@@ -382,7 +386,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
         Streamlit.setFrameHeight()
 
-    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args])
+        canvas.renderAll()
+
+    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
 
     // Create a default bounding box
     const defaultBox = () => ({
@@ -539,6 +545,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     onClick={addBoxHandler}
                 >
                     Mark Untagged
+                </button>
+                <button
+                    className={mode === "dark" ? styles.dark : ""}
+                    onClick={() => togglePolygonVisibility(!polygonVisible)}
+                >
+                    {polygonVisible ? "Hide Polygons" : "Show Polygons"}
                 </button>
                 <button
                     className={mode === "dark" ? styles.dark : ""}

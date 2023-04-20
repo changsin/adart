@@ -242,6 +242,7 @@ def add_data_task(selected_project: Project):
                     f.write(file.getbuffer())
                 saved_filenames.append(os.path.join(ori_folder, file.name))
 
+            saved_filenames.sort()
             if labels_format_type == STRADVISION_XML:
                 converted_filename = from_strad_vision_xml("11", saved_filenames, save_folder)
             elif labels_format_type == CVAT_XML:
