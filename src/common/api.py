@@ -1,7 +1,11 @@
 import importlib.util
 import json
+import os
 import urllib.parse
 import urllib.request
+from abc import ABC
+
+import attr
 
 spec = importlib.util.find_spec("src")
 if spec is None:
@@ -11,7 +15,27 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
-from src.common.security import decode_token, create_access_token
+from src.common.security import decode_token
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    USERS,
+    JSON_EXT
+)
+import src.common.utils as utils
+from src.models.users_info import User
+
+
+@attr.s(slots=True, frozen=False)
+class ServerApi(ABC):
+    def get_users(self):
+        users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
+        json_users = utils.from_file(users_filename, "{\"users\":[]}")
+
+        users = list()
+        for json_user in json_users:
+            user_info = User.from_json(json_user)
+            users.append(user_info)
+        return users
 
 
 def get_access_token(login_url, username, password):
@@ -37,6 +61,7 @@ def get_access_token(login_url, username, password):
         print('Error : get_access_token() - HTTPError {}'.format(e))
     except Exception as e:
         print('Error : get_access_token() - {0}'.format(e))
+
 
 
 if __name__ == '__main__':

@@ -287,7 +287,6 @@ def update_model_project(selected_project: Project):
 
 def delete_project():
     selected_project = select_project(is_sidebar=True)
-
     if selected_project:
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the project {}-{}?"
                                              .format(selected_project.id, selected_project.name))

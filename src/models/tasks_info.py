@@ -108,9 +108,6 @@ class TasksInfo:
             "tasks": [task.to_json() for task in self.tasks]
         }
 
-    def __dict__(self):
-        return vars(self)
-
     def get_next_task_id(self) -> int:
         if len(self.tasks) == 0:
             return 0

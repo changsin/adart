@@ -83,7 +83,7 @@ class DartImageManager:
 
         self._shapes = converted_shapes
 
-    def resizing_img(self, max_height=700, max_width=700):
+    def resizing_img(self, max_height=1000, max_width=1000):
         """resizing the image by max_height and max_width.
 
         Args:

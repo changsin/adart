@@ -3,6 +3,7 @@ from enum import Enum
 ADQ_WORKING_FOLDER = ".adq"
 PROJECTS = "projects"
 TASKS = "tasks"
+USERS = "users"
 JSON_EXT = ".json"
 CHARTS = "charts"
 
@@ -22,6 +23,8 @@ PROJECT_COLUMNS = ['id', 'name', 'file_format_id',
                    'total_count', 'task_total_count', 'task_done_count']
 
 TASK_COLUMNS = ['id', 'name', "project_id"]
+
+USER_TYPES = ["admin", "reviewer", "inspector", "user"]
 
 
 class ErrorType(Enum):
