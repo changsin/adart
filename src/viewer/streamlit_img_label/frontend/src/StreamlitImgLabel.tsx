@@ -52,7 +52,13 @@ interface PolygonProps {
     shapeType: "polygon"
 }
 
-type ShapeProps = RectProps | SplineProps | BoundaryProps | PolygonProps
+interface VPProps {
+    points: PolygonPoint[]
+    label: string
+    shapeType: "VP"
+}
+
+type ShapeProps = RectProps | SplineProps | BoundaryProps | PolygonProps | VPProps
 
 interface PythonArgs {
     canvasWidth: number
@@ -190,8 +196,8 @@ function createSplinePaths(points: SplinePoint[], color: string): fabric.Object 
         const yc = (points[i].y + points[i + 1].y) / 2;
         path += ` Q ${points[i].x} ${points[i].y}, ${xc} ${yc}`;
       }
-      // Add the last point to the path
-      path += ` Q ${points[points.length - 2].x} ${points[points.length - 2].y}, ${points[points.length - 1].x} ${points[points.length - 1].y}`;
+    //   // Add the last point to the path
+    //   path += ` Q ${points[points.length - 2].x} ${points[points.length - 2].y}, ${points[points.length - 1].x} ${points[points.length - 1].y}`;
     }
     
     // Create a Fabric.js path object from the path string
@@ -204,6 +210,24 @@ function createSplinePaths(points: SplinePoint[], color: string): fabric.Object 
     // Return the spline object
     return spline;
   }
+
+function drawVanishingPoint(canvas: fabric.Canvas, x: number, y: number) {
+    if (!canvas) return;
+
+    const x_offset = 40
+    const y_offset = 20
+    const line_x = new fabric.Line([x - x_offset, y, x + x_offset, y], {
+        stroke: 'red',
+        strokeWidth: 2,
+    });
+    const line_y = new fabric.Line([x, y - y_offset, x, y + y_offset], {
+        stroke: 'red',
+        strokeWidth: 2,
+    });
+
+    canvas.add(line_x);
+    canvas.add(line_y);
+}
   
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -374,6 +398,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         strokeWidth: 2,
                     });
                     canvas.add(polygon);
+                } else if (shape.shapeType === "VP") {
+                    const { x, y } = shape.points[0]
+                    drawVanishingPoint(canvas, x, y)
                 } else {
                     console.warn(`Invalid shape "${shape}" specified". Skipping...`)
                     return

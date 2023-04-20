@@ -257,20 +257,20 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
         cur_img['image_id'] = str(image_id)
         cur_img['name'] = os.path.splitext(os.path.basename(xml_file))[0] + '.jpg'
 
-        print("Converting {}".format(cur_img['name']))
+        print("Converting {}".format(xml_file))
 
         root = xml_structure.getroot()
 
-        cur_img['width'] = int(root.get('imageWidth'))
-        cur_img['height'] = int(root.get('imageHeight'))
+        image_width = int(root.get('imageWidth'))
+        image_height = int(root.get('imageHeight'))
+        cur_img['width'] = image_width
+        cur_img['height'] = image_height
 
         label_objects = []
 
         # Find the VP element
         el_vanishing_point = root.find('VP')
-
-        # Check if VP exists in the XML file
-        if el_vanishing_point:
+        if el_vanishing_point is not None and el_vanishing_point.get('hasVP'):
             vanishing_point_dict = dict()
 
             vanishing_point_dict['label'] = 'VP'
@@ -279,7 +279,8 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
             # Extract the VP coordinates
             x_ratio = float(el_vanishing_point.get('x_ratio'))
             y_ratio = float(el_vanishing_point.get('y_ratio'))
-            vanishing_point_dict['points'] = [x_ratio, y_ratio]
+            # Convert to image coordinates and save it as a polygon point
+            vanishing_point_dict['points'] = [[image_width * x_ratio, image_height * y_ratio]]
 
             # Add as an object (i.e., an annotation)
             label_objects.append(vanishing_point_dict)
