@@ -58,10 +58,11 @@ def select_project(is_sidebar=True):
         st.markdown("**No project is created!**")
 
 
-def select_task(project_id: int):
+def select_task(project_id: int) -> (list, int):
     tasks_info = TasksInfo.get_tasks_info()
-    if tasks_info.num_count > 0:
-        df_tasks = pd.DataFrame(tasks_info.to_json()[TASKS])
+    tasks = tasks_info.get_tasks(project_id)
+    if tasks and len(tasks) > 0:
+        df_tasks = pd.DataFrame([task.to_json() for task in tasks])
         df_tasks = df_tasks[["id", "name", "project_id"]]
         df_filtered = df_tasks[df_tasks['project_id'] == project_id]
         options = ["{}-{}".format(task_id, name)
@@ -81,7 +82,7 @@ def select_task(project_id: int):
     else:
         st.markdown("**No task is created!**")
 
-    return None, None
+    return [], 0
 
 
 def get_token(url, username: str, password: str):

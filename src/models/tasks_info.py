@@ -175,12 +175,12 @@ class TasksInfo:
                       filename)
 
     @staticmethod
-    def from_json(json_dict):
+    def from_json(json_dict) -> 'TasksInfo':
         return TasksInfo(num_count=json_dict['num_count'],
                          tasks=[Task.from_json(json_task) for json_task in json_dict['tasks']])
 
     @staticmethod
-    def get_tasks_info():
+    def get_tasks_info() -> 'TasksInfo':
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
         json_tasks = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
         return TasksInfo.from_json(json_tasks)
@@ -188,9 +188,4 @@ class TasksInfo:
     @staticmethod
     def get_tasks(project_id: int) -> list:
         tasks_info = TasksInfo.get_tasks_info()
-        tasks_to_return = []
-        for task in tasks_info.tasks:
-            if task.project_id == project_id:
-                tasks_to_return.append(task)
-
-        return tasks_to_return
+        return tasks_info.get_tasks_by_project_id(project_id)

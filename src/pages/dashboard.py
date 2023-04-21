@@ -72,7 +72,6 @@ def dashboard():
     st.subheader("**Tasks**")
     tasks_info = TasksInfo.get_tasks_info()
     if len(tasks_info.tasks) > 0:
-        # df_tasks = pd.DataFrame(columns=constants.TASK_COLUMNS)
         df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
         df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
 
