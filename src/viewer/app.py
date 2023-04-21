@@ -11,7 +11,7 @@ from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import DartImageManager
 
 
-def main(selected_project: Project, labels=ErrorType.get_all_types()):
+def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
     selected_task, selected_index = select_task(selected_project.id)
     if selected_task:
         task_folder = os.path.join(ADQ_WORKING_FOLDER,
@@ -44,7 +44,7 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
             else:
                 st.warning('This is the first image.')
 
-        def next_annotate_file():
+        def save_labels():
             image_index = st.session_state["image_index"]
             next_image_index = image_index + 1 if (image_index < len(image_filenames) - 1) else image_index
             if next_image_index != image_index:
@@ -81,7 +81,6 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
             st.button(label="< Previous", on_click=previous_image)
         with col2:
             st.button(label="Next >", on_click=next_image)
-        st.sidebar.button(label="Next image to review", on_click=next_annotate_file)
         st.sidebar.button(label="Refresh", on_click=refresh)
 
         # Main content: review images
@@ -108,13 +107,18 @@ def main(selected_project: Project, labels=ErrorType.get_all_types()):
                         st.dataframe(shapes)
                     with col2:
                         default_index = 0
+                        if im.image_labels.objects[i].verification_result:
+                            error_code = im.image_labels.objects[i].verification_result['error_code']
+                            default_index = error_codes[error_code]
 
                         select_label = col2.selectbox(
-                            "Error", labels, key=f"error_{i}", index=default_index
+                            "Error", error_codes, key=f"error_{i}", index=default_index
                         )
-                        im.set_annotation(i, select_label)
+                        if select_label:
+                            print("verification_result {}".format(im.image_labels.objects[i].verification_result))
+                            im.set_annotation(i, select_label)
 
-        if data_labels.images[image_index].objects[0].attributes:
+        if data_labels.images[image_index].objects[st.session_state["image_index"]].attributes:
             df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
                                                    .objects[0].attributes,
                                                    orient='index')

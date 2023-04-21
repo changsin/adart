@@ -223,5 +223,10 @@ class DartImageManager:
             index(int): the index of the list of bounding boxes of the image.
             label(str): the label of the bounding box
         """
-        # self._current_shapes[index]["label"] = label
-        # TODO: set the error category here
+        if label and label != 'No error':
+            print("index {} label {}".format(index, label))
+
+            if not self.image_labels.objects[index].verification_result:
+                self.image_labels.objects[index].verification_result = dict()
+
+            self.image_labels.objects[index].verification_result['error_code'] = label

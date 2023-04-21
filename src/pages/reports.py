@@ -112,12 +112,13 @@ def show_image_metrics():
         st.write("No image data")
 
 
-def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
+def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 
     class_labels = dict()
     overlap_areas = dict()
     dimensions = dict()
+    errors = dict()
     for label_file, dart_labels in label_objects_dict.items():
         for image in dart_labels.images:
             count = len(image.objects)
@@ -128,6 +129,12 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
                     class_labels[label] += 1
                 else:
                     class_labels[label] = 1
+
+                if object_cur.verification_result:
+                    if errors.get('error_code'):
+                        errors['error_code'] += 1
+                    else:
+                        errors['error_code'] = 1
 
                 if object_cur.type == 'box':
                     xtl1, ytl1, xbr1, ybr1 = object_cur.points
@@ -154,7 +161,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict):
                             else:
                                 overlap_areas[overlap_percent] = 1
 
-    return class_labels, overlap_areas, dimensions
+    return class_labels, overlap_areas, dimensions, errors
 
 
 def triangle_area(vertices):
@@ -223,7 +230,11 @@ def show_label_metrics():
                 if task.anno_file_name:
                     data_label_files['.'] = [task.anno_file_name]
 
-        class_labels, overlap_areas, dimensions = get_label_metrics(data_label_files)
+        class_labels, overlap_areas, dimensions, errors = get_label_metrics(data_label_files)
+
+        chart_errors = plot_chart("Error Count", "error", "count", errors)
+        if chart_errors:
+            display_chart(selected_project.id, "error_count", chart_errors)
 
         chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
