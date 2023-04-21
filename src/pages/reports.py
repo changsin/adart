@@ -19,8 +19,8 @@ from src.home import (
     is_authenticated,
     login,
     logout,
-    select_project,
-    get_tasks)
+    select_project)
+from src.models.tasks_info import TasksInfo
 from src.models.data_labels import DataLabels
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
@@ -32,7 +32,7 @@ def get_data_files(selected_project):
         st.markdown("# Files Info")
         data_files = selected_project.data_files
     else:
-        tasks = get_tasks(selected_project.id)
+        tasks = TasksInfo.get_tasks(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.data_files:
@@ -54,7 +54,7 @@ def get_label_files(selected_project):
     if len(selected_project.label_files) > 0:
         return selected_project.label_files
     else:
-        tasks = get_tasks(selected_project.id)
+        tasks = TasksInfo.get_tasks(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.anno_file_name:
@@ -217,7 +217,7 @@ def show_label_metrics():
     if selected_project:
         data_label_files = dict()
 
-        tasks = get_tasks(selected_project.id)
+        tasks = TasksInfo.get_tasks(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.anno_file_name:

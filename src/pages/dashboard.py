@@ -1,4 +1,3 @@
-import os
 import importlib.util
 import importlib.util
 
@@ -16,12 +15,12 @@ if spec is None:
 
 from src.common import constants, utils
 from src.home import (
-    get_df_tasks,
     get_projects_info,
     is_authenticated,
     login,
     logout,
     select_project)
+from src.models.tasks_info import TasksInfo
 
 
 def view_project():
@@ -29,8 +28,7 @@ def view_project():
 
     if selected_project:
         st.markdown("# Project")
-        df_project = pd.DataFrame.from_dict(selected_project.to_json())
-        st.dataframe(df_project)
+        st.dataframe(pd.DataFrame(selected_project.to_json(), index=[0]))
 
         extended_props = selected_project.extended_properties
         if extended_props:
@@ -39,8 +37,10 @@ def view_project():
                                                 orient='index'))
 
         st.markdown("# Tasks")
-        df_tasks = get_df_tasks(selected_project.id)
-        st.dataframe(df_tasks.transpose())
+        tasks_info = TasksInfo.get_tasks_info()
+        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
+        tasks_json = [task.to_json() for task in tasks]
+        st.dataframe(pd.DataFrame(tasks_json))
 
 
 # def model_validation_dashboard():
@@ -70,16 +70,13 @@ def dashboard():
     AgGrid(df_projects)
 
     st.subheader("**Tasks**")
-    json_tasks = utils.from_file(os.path.join(constants.ADQ_WORKING_FOLDER,
-                                              constants.TASKS + constants.JSON_EXT),
-                                 "{\"num_count\":0,\"tasks\":[]}")
+    tasks_info = TasksInfo.get_tasks_info()
+    if len(tasks_info.tasks) > 0:
+        # df_tasks = pd.DataFrame(columns=constants.TASK_COLUMNS)
+        df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
+        df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
 
-    df_tasks = pd.DataFrame(columns=constants.TASK_COLUMNS)
-    if len(json_tasks[constants.TASKS]) > 0:
-        df_tasks = pd.DataFrame(json_tasks[constants.TASKS])
-        df_tasks = df_tasks[constants.TASK_COLUMNS]
-
-    AgGrid(df_tasks)
+        AgGrid(df_tasks)
 
 
 def main():

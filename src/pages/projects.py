@@ -30,7 +30,6 @@ from src.common.constants import (
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.home import (
     get_projects_info,
-    get_tasks_info,
     is_authenticated,
     login,
     logout,

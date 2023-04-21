@@ -48,6 +48,47 @@ class Project(ABC):
 
     extended_properties = attr.ib(default=None)
 
+    def __iter__(self):
+        yield from {
+            "id": self.id,
+            "name": self.name,
+
+            "data_files": self.data_files,
+            "label_files": self.label_files,
+
+            "annotation_type_id": self.annotation_type_id,
+            "file_format_id": self.file_format_id,
+
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+
+            "description": self.description,
+
+            "progress": self.progress,
+            "task_total_count": self.task_total_count,
+            "task_done_count": self.task_done_count,
+            "total_count": self.total_count,
+            "sample_count": self.sample_count,
+
+            # TODO: for backward-compatibility
+            "per_task_count": self.per_task_count,
+            "dir_name": self.per_task_count,
+
+            "annotation_classes": self.annotation_classes,
+            "annotation_errors": self.annotation_errors,
+            "dataset_name": self.dataset_name,
+            "domain_id": self.domain_id,
+
+            "customer_company": self.customer_company,
+            "customer_name": self.customer_name,
+            "customer_url": self.customer_url,
+            "customer_phone": self.customer_phone,
+            "customer_email": self.customer_email,
+            "customer_address": self.customer_address,
+
+            "extended_properties": self.extended_properties
+        }.items()
+
     def to_json(self):
         return {
             "id": self.id,

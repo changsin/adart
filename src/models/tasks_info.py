@@ -42,6 +42,29 @@ class Task:
 
     description = attr.ib(default=None)
 
+    def __iter__(self):
+        yield from {
+            "id": self.id,
+            "name": self.name,
+
+            "project_id": self.project_id,
+            "state_id": self.state_id,
+            "state_name": self.state_name,
+            "count": self.count,
+            "anno_file_name": self.anno_file_name,
+
+            "annotator_id": self.annotator_id,
+            "annotator_fullname": self.annotator_fullname,
+
+            "reviewer_id": self.reviewer_id,
+            "reviewer_fullname": self.reviewer_fullname,
+
+            "date": self.date,
+            "data_files": self.data_files,
+
+            "description": self.description
+        }.items()
+
     def to_json(self):
         return {
             "id": self.id,
@@ -118,6 +141,15 @@ class TasksInfo:
 
         return max(task_idx) + 1
 
+    def get_tasks_by_project_id(self, project_id: int) -> list:
+        tasks = list()
+        if len(self.tasks) > 0:
+            for task in self.tasks:
+                if task.project_id == project_id:
+                    tasks.append(task)
+
+        return tasks
+
     def get_task_by_id(self, task_id: int) -> Task:
         if len(self.tasks) > 0:
             for task in self.tasks:
@@ -146,3 +178,19 @@ class TasksInfo:
     def from_json(json_dict):
         return TasksInfo(num_count=json_dict['num_count'],
                          tasks=[Task.from_json(json_task) for json_task in json_dict['tasks']])
+
+    @staticmethod
+    def get_tasks_info():
+        tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
+        json_tasks = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
+        return TasksInfo.from_json(json_tasks)
+
+    @staticmethod
+    def get_tasks(project_id: int) -> list:
+        tasks_info = TasksInfo.get_tasks_info()
+        tasks_to_return = []
+        for task in tasks_info.tasks:
+            if task.project_id == project_id:
+                tasks_to_return.append(task)
+
+        return tasks_to_return

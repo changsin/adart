@@ -34,14 +34,13 @@ from src.common.convert_lib import (
     from_strad_vision_xml)
 from src.home import (
     is_authenticated,
-    get_tasks_info,
     login,
     logout,
     select_project,
     select_task)
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
-from src.models.tasks_info import Task, TaskState
+from src.models.tasks_info import Task, TasksInfo, TaskState
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml']
@@ -127,7 +126,7 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
                       os.path.join(task_folder, label_filename))
 
-        tasks_info = get_tasks_info()
+        tasks_info = TasksInfo.get_tasks_info()
         task_id = tasks_info.get_next_task_id()
         task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
         new_task = Task(task_id,
@@ -144,10 +143,10 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 
 def create_data_tasks(selected_project: Project):
     if len(selected_project.label_files) > 0:
-        dart_labels_dict = DataLabels.load(selected_project.label_files)
+        data_labels = DataLabels.load(selected_project.label_files)
         images_per_label_file_dict = dict()
-        if dart_labels_dict.items() is not None:
-            for labels_file, dart_labels in dart_labels_dict.items():
+        if data_labels:
+            for labels_file, dart_labels in data_labels.images():
                 images_per_label_file_dict[labels_file] = len(dart_labels.images)
 
         df_total_count = pd.DataFrame(images_per_label_file_dict.items(), columns=['filename', 'count'])
@@ -185,11 +184,20 @@ def create_data_tasks(selected_project: Project):
                     st.write("Here is how the image files are sampled")
                     st.dataframe(df_sample_count)
 
-                    sample_data(selected_project, dart_labels_dict, df_sample_count)
+                    sample_data(selected_project, data_labels.to_json(), df_sample_count)
+
+
+def assign_tasks():
+    selected_project = select_project()
+    if selected_project:
+        tasks = TasksInfo.get_tasks(selected_project.id)
+        st.checkbox("Assign tasks", )
+        df_tasks = pd.DataFrame(tasks)
+        st.dataframe(df_tasks)
 
 
 def add_task():
-    selected_project = select_project(is_sidebar=True)
+    selected_project = select_project()
     if selected_project:
         if selected_project.extended_properties:
             add_model_task(selected_project)
@@ -212,7 +220,7 @@ def add_data_task(selected_project: Project):
                                                 LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
 
-        tasks_info = get_tasks_info()
+        tasks_info = TasksInfo.get_tasks_info()
         new_task_id = tasks_info.get_next_task_id()
 
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
@@ -257,7 +265,6 @@ def add_data_task(selected_project: Project):
             new_task = Task(new_task_id, task_name, selected_project.id, "Created",
                             date=str(dt.datetime.now()),
                             anno_file_name=converted_filename)
-            tasks_info = get_tasks_info()
             tasks_info.add(new_task)
             tasks_info.save()
 
@@ -273,7 +280,7 @@ def add_model_task(selected_project: Project):
 
         uploaded_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
 
-        tasks_info = get_tasks_info()
+        tasks_info = TasksInfo.get_tasks_info()
         new_task_id = tasks_info.get_next_task_id()
 
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
@@ -296,7 +303,6 @@ def add_model_task(selected_project: Project):
                             date=dt.datetime.strftime(date, DATE_FORMAT),
                             data_files=data_files,
                             description=description)
-            tasks_info = get_tasks_info()
             tasks_info.add(new_task)
             tasks_info.save()
 
@@ -343,7 +349,7 @@ def update_model_task(selected_project):
             selected_task.state_name = task_stage
             selected_task.data_files = uploaded_files
 
-            tasks_info = get_tasks_info()
+            tasks_info = TasksInfo.get_tasks_info()
             tasks_info.update_task(selected_task)
             tasks_info.save()
 
@@ -405,7 +411,7 @@ def delete_task():
                                              .format(selected_task.id, selected_project.id, selected_project.name))
         if delete_confirmed:
             # projects_info = get_projects_info()
-            tasks_info = get_tasks_info()
+            tasks_info = TasksInfo.get_tasks_info()
             tasks_info.tasks.remove(selected_task)
 
             task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
@@ -421,6 +427,7 @@ def delete_task():
 def main():
     menu = {
         "Add Task": lambda: add_task(),
+        "Assign Tasks": lambda: assign_tasks(),
         "Update Task": lambda: update_task(),
         "Review Task": lambda: review_task(),
         "Delete Task": lambda: delete_task(),

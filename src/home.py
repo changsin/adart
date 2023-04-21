@@ -58,34 +58,8 @@ def select_project(is_sidebar=True):
         st.markdown("**No project is created!**")
 
 
-def get_tasks_info():
-    if st.session_state.get(TASKS):
-        return st.session_state[TASKS]
-
-    tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
-    json_tasks = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
-    return TasksInfo.from_json(json_tasks)
-
-
-def get_df_tasks(project_id: int):
-    tasks_info = get_tasks_info()
-    if tasks_info.num_count > 0:
-        df_tasks = pd.DataFrame(tasks_info.to_json()[TASKS])
-        return df_tasks[df_tasks['project_id'] == project_id]
-
-
-def get_tasks(project_id: int) -> list:
-    tasks_info = get_tasks_info()
-    tasks_to_return = []
-    for task in tasks_info.tasks:
-        if task.project_id == project_id:
-            tasks_to_return.append(task)
-
-    return tasks_to_return
-
-
 def select_task(project_id: int):
-    tasks_info = get_tasks_info()
+    tasks_info = TasksInfo.get_tasks_info()
     if tasks_info.num_count > 0:
         df_tasks = pd.DataFrame(tasks_info.to_json()[TASKS])
         df_tasks = df_tasks[["id", "name", "project_id"]]
