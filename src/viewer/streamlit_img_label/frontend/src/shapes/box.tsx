@@ -1,16 +1,17 @@
 import React from "react";
 import { fabric } from "fabric"
-import { BoxProps, ShapeRenderProps } from "../interfaces";
+import { BoxPoint, ShapeProps, ShapeRenderProps } from "../interfaces";
 import { sendSelectedShape } from "../streamlit-utils";
 
 export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
-    const {shape_id, top, left, width, height, label } = shape as BoxProps;
+    const {shape_id, points, label } = shape;
+    const {x, y, w, h} = points[0] as BoxPoint
     const annotation = new fabric.Rect({
-        left,
-        top,
+        left: x,
+        top: y,
         fill: "",
-        width,
-        height,
+        width: w,
+        height: h,
         objectCaching: true,
         stroke: color,
         strokeWidth: 1,
@@ -19,8 +20,8 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         opacity: opacity
     })
     const text = new fabric.Text(label, {
-            left: left,
-            top: top + 20,
+            left: x,
+            top: y + 20,
             fontFamily: "Arial",
             fontSize: 14,
             fontWeight: "bold",
@@ -28,11 +29,11 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
             opacity: opacity
         })
     const selectedAnnotation = new fabric.Rect({
-            left,
-            top,
+            left: x,
+            top: y,
             fill: "",
-            width,
-            height,
+            width: w,
+            height: h,
             objectCaching: true,
             stroke: color,
             strokeWidth: 10,
@@ -58,10 +59,10 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         } else {
             // Otherwise, select the annotation
             selectedAnnotation.set({
-            left: left,
-            top: top,
-            width: width,
-            height: height,
+            left: x,
+            top: y,
+            width: w,
+            height: h,
             visible: true,
             });
             canvas.setActiveObject(selectedAnnotation);
@@ -83,14 +84,15 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
     // Add a click event listener to show the highlight rectangle
     annotation.on("selected", () => {
         selectedAnnotation.set({
-        left: left,
-        top: top,
-        width: width,
-        height: height,
+        left: x,
+        top: y,
+        width: w,
+        height: h,
         visible: true,
         });
         canvas.setActiveObject(selectedAnnotation);
 
+        console.log("selected " + shape)
         sendSelectedShape(shape)
     });
 

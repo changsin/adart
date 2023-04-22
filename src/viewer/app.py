@@ -124,10 +124,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 untagged_dict = dict()
                 untagged_dict['label'] = selected_shape['label']
                 untagged_dict['type'] = selected_shape['shapeType']
-                untagged_dict['points'] = [selected_shape['left'],
-                                           selected_shape['top'],
-                                           selected_shape['left'] + selected_shape['width'],
-                                           selected_shape['top'] + selected_shape['height']]
+                untagged_dict['points'] = selected_shape['points']
                 untagged_dict['verification_result'] = dict()
                 untagged_dict['verification_result']['name'] = selected_shape['label']
                 untagged_object = DataLabels.Object.from_json(untagged_dict)

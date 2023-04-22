@@ -45,13 +45,15 @@ class DartImageManager:
             shape = dict()
             if label_object.type == 'box':
                 print(label_object.points)
-                left, top, right, bottom = label_object.points
+                left, top, right, bottom = label_object.points[0]
                 width = right - left
                 height = bottom - top
-                shape['left'] = int(left)
-                shape['top'] = int(top)
-                shape['width'] = int(width)
-                shape['height'] = int(height)
+                points = dict()
+                points['x'] = int(left)
+                points['y'] = int(top)
+                points['w'] = int(width)
+                points['h'] = int(height)
+                shape['points'] = [points]
                 shape['label'] = label_object.label
                 shape['shapeType'] = 'box'
             elif label_object.type == 'spline' or label_object.type == 'boundary':
@@ -117,10 +119,13 @@ class DartImageManager:
         resized_shape = dict()
         resized_shape['shape_id'] = idx
         if shape['shapeType'] == 'box':
-            resized_shape['left'] = shape['left'] / self._resized_ratio_w
-            resized_shape['width'] = shape['width'] / self._resized_ratio_w
-            resized_shape['top'] = shape['top'] / self._resized_ratio_h
-            resized_shape['height'] = shape['height'] / self._resized_ratio_h
+            points = shape['points'][0]
+            resized_points = dict()
+            resized_points['x'] = points['x'] / self._resized_ratio_w
+            resized_points['w'] = points['w'] / self._resized_ratio_w
+            resized_points['y'] = points['y'] / self._resized_ratio_h
+            resized_points['h'] = points['h'] / self._resized_ratio_h
+            resized_shape['points'] = [resized_points]
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
             resized_points = []
             for point in shape['points']:
@@ -171,18 +176,21 @@ class DartImageManager:
         label = ""
         if shape:
             if shape['shapeType'] == 'box':
-                shape['left'] = int(shape['left'] * self._resized_ratio_w)
-                shape['width'] = int(shape['width'] * self._resized_ratio_w)
-                shape['top'] = int(shape['top'] * self._resized_ratio_h)
-                shape['height'] = int(shape['height'] * self._resized_ratio_h)
-                left, top, width, height = (
-                    shape['left'],
-                    shape['top'],
-                    shape['width'],
-                    shape['height']
+                points = shape['points'][0]
+                resized_points = dict()
+                resized_points['x'] = int(points['x'] * self._resized_ratio_w)
+                resized_points['w'] = int(points['w'] * self._resized_ratio_w)
+                resized_points['y'] = int(points['y'] * self._resized_ratio_h)
+                resized_points['h'] = int(points['h'] * self._resized_ratio_h)
+
+                x, y, w, h = (
+                    resized_points['x'],
+                    resized_points['y'],
+                    resized_points['w'],
+                    resized_points['h']
                 )
-                top = top if top > 0 else 0
-                left = left if left > 0 else 0
+                top = y if y > 0 else 0
+                left = x if x > 0 else 0
                 width = width if width > 0 else 1
                 height = height if height > 0 else 1
                 prev_img[top: top + height, left: left + width] = raw_image[top: top + height, left: left + width]
@@ -191,9 +199,9 @@ class DartImageManager:
                 resized_points = []
                 for point in shape['points']:
                     resized_point = dict()
-                    resized_point['x'] = int(point['x'] / self._resized_ratio_w)
-                    resized_point['y'] = int(point['y'] / self._resized_ratio_h)
-                    resized_point['r'] = int(point['r'] / self._resized_ratio_w)
+                    resized_point['x'] = int(point['x'] * self._resized_ratio_w)
+                    resized_point['y'] = int(point['y'] * self._resized_ratio_h)
+                    resized_point['r'] = int(point['r'] * self._resized_ratio_w)
 
                     resized_points.append(resized_point)
 
@@ -201,8 +209,8 @@ class DartImageManager:
                 resized_points = []
                 for point in shape['points']:
                     resized_point = dict()
-                    resized_point['x'] = int(point['x'] / self._resized_ratio_w)
-                    resized_point['y'] = int(point['y'] / self._resized_ratio_h)
+                    resized_point['x'] = int(point['x'] * self._resized_ratio_w)
+                    resized_point['y'] = int(point['y'] * self._resized_ratio_h)
 
                     resized_points.append(resized_point)
 
@@ -214,7 +222,7 @@ class DartImageManager:
         """init annotation for current shapes.
 
         Args:
-            shapes(dict): the bounding boxes of the image.
+            shape(dict): the bounding boxes of the image.
         Returns:
             prev_img(list): list of preview images with default label.
         """

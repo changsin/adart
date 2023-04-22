@@ -1,11 +1,11 @@
 import React from "react";
 import { fabric } from "fabric"
-import { PolygonProps, ShapeRenderProps } from "../interfaces";
+import { ShapeRenderProps, Point } from "../interfaces";
   
-export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
-    const { points, label } = shape as PolygonProps
+export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color = 'red', opacity = 0.5, canvas }) => {
+    const { points, label } = shape
 
-    const { x, y } = points[0]
+    const { x, y } = points[0] as Point
 
     const x_offset = 40
     const y_offset = 20
@@ -26,13 +26,13 @@ export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color, opaci
     return null;
 }
 
-export const Polygon: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
-    const { points, label } = shape as PolygonProps
+export const Polygon: React.FC<ShapeRenderProps> = ({ shape, color = 'purple', opacity = 0.3, canvas }) => {
+    const { points, label } = shape
     const polygon = new fabric.Polygon(points, {
         fill: color,
-        stroke: 'black',
+        stroke: color,
         opacity: opacity,
-        strokeWidth: 2,
+        strokeWidth: 1,
     });
     canvas.add(polygon);
 

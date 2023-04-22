@@ -1,65 +1,41 @@
-export interface BoxProps {
-  shape_id: number
-  top: number
-  left: number
-  width: number
-  height: number
-  label: string
-  shapeType: "box"
-}
-
-export interface SplinePoint {
+export interface Point {
   x: number;
   y: number;
+}
+
+export interface SplinePoint extends Point {
   r: number;
 }
 
-export interface SplineProps {
-  shape_id: number
-  points: SplinePoint[]
-  label: string
-  shapeType: "spline"
+export interface BoxPoint extends Point {
+  w: number;
+  h: number;
 }
 
-export interface BoundaryPoint {
-  x: number;
-  y: number;
-  r: number;
+export interface VerificationResult {
+  name: string;
+  comment: string | null;
 }
 
-export interface BoundaryProps {
-  shape_id: number
-  points: BoundaryPoint[]
-  label: string
-  shapeType: "boundary"
+export interface Attributes {
+  key: string;
+  value: string;
 }
 
-export interface PolygonPoint {
-  x: number;
-  y: number;
+export interface ShapeProps {
+  shape_id: number;
+  label: string;
+  points: BoxPoint[] | SplinePoint[] | Point[]
+  shapeType: "box" | "spline" | "boundary" | "polygon" | "VP";
+  attributes: Attributes[] | null;
+  verification_result: VerificationResult | null;
 }
-
-export interface PolygonProps {
-  shape_id: number
-  points: PolygonPoint[]
-  label: string
-  shapeType: "polygon"
-}
-
-export interface VPProps {
-  shape_id: number
-  points: PolygonPoint[]
-  label: string
-  shapeType: "VP"
-}
-
-export type ShapeProps = BoxProps | SplineProps | BoundaryProps | PolygonProps | VPProps
 
 export interface ShapeRenderProps {
   shape: ShapeProps;
   color: string;
   opacity: number;
-  canvas:  fabric.Canvas;
+  canvas: fabric.Canvas;
 }
 
 export interface PythonArgs {

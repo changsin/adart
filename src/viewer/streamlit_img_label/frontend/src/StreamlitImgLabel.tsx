@@ -8,13 +8,14 @@ import {
 import { fabric } from "fabric"
 import styles from "./StreamlitImgLabel.module.css"
 import {
-    BoxProps,
+    BoxPoint,
+    ShapeProps,
     PythonArgs,
-    ShapeProps
 } from "./interfaces";
 import { Box } from "./shapes/box"
 import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
+import { sendSelectedShape } from "./streamlit-utils"
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -72,7 +73,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         if (canvas) {
             // Add shapes to the canvas
             shapes.forEach((shape) => {
-                console.log(shape)
                 if (shape.shapeType === "box") {
                     // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
                     Box({shape, color: shapeColor, opacity, canvas});
@@ -99,82 +99,31 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
 
     // Create a default bounding box
-    const untaggedBox = (shape_id: number): BoxProps  => ({
-            shape_id: shape_id,
-            left: canvasWidth * 0.15 + newBBoxIndex * 3,
-            top: canvasHeight * 0.15 + newBBoxIndex * 3,
-            width: canvasWidth * 0.2,
-            height: canvasHeight * 0.2,
-            label: "untagged",
-            shapeType: "box"
-          })
-
-    function showSelectBox(shape: fabric.Object) {
-        const selectBoxWidth = 100;
-        const selectBoxHeight = 50;
-        const selectBoxPadding = 10;
-      
-        // Create the group
-        const group = new fabric.Group([shape], {
-          left: shape.left || 0,
-          top: shape.top || 0,
-        });
-      
-        // Create the select box
-        const selectBox = new fabric.Rect({
-          width: selectBoxWidth,
-          height: selectBoxHeight,
-          fill: 'white',
-          stroke: 'black',
-          strokeWidth: 2,
-        });
-      
-        // Create the options
-        const option1 = new fabric.Text('Option 1', {
-          left: selectBoxPadding,
-          top: selectBoxPadding,
-          height: 100
-          
-        });
-        const option2 = new fabric.Text('Option 2', {
-          left: selectBoxPadding,
-          top: selectBoxPadding + option1.getBoundingRect().height + selectBoxHeight,
-        });
-        const option3 = new fabric.Text('Option 3', {
-          left: selectBoxPadding,
-          top: selectBoxPadding + option1.getBoundingRect().height + selectBoxHeight,
-        });
-      
-        // Add the select box and options to the group
-        group.addWithUpdate(selectBox);
-        group.addWithUpdate(option1);
-        group.addWithUpdate(option2);
-        group.addWithUpdate(option3);
-      
-        // Set the group as the active object
-        canvas.setActiveObject(group);
-      }
-
-      canvas.on('mouse:down', function(event: fabric.IEvent) {
-        console.log()
-        // check if right mouse button is clicked
-        if (event.e instanceof MouseEvent && event.e.button === 2) {
-          event.e.preventDefault(); // prevent the default context menu from showing
-          var shape = event.target;
-          if (shape && shape.type === 'rect') {
-            // show the select box
-            showSelectBox(shape);
-          }
-        }
-      });
+    const untaggedBox = (shape_id: number): ShapeProps  => ({
+        shape_id: shape_id,
+        points: [{
+            x: canvasWidth * 0.15 + newBBoxIndex * 3,
+            y: canvasHeight * 0.15 + newBBoxIndex * 3,
+            w: canvasWidth * 0.2,
+            h: canvasHeight * 0.2,
+        }],
+        label: "untagged",
+        shapeType: "box",
+        attributes: null,
+        verification_result: ({ name: "untagged", comment: null})
+    });
             
-    // Add new bounding box to be image
+    // Add new bounding box to the image
     const addBoxHandler = () => {
         const box = untaggedBox(newBBoxIndex)
+        const rect = 
         setNewBBoxIndex(newBBoxIndex + 1)
         canvas.add(
             new fabric.Rect({
-                ...box,
+                top: box.points[0].y,
+                left: box.points[0].x,
+                width: (box.points[0] as BoxPoint).w,
+                height: (box.points[0] as BoxPoint).h,
                 fill: "",
                 objectCaching: true,
                 stroke: props.args.shapeColor,
@@ -183,7 +132,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 hasRotatingPoint: false,
             })
         )
-          sendSelectedShape(box)
+        sendSelectedShape(box)
     }
 
     // Remove the selected bounding box
@@ -219,10 +168,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         // setNewBBoxIndex(0)
         canvas.getObjects().forEach((rect) => canvas.remove(rect))
         sendCoordinates([])
-      }
-
-    const sendSelectedShape = (shape: ShapeProps) => {
-        Streamlit.setComponentValue({ shape })
       }
 
     const sendCoordinates = (returnLabels: string[]) => {
