@@ -109,11 +109,12 @@ class DartImageManager:
 
         return resized_img
 
-    def _resize_shape(self, shape):
+    def _resize_shape(self, idx, shape):
         if not shape:
             return shape
 
         resized_shape = dict()
+        shape['id'] = idx
         if shape['shapeType'] == 'box':
             resized_shape['left'] = shape['left'] / self._resized_ratio_w
             resized_shape['width'] = shape['width'] / self._resized_ratio_w
@@ -153,7 +154,11 @@ class DartImageManager:
         Returns:
             resized_rects(list): the resized bounding boxes of the image.
         """
-        return [self._resize_shape(shape) for shape in self._shapes]
+        resized_shapes = []
+        for idx, shape in enumerate(self._shapes):
+            resized_shapes.append(self._resize_shape(idx, shape))
+
+        return resized_shapes
 
     def _chop_shape_img(self, shape):
         raw_image = np.asarray(self._img).astype("uint8")

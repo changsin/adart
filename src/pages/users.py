@@ -1,12 +1,12 @@
-import streamlit as st
 import pandas as pd
+import streamlit as st
 
+from src.common.constants import USER_TYPES, USERS
 from src.home import (
     is_authenticated,
     login,
     logout)
 from src.models.users_info import User, UsersInfo
-from src.common.constants import USER_TYPES, USERS
 
 
 def select_user():
