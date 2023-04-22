@@ -11,9 +11,9 @@ import {
     PythonArgs,
     ShapeProps
 } from "./interfaces";
-import { Box } from "./box"
-import { Polygon, VanishingPoint } from "./polygon"
-import { Spline } from "./spline"
+import { Box } from "./shapes/box"
+import { Polygon, VanishingPoint } from "./shapes/polygon"
+import { Spline } from "./shapes/spline"
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -69,9 +69,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // Add shapes to the canvas
     useEffect(() => {
         if (canvas) {
-            const { shapes, shapeColor }: PythonArgs = props.args
             // Add shapes to the canvas
             shapes.forEach((shape) => {
+                console.log(shape)
                 if (shape.shapeType === "box") {
                     // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
                     Box({shape, color: shapeColor, opacity, canvas});
@@ -105,6 +105,65 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         height: canvasHeight * 0.2,
     })
 
+    function showSelectBox(shape: fabric.Object) {
+        const selectBoxWidth = 100;
+        const selectBoxHeight = 50;
+        const selectBoxPadding = 10;
+      
+        // Create the group
+        const group = new fabric.Group([shape], {
+          left: shape.left || 0,
+          top: shape.top || 0,
+        });
+      
+        // Create the select box
+        const selectBox = new fabric.Rect({
+          width: selectBoxWidth,
+          height: selectBoxHeight,
+          fill: 'white',
+          stroke: 'black',
+          strokeWidth: 2,
+        });
+      
+        // Create the options
+        const option1 = new fabric.Text('Option 1', {
+          left: selectBoxPadding,
+          top: selectBoxPadding,
+          height: 100
+          
+        });
+        const option2 = new fabric.Text('Option 2', {
+          left: selectBoxPadding,
+          top: selectBoxPadding + option1.getBoundingRect().height + selectBoxHeight,
+        });
+        const option3 = new fabric.Text('Option 3', {
+          left: selectBoxPadding,
+          top: selectBoxPadding + option1.getBoundingRect().height + selectBoxHeight,
+        });
+      
+        // Add the select box and options to the group
+        group.addWithUpdate(selectBox);
+        group.addWithUpdate(option1);
+        group.addWithUpdate(option2);
+        group.addWithUpdate(option3);
+      
+        // Set the group as the active object
+        canvas.setActiveObject(group);
+      }
+
+      canvas.on('mouse:down', function(event: fabric.IEvent) {
+        console.log()
+        // check if right mouse button is clicked
+        if (event.e instanceof MouseEvent && event.e.button === 2) {
+          event.e.preventDefault(); // prevent the default context menu from showing
+          var shape = event.target;
+          if (shape && shape.type === 'rect') {
+            // show the select box
+            showSelectBox(shape);
+          }
+        }
+      });
+            
     // Add new bounding box to be image
     const addBoxHandler = () => {
         const box = defaultBox()

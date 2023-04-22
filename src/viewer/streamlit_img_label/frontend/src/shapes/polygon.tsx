@@ -1,6 +1,6 @@
 import React from "react";
 import { fabric } from "fabric"
-import { PolygonProps, ShapeRenderProps } from "./interfaces";
+import { PolygonProps, ShapeRenderProps } from "../interfaces";
   
 export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
     const { points, label } = shape as PolygonProps

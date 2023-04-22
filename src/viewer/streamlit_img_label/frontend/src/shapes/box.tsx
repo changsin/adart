@@ -1,6 +1,7 @@
 import React from "react";
 import { fabric } from "fabric"
-import { BoxProps, ShapeRenderProps } from "./interfaces";
+import { BoxProps, ShapeRenderProps } from "../interfaces";
+import { sendSelectedShape } from "../streamlit-utils";
 
 export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
     const {shape_id, top, left, width, height, label } = shape as BoxProps;
@@ -90,7 +91,7 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         });
         canvas.setActiveObject(selectedAnnotation);
 
-        // sendSelectedShape(shape)
+        sendSelectedShape(shape)
     });
 
     // Add a click event listener to hide the highlight rectangle

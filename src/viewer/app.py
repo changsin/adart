@@ -118,18 +118,22 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                             print("verification_result {}".format(im.image_labels.objects[i].verification_result))
                             im.set_annotation(i, select_label)
 
-        if data_labels.images[image_index].objects[st.session_state["image_index"]].attributes:
-            df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
-                                                   .objects[0].attributes,
-                                                   orient='index')
-            # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
+        print("shapes {}".format(shapes))
+        if len(shapes) > 0:
+            if data_labels.images[image_index].objects[st.session_state["image_index"]].attributes:
+                print(data_labels.images[st.session_state["image_index"]]
+                                                       .objects[0].attributes)
+                df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
+                                                       .objects[0].attributes,
+                                                       orient='index')
+                # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 
-            # Display the dataframe as an HTML table with custom styling using st.write()
-            st.write(df_attributes.style.set_table_styles(
-                [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
-                 {'selector': 'td', 'props': [('text-align', 'center')]}])
-                     .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
-                     .to_html(), unsafe_allow_html=True)
+                # Display the dataframe as an HTML table with custom styling using st.write()
+                st.write(df_attributes.style.set_table_styles(
+                    [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
+                     {'selector': 'td', 'props': [('text-align', 'center')]}])
+                         .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
+                         .to_html(), unsafe_allow_html=True)
         # else:
         #     df_attributes = pd.DataFrame(data_labels.images[st.session_state["image_index"]].to_json())
         #     st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)

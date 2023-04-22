@@ -114,7 +114,7 @@ class DartImageManager:
             return shape
 
         resized_shape = dict()
-        shape['id'] = idx
+        resized_shape['shape_id'] = idx
         if shape['shapeType'] == 'box':
             resized_shape['left'] = shape['left'] / self._resized_ratio_w
             resized_shape['width'] = shape['width'] / self._resized_ratio_w

@@ -1,6 +1,6 @@
 import React from "react";
 import { fabric } from "fabric"
-import { SplinePoint, SplineProps, ShapeRenderProps } from "./interfaces";
+import { SplinePoint, SplineProps, ShapeRenderProps } from "../interfaces";
 
 export const Spline: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
     const { points, label } = shape as SplineProps
