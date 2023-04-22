@@ -18,7 +18,7 @@ else:
     _component_func = components.declare_component("st_img_label", path=build_dir)
 
 
-def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
+def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None) -> dict:
     """Create a new instance of "st_img_label".
 
     Parameters
@@ -68,4 +68,4 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None):
         return component_value['shape']
     else:
         # return shape_props
-        return []
+        return None

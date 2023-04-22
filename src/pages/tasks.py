@@ -410,9 +410,8 @@ def delete_task():
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the task ({}) of project ({}-{})?"
                                              .format(selected_task.id, selected_project.id, selected_project.name))
         if delete_confirmed:
-            # projects_info = get_projects_info()
             tasks_info = TasksInfo.get_tasks_info()
-            tasks_info.tasks.remove(selected_task)
+            tasks_info.remove(selected_task)
 
             task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
                                                  str(selected_project.id),
@@ -420,8 +419,8 @@ def delete_task():
             print("Deleting folder {}".format(task_folder_to_delete))
             if os.path.exists(task_folder_to_delete):
                 shutil.rmtree(task_folder_to_delete)
-            st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))
             tasks_info.save()
+            st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))
 
 
 def main():

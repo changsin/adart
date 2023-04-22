@@ -18,6 +18,10 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                                    str(selected_project.id),
                                    str(selected_task.id))
         data_labels = DataLabels.load(selected_task.anno_file_name)
+        if not data_labels:
+            st.warning("Data labels are empty")
+            return
+
         image_filenames = [image.name for image in data_labels.images]
 
         if not st.session_state.get('image_index'):
@@ -27,10 +31,12 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             st.session_state["img_files"] = image_filenames
 
         def refresh():
+            data_labels.save(selected_task.anno_file_name)
             st.session_state["img_files"] = image_filenames
             st.session_state["image_index"] = 0
 
         def next_image():
+            data_labels.save(selected_task.anno_file_name)
             image_index = st.session_state["image_index"]
             if image_index < len(st.session_state["img_files"]) - 1:
                 st.session_state["image_index"] += 1
@@ -38,26 +44,19 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 st.warning('This is the last image.')
 
         def previous_image():
+            data_labels.save(selected_task.anno_file_name)
             image_index = st.session_state["image_index"]
             if image_index > 0:
                 st.session_state["image_index"] -= 1
             else:
                 st.warning('This is the first image.')
 
-        def save_labels():
-            image_index = st.session_state["image_index"]
-            next_image_index = image_index + 1 if (image_index < len(image_filenames) - 1) else image_index
-            if next_image_index != image_index:
-                st.session_state["image_index"] = next_image_index
-            else:
-                st.warning("All images are annotated.")
-                next_image()
-
         def go_to_image():
+            data_labels.save(selected_task.anno_file_name)
             image_index = st.session_state["img_files"].index(st.session_state["img_file"])
             st.session_state["image_index"] = image_index
 
-        def pick_color(label: str, default_color: str) -> str:
+        def _pick_color(label: str, default_color: str) -> str:
             color_dict = {
                 'boundary': 'blue',
                 'spline': 'green',
@@ -89,14 +88,14 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         im = DartImageManager(task_folder, data_labels.images[image_index])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
-        shape_color = pick_color(resized_shapes[0].get('label'), 'green')
+        shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
 
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
         # Display cutout boxes
-        shapes = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
-        if shapes:
-            preview_imgs = im.init_annotation(shapes)
+        selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
+        if selected_shape:
+            preview_imgs = [im.init_annotation(selected_shape)]
 
             if len(preview_imgs) > 0:
                 for i, prev_img in enumerate(preview_imgs):
@@ -104,7 +103,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     col1, col2 = st.columns(2)
                     with col1:
                         col1.image(prev_img[0])
-                        st.dataframe(shapes)
+                        st.dataframe(selected_shape)
                     with col2:
                         default_index = 0
                         if im.image_labels.objects[i].verification_result:
@@ -118,13 +117,24 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                             print("verification_result {}".format(im.image_labels.objects[i].verification_result))
                             im.set_annotation(i, select_label)
 
-        print("shapes {}".format(shapes))
-        if len(shapes) > 0:
-            if data_labels.images[image_index].objects[st.session_state["image_index"]].attributes:
-                print(data_labels.images[st.session_state["image_index"]]
-                                                       .objects[0].attributes)
-                df_attributes = pd.DataFrame.from_dict(data_labels.images[st.session_state["image_index"]]
-                                                       .objects[0].attributes,
+            selected_shape_id = selected_shape["shape_id"]
+            if selected_shape_id > len(data_labels.images[image_index].objects) - 1:
+                st.write("Untagged box added")
+                print(selected_shape)
+                untagged_dict = dict()
+                untagged_dict['label'] = selected_shape['label']
+                untagged_dict['type'] = selected_shape['shapeType']
+                untagged_dict['points'] = [selected_shape['left'],
+                                           selected_shape['top'],
+                                           selected_shape['left'] + selected_shape['width'],
+                                           selected_shape['top'] + selected_shape['height']]
+                untagged_dict['verification_result'] = dict()
+                untagged_dict['verification_result']['name'] = selected_shape['label']
+                untagged_object = DataLabels.Object.from_json(untagged_dict)
+                data_labels.images[image_index].objects.append(untagged_object)
+            elif data_labels.images[image_index].objects[selected_shape_id].attributes:
+                df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
+                                                       .objects[selected_shape_id].attributes,
                                                        orient='index')
                 # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 

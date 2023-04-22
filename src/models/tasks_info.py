@@ -125,6 +125,19 @@ class TasksInfo:
         self.tasks.append(task)
         self.num_count = len(self.tasks)
 
+    def remove(self, task_to_remove: Task):
+        if task_to_remove in self.tasks:
+            print("Deleting task {}".format(task_to_remove))
+            self.tasks.remove(task_to_remove)
+            return
+        else:
+            for task in self.tasks:
+                if task.id == task_to_remove.id:
+                    self.tasks.remove(task)
+                    return
+
+        print(f"**Error: Task {task_to_remove} not found in the list")
+
     def to_json(self):
         return {
             "num_count": self.num_count,
@@ -182,8 +195,8 @@ class TasksInfo:
     @staticmethod
     def get_tasks_info() -> 'TasksInfo':
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
-        json_tasks = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
-        return TasksInfo.from_json(json_tasks)
+        json_tasks_info = utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
+        return TasksInfo.from_json(json_tasks_info)
 
     @staticmethod
     def get_tasks(project_id: int) -> list:

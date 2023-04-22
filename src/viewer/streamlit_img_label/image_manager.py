@@ -26,7 +26,7 @@ class DartImageManager:
         self.image_labels = image_labels
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
         self._shapes = []
-        self._current_shapes = []
+        self._selected_shape = dict()
         self._load_shapes()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
@@ -44,6 +44,7 @@ class DartImageManager:
         for label_object in self.image_labels.objects:
             shape = dict()
             if label_object.type == 'box':
+                print(label_object.points)
                 left, top, right, bottom = label_object.points
                 width = right - left
                 height = bottom - top
@@ -209,17 +210,17 @@ class DartImageManager:
                 label = shape["label"]
         return Image.fromarray(prev_img), label
 
-    def init_annotation(self, shapes):
+    def init_annotation(self, shape: dict):
         """init annotation for current shapes.
 
         Args:
-            shapes(list): the bounding boxes of the image.
+            shapes(dict): the bounding boxes of the image.
         Returns:
             prev_img(list): list of preview images with default label.
         """
-        self._current_shapes = shapes
+        self._selected_shape = shape
         # return [self._chop_shape_img(shape) for shape in self._current_shapes]
-        return [self._chop_shape_img(shapes)]
+        return self._chop_shape_img(shape)
 
     def set_annotation(self, index, label):
         """set the label of the image.

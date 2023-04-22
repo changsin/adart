@@ -8,6 +8,7 @@ import {
 import { fabric } from "fabric"
 import styles from "./StreamlitImgLabel.module.css"
 import {
+    BoxProps,
     PythonArgs,
     ShapeProps
 } from "./interfaces";
@@ -20,7 +21,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [labels, setLabels] = useState<string[]>([])
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
-    const [newBBoxIndex, setNewBBoxIndex] = useState<number>(0)
+    const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [opacity, setOpacity] = useState(1);
     const [polygonVisible, togglePolygon] = useState(false);
 
@@ -98,12 +99,15 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
 
     // Create a default bounding box
-    const defaultBox = () => ({
-        left: canvasWidth * 0.15 + newBBoxIndex * 3,
-        top: canvasHeight * 0.15 + newBBoxIndex * 3,
-        width: canvasWidth * 0.2,
-        height: canvasHeight * 0.2,
-    })
+    const untaggedBox = (shape_id: number): BoxProps  => ({
+            shape_id: shape_id,
+            left: canvasWidth * 0.15 + newBBoxIndex * 3,
+            top: canvasHeight * 0.15 + newBBoxIndex * 3,
+            width: canvasWidth * 0.2,
+            height: canvasHeight * 0.2,
+            label: "untagged",
+            shapeType: "box"
+          })
 
     function showSelectBox(shape: fabric.Object) {
         const selectBoxWidth = 100;
@@ -166,7 +170,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             
     // Add new bounding box to be image
     const addBoxHandler = () => {
-        const box = defaultBox()
+        const box = untaggedBox(newBBoxIndex)
         setNewBBoxIndex(newBBoxIndex + 1)
         canvas.add(
             new fabric.Rect({
@@ -179,7 +183,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 hasRotatingPoint: false,
             })
         )
-        sendCoordinates([...labels, "UNTAG"])
+          sendSelectedShape(box)
     }
 
     // Remove the selected bounding box
@@ -212,7 +216,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     // Remove all the bounding boxes
     const clearHandler = () => {
-        setNewBBoxIndex(0)
+        // setNewBBoxIndex(0)
         canvas.getObjects().forEach((rect) => canvas.remove(rect))
         sendCoordinates([])
       }

@@ -1,4 +1,5 @@
 import attr
+import json
 
 import src.common.utils as utils
 from src.models.adq_labels import AdqLabels
@@ -11,12 +12,6 @@ class DataLabels:
     template_version = attr.ib(default="0.1", validator=attr.validators.instance_of(str))
     images = attr.ib(default=[], validator=attr.validators.instance_of(list))
 
-    # {
-    #     "mode": "annotation",
-    #     "twconverted": "96E7D8C8-44E4-4055-8487-85B3208E51A2",
-    #     "template_version": "0.1",
-    #     "images": [
-
     def to_json(self):
         return {
             "twconverted": self.twconverted,
@@ -24,6 +19,10 @@ class DataLabels:
             "template_version": self.template_version,
             "images": self.images
         }
+
+    def save(self, filename: str):
+        json_data = json.dumps(self.to_json(), default=utils.default, ensure_ascii=False)
+        utils.to_file(json_data, filename)
 
     @staticmethod
     def from_json(json_dict):
