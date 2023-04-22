@@ -125,12 +125,9 @@ class DataLabels:
     class Object:
         label = attr.ib(validator=attr.validators.instance_of(str))
         type = attr.ib(validator=attr.validators.instance_of(str))
-        points = attr.ib(default=None)
+        points = attr.ib(default=list)
         # a list of attribute_name and attribute_value pairs
         attributes = attr.ib(default=None)
-        occluded = attr.ib(default=None)
-        z_order = attr.ib(default=None)
-        group_id = attr.ib(default=None)
         verification_result = attr.ib(default=None)
 
         # {
@@ -164,9 +161,6 @@ class DataLabels:
                 "type": self.type,
                 "points": self.points,
                 "attributes": self.attributes,
-                "occluded": self.occluded,
-                "z_order": self.z_order,
-                "group_id": self.group_id,
                 "verification_result": self.verification_result,
             }
 
@@ -176,18 +170,19 @@ class DataLabels:
                                      type=json_dict['type'],
                                      points=json_dict.get('points', None),
                                      attributes=json_dict.get('attributes', None),
-                                     occluded=json_dict.get('occluded', None),
-                                     z_order=json_dict.get('z_order', None),
-                                     group_id=json_dict.get('group_id', None),
                                      verification_result=json_dict.get('verification_result', None)
                                      )
 
         @staticmethod
         def from_adq_object(adq_object: AdqLabels.Object):
             points_str = adq_object.position.split()
-            points = [float(point.replace(",", "")) for point in points_str]
+            points = [[float(point.replace(",", "")) for point in points_str]]
 
             attributes = dict()
+            attributes['occluded'] = int(adq_object.occluded) if adq_object.group_id else 0
+            attributes['z_order'] = int(adq_object.z_order) if adq_object.group_id else 0
+            attributes['group_id'] = int(adq_object.group_id) if adq_object.group_id else 0
+
             for attribute in adq_object.attributes:
                 key = attribute["attribute_name"]
                 value = attribute["attribute_value"]
@@ -197,7 +192,4 @@ class DataLabels:
                                      type=adq_object.type,
                                      points=points,
                                      attributes=attributes,
-                                     occluded=adq_object.occluded,
-                                     z_order=adq_object.z_order,
-                                     group_id=adq_object.group_id,
                                      verification_result=adq_object.verification_result)

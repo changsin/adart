@@ -124,9 +124,10 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 untagged_dict = dict()
                 untagged_dict['label'] = selected_shape['label']
                 untagged_dict['type'] = selected_shape['shapeType']
-                untagged_dict['points'] = selected_shape['points']
-                untagged_dict['verification_result'] = dict()
-                untagged_dict['verification_result']['name'] = selected_shape['label']
+                points = selected_shape['points'][0]
+                x, y, w, h = points['x'], points['y'], points['w'], points['h']
+                untagged_dict['points'] = [[x, y, w, h]]
+                untagged_dict['verification_result'] = selected_shape['verification_result']
                 untagged_object = DataLabels.Object.from_json(untagged_dict)
                 data_labels.images[image_index].objects.append(untagged_object)
             elif data_labels.images[image_index].objects[selected_shape_id].attributes:

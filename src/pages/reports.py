@@ -131,13 +131,15 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     class_labels[label] = 1
 
                 if object_cur.verification_result:
-                    if errors.get('error_code'):
-                        errors['error_code'] += 1
+                    print(object_cur.verification_result)
+                    error_code = object_cur.verification_result['error_code']
+                    if errors.get(error_code):
+                        errors[error_code] += 1
                     else:
-                        errors['error_code'] = 1
+                        errors[error_code] = 1
 
                 if object_cur.type == 'box':
-                    xtl1, ytl1, xbr1, ybr1 = object_cur.points
+                    xtl1, ytl1, xbr1, ybr1 = object_cur.points[0]
                     rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                     width1 = rect1.xmax - rect1.xmin
                     height1 = rect1.ymax - rect1.ymin
@@ -148,7 +150,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
 
                     for ob_id2 in range(ob_id1 + 1, count):
-                        xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points
+                        xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points[0]
                         rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
 
                         overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)

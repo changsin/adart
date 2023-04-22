@@ -110,7 +110,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         label: "untagged",
         shapeType: "box",
         attributes: null,
-        verification_result: ({ name: "untagged", comment: null})
+        verification_result: ({ error_code: "untagged", comment: null})
     });
             
     // Add new bounding box to the image

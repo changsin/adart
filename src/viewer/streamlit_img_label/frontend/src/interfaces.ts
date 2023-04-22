@@ -13,7 +13,7 @@ export interface BoxPoint extends Point {
 }
 
 export interface VerificationResult {
-  name: string;
+  error_code: string;
   comment: string | null;
 }
 

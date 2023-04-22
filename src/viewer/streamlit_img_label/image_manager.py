@@ -48,12 +48,12 @@ class DartImageManager:
                 left, top, right, bottom = label_object.points[0]
                 width = right - left
                 height = bottom - top
-                points = dict()
-                points['x'] = int(left)
-                points['y'] = int(top)
-                points['w'] = int(width)
-                points['h'] = int(height)
-                shape['points'] = [points]
+                point_dict = dict()
+                point_dict['x'] = left
+                point_dict['y'] = top
+                point_dict['w'] = width
+                point_dict['h'] = height
+                shape['points'] = [point_dict]
                 shape['label'] = label_object.label
                 shape['shapeType'] = 'box'
             elif label_object.type == 'spline' or label_object.type == 'boundary':
@@ -119,13 +119,13 @@ class DartImageManager:
         resized_shape = dict()
         resized_shape['shape_id'] = idx
         if shape['shapeType'] == 'box':
-            points = shape['points'][0]
-            resized_points = dict()
-            resized_points['x'] = points['x'] / self._resized_ratio_w
-            resized_points['w'] = points['w'] / self._resized_ratio_w
-            resized_points['y'] = points['y'] / self._resized_ratio_h
-            resized_points['h'] = points['h'] / self._resized_ratio_h
-            resized_shape['points'] = [resized_points]
+            point_dict = shape['points'][0]
+            resized_point = dict()
+            resized_point['x'] = point_dict['x'] / self._resized_ratio_w
+            resized_point['w'] = point_dict['w'] / self._resized_ratio_w
+            resized_point['y'] = point_dict['y'] / self._resized_ratio_h
+            resized_point['h'] = point_dict['h'] / self._resized_ratio_h
+            resized_shape['points'] = [resized_point]
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
             resized_points = []
             for point in shape['points']:
@@ -176,12 +176,12 @@ class DartImageManager:
         label = ""
         if shape:
             if shape['shapeType'] == 'box':
-                points = shape['points'][0]
+                point_dict = shape['points'][0]
                 resized_points = dict()
-                resized_points['x'] = int(points['x'] * self._resized_ratio_w)
-                resized_points['w'] = int(points['w'] * self._resized_ratio_w)
-                resized_points['y'] = int(points['y'] * self._resized_ratio_h)
-                resized_points['h'] = int(points['h'] * self._resized_ratio_h)
+                resized_points['x'] = int(point_dict['x'] * self._resized_ratio_w)
+                resized_points['w'] = int(point_dict['w'] * self._resized_ratio_w)
+                resized_points['y'] = int(point_dict['y'] * self._resized_ratio_h)
+                resized_points['h'] = int(point_dict['h'] * self._resized_ratio_h)
 
                 x, y, w, h = (
                     resized_points['x'],
@@ -198,24 +198,25 @@ class DartImageManager:
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
                 resized_points = []
                 for point in shape['points']:
-                    resized_point = dict()
-                    resized_point['x'] = int(point['x'] * self._resized_ratio_w)
-                    resized_point['y'] = int(point['y'] * self._resized_ratio_h)
-                    resized_point['r'] = int(point['r'] * self._resized_ratio_w)
+                    resized_point_dict = dict()
+                    resized_point_dict['x'] = point['x'] * self._resized_ratio_w
+                    resized_point_dict['y'] = point['y'] * self._resized_ratio_h
+                    resized_point_dict['r'] = point['r'] * self._resized_ratio_w
 
-                    resized_points.append(resized_point)
+                    resized_points.append(resized_points)
 
             elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
                 resized_points = []
                 for point in shape['points']:
-                    resized_point = dict()
-                    resized_point['x'] = int(point['x'] * self._resized_ratio_w)
-                    resized_point['y'] = int(point['y'] * self._resized_ratio_h)
+                    resized_point_dict = dict()
+                    resized_point_dict['x'] = point['x'] * self._resized_ratio_w
+                    resized_point_dict['y'] = point['y'] * self._resized_ratio_h
 
-                    resized_points.append(resized_point)
+                    resized_points.append(resized_points)
 
             if "label" in shape:
                 label = shape["label"]
+
         return Image.fromarray(prev_img), label
 
     def init_annotation(self, shape: dict):
