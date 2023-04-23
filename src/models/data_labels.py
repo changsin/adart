@@ -21,7 +21,7 @@ class DataLabels:
         }
 
     def save(self, filename: str):
-        json_data = json.dumps(self.to_json(), default=utils.default, ensure_ascii=False)
+        json_data = json.dumps(self.to_json(), default=utils.default, ensure_ascii=False, indent=2)
         utils.to_file(json_data, filename)
 
     @staticmethod

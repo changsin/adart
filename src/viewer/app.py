@@ -95,56 +95,70 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         # Display cutout boxes
         selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
         if selected_shape:
-            preview_imgs = [im.init_annotation(selected_shape)]
-
-            if len(preview_imgs) > 0:
-                for i, prev_img in enumerate(preview_imgs):
-                    prev_img[0].thumbnail((200, 200))
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        col1.image(prev_img[0])
-                        st.dataframe(selected_shape)
-                    with col2:
-                        default_index = 0
-                        if im.image_labels.objects[i].verification_result:
-                            error_code = im.image_labels.objects[i].verification_result['error_code']
-                            default_index = error_codes[error_code]
-
-                        select_label = col2.selectbox(
-                            "Error", error_codes, key=f"error_{i}", index=default_index
-                        )
-                        if select_label:
-                            print("verification_result {}".format(im.image_labels.objects[i].verification_result))
-                            im.set_annotation(i, select_label)
-
             selected_shape_id = selected_shape["shape_id"]
-            if selected_shape_id > len(data_labels.images[image_index].objects) - 1:
+            preview_img, preview_label = im.init_annotation(selected_shape)
+            # if shape_id is new, it's an untagged label
+            if selected_shape_id >= len(data_labels.images[image_index].objects):
                 st.write("Untagged box added")
-                print(selected_shape)
                 untagged_dict = dict()
                 untagged_dict['label'] = selected_shape['label']
                 untagged_dict['type'] = selected_shape['shapeType']
-                points = selected_shape['points'][0]
-                x, y, w, h = points['x'], points['y'], points['w'], points['h']
-                untagged_dict['points'] = [[x, y, w, h]]
+
+                print(selected_shape)
+                resized_shape = selected_shape['points'][0]
+                x, y, w, h = (
+                    resized_shape['x'] * im._resized_ratio_w,
+                    resized_shape['y'] * im._resized_ratio_h,
+                    resized_shape['w'] * im._resized_ratio_w,
+                    resized_shape['h'] * im._resized_ratio_h
+                )
+                untagged_dict['points'] = [[x, y, x + w, y + h]]
+
                 untagged_dict['verification_result'] = selected_shape['verification_result']
                 untagged_object = DataLabels.Object.from_json(untagged_dict)
                 data_labels.images[image_index].objects.append(untagged_object)
-            elif data_labels.images[image_index].objects[selected_shape_id].attributes:
-                df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
-                                                       .objects[selected_shape_id].attributes,
-                                                       orient='index')
-                # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
+            else:
+                print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
+                                                                     len(data_labels.images[image_index]
+                                                       .objects)))
+                if data_labels.images[image_index].objects[selected_shape_id].attributes:
+                    df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
+                                                           .objects[selected_shape_id].attributes,
+                                                           orient='index')
+                else:
+                    print(data_labels.images[image_index]
+                                                           .objects[selected_shape_id])
+                    st.write(data_labels.images[image_index]
+                                                           .objects[selected_shape_id])
+                    # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
 
-                # Display the dataframe as an HTML table with custom styling using st.write()
-                st.write(df_attributes.style.set_table_styles(
-                    [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
-                     {'selector': 'td', 'props': [('text-align', 'center')]}])
-                         .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
-                         .to_html(), unsafe_allow_html=True)
-        # else:
-        #     df_attributes = pd.DataFrame(data_labels.images[st.session_state["image_index"]].to_json())
-        #     st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
+                    # # Display the dataframe as an HTML table with custom styling using st.write()
+                    # st.write(df_attributes.style.set_table_styles(
+                    #     [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
+                    #      {'selector': 'td', 'props': [('text-align', 'center')]}])
+                    #          .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
+                    #          .to_html(), unsafe_allow_html=True)
+
+            if preview_img and preview_label:
+                preview_img.thumbnail((200, 200))
+                col1, col2 = st.columns(2)
+                with col1:
+                    col1.image(preview_img)
+                    st.write(preview_label)
+                    st.dataframe(selected_shape)
+                with col2:
+                    default_index = 0
+                    if im.image_labels.objects[selected_shape_id].verification_result:
+                        error_code = im.image_labels.objects[selected_shape_id].verification_result['error_code']
+                        default_index = error_codes.index(error_code)
+
+                    select_label = col2.selectbox(
+                        "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
+                    )
+                    if select_label:
+                        print("verification_result {}".format(im.image_labels.objects[selected_shape_id]
+                                                              .verification_result))
+                        im.set_annotation(selected_shape_id, select_label)
 
 #
 # if __name__ == "__main__":

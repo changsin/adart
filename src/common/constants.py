@@ -28,12 +28,12 @@ USER_TYPES = ["admin", "reviewer", "inspector", "user"]
 
 
 class ErrorType(Enum):
-    DVE_NOERROR = (0, "No error")       # "무오류"
-    DVE_MISS = (1, "Mis-tagged")        # "오태깅"
-    DVE_UNTAG = (2, "Un-tagged")        # "미태깅"
-    DVE_OVER = (3, "Over-tagged")       # "과태깅"
-    DVE_RANGE = (4, "Range error")      # "범위오류"
-    DVE_ATTR = (5, "Attributes error")  # "속성오류"
+    # DVE_NOERROR = (0, "No error")       # "무오류"
+    DVE_MISS = (1, "mis-tagged")        # "오태깅"
+    DVE_UNTAG = (2, "untagged")        # "미태깅"
+    DVE_OVER = (3, "over-tagged")       # "과태깅"
+    DVE_RANGE = (4, "range error")      # "범위오류"
+    DVE_ATTR = (5, "attributes error")  # "속성오류"
 
     def __new__(cls, value, description):
         obj = object.__new__(cls)

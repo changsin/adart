@@ -54,6 +54,7 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     });
     segments.push(lastSegment);
   }
+  console.log(path)
 
   // Create a Fabric.js path object from the path string
   const group = new fabric.Group(segments, {

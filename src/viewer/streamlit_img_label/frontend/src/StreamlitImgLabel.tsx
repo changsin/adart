@@ -74,16 +74,19 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             // Add shapes to the canvas
             shapes.forEach((shape) => {
                 if (shape.shapeType === "box") {
+                    console.log(shape)
                     // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
                     Box({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     Spline({shape, color: shapeColor, opacity, canvas});
-                } else if (shape.shapeType === "polygon" && polygonVisible === true) {
-                    Polygon({shape, color: "purple", opacity, canvas});
+                } else if (shape.shapeType === "polygon") {
+                    if (polygonVisible === true) {
+                        Polygon({shape, color: "purple", opacity, canvas});
+                    }
                 } else if (shape.shapeType === "VP") {
                     VanishingPoint({shape, color: "red", opacity, canvas});
                 } else {
-                    console.warn(`Invalid shape "${shape}" specified". Skipping...`)
+                    console.warn(`Invalid shape "${shape.shapeType}" specified". Skipping...`)
                     return
                 }
             })
@@ -126,7 +129,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 height: (box.points[0] as BoxPoint).h,
                 fill: "",
                 objectCaching: true,
-                stroke: props.args.shapeColor,
+                stroke: "red",
                 strokeWidth: 1,
                 strokeUniform: true,
                 hasRotatingPoint: false,

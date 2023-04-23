@@ -189,12 +189,12 @@ class DartImageManager:
                     resized_points['w'],
                     resized_points['h']
                 )
-                top = y if y > 0 else 0
-                left = x if x > 0 else 0
-                width = width if width > 0 else 1
-                height = height if height > 0 else 1
-                prev_img[top: top + height, left: left + width] = raw_image[top: top + height, left: left + width]
-                prev_img = prev_img[top: top + height, left: left + width]
+                x = x if x > 0 else 0
+                y = y if y > 0 else 0
+                w = w if w > 0 else 1
+                h = h if h > 0 else 1
+                prev_img[y: y + h, x: x + w] = raw_image[y: y + h, x: x + w]
+                prev_img = prev_img[y: y + h, x: x + w]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
                 resized_points = []
                 for point in shape['points']:
