@@ -299,7 +299,8 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
                     y = point.get('y')
                     r = point.get('r')
                     points.append((float(x), float(y), float(r)))
-                spline_dict['points'] = points
+                # sort the control points by y as they can be out of order
+                spline_dict['points'] = sorted(points, key=lambda p: p[1])
 
                 attributes_dict = dict()
                 # Iterate over the attributes of the element

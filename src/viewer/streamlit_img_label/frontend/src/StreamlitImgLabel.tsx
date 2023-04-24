@@ -23,7 +23,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
-    const [opacity, setOpacity] = useState(1);
+    const [opacity, setOpacity] = useState(0.4);
     const [polygonVisible, togglePolygon] = useState(false);
 
     const handleOpacityChange = (value: number) => {
