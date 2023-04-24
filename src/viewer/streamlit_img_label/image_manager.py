@@ -43,6 +43,10 @@ class DartImageManager:
         converted_shapes = []
         for label_object in self.image_labels.objects:
             shape = dict()
+            shape['label'] = label_object.label
+            shape['attributes'] = label_object.attributes
+            shape['verification_result'] = label_object.verification_result
+
             if label_object.type == 'box':
                 left, top, right, bottom = label_object.points[0]
                 width = right - left
@@ -53,10 +57,7 @@ class DartImageManager:
                 point_dict['w'] = width
                 point_dict['h'] = height
                 shape['points'] = [point_dict]
-                shape['label'] = label_object.label
                 shape['shapeType'] = 'box'
-                shape['attributes'] = label_object.attributes
-                shape['verification_result'] = label_object.verification_result
             elif label_object.type == 'spline' or label_object.type == 'boundary':
                 points = []
                 for point in label_object.points:
@@ -68,7 +69,6 @@ class DartImageManager:
                     points.append(point_dict)
 
                 shape['points'] = points
-                shape['label'] = label_object.label
                 shape['shapeType'] = label_object.type
             elif label_object.type == 'polygon' or label_object.type == 'VP':
                 points = []
@@ -80,7 +80,6 @@ class DartImageManager:
                     points.append(point_dict)
 
                 shape['points'] = points
-                shape['label'] = label_object.label
                 shape['shapeType'] = label_object.type
 
             converted_shapes.append(shape)
@@ -113,12 +112,19 @@ class DartImageManager:
 
         return resized_img
 
-    def _resize_shape(self, idx, shape):
+    def _scale_down_shape(self, idx, shape):
         if not shape:
             return shape
 
         resized_shape = dict()
         resized_shape['shape_id'] = idx
+        resized_shape['attributes'] = shape['attributes'] if shape['attributes'] else {}
+        resized_shape['verification_result'] = shape['verification_result'] if shape['verification_result']  else {}
+        resized_shape['shapeType'] = shape['shapeType']
+
+        if 'label' in shape:
+            resized_shape['label'] = shape['label']
+
         if shape['shapeType'] == 'box':
             point_dict = shape['points'][0]
             resized_point = dict()
@@ -150,9 +156,6 @@ class DartImageManager:
 
             resized_shape['points'] = resized_points
 
-        if 'label' in shape:
-            resized_shape['label'] = shape['label']
-        resized_shape['shapeType'] = shape['shapeType']
         return resized_shape
 
     def get_resized_shapes(self):
@@ -163,7 +166,7 @@ class DartImageManager:
         """
         resized_shapes = []
         for idx, shape in enumerate(self._shapes):
-            resized_shapes.append(self._resize_shape(idx, shape))
+            resized_shapes.append(self._scale_down_shape(idx, shape))
 
         return resized_shapes
 
@@ -196,17 +199,34 @@ class DartImageManager:
                 h = h if h > 0 else 1
                 prev_img[y: y + h, x: x + w] = raw_image[y: y + h, x: x + w]
                 prev_img = prev_img[y: y + h, x: x + w]
-            elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
+            elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
                 resized_points = []
                 for point in shape['points']:
                     resized_point_dict = dict()
                     resized_point_dict['x'] = point['x'] * self._resized_ratio_w
                     resized_point_dict['y'] = point['y'] * self._resized_ratio_h
-                    resized_point_dict['r'] = point['r'] * self._resized_ratio_w
 
-                    resized_points.append(resized_points)
+                    resized_points.append(resized_point_dict)
 
-            elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+                min_x = max_x = int(resized_points[0]['x'])
+                min_y = max_y = int(resized_points[0]['y'])
+
+                # Iterate over the remaining control points and update the minimum and maximum x and y values
+                for pt in resized_points[1:]:
+                    if pt['x'] < min_x:
+                        min_x = int(pt['x'])
+                    elif pt['x'] > max_x:
+                        max_x = int(pt['x'])
+                    if pt['y'] < min_y:
+                        min_y = int(pt['y'])
+                    elif pt['y'] > max_y:
+                        max_y = int(pt['y'])
+
+                print("{}:{}, {}:{}".format(min_y, max_y, min_x, max_x))
+                prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
+                prev_img = prev_img[min_y:max_y, min_x:max_x]
+
+            elif shape['shapeType'] == 'VP':
                 resized_points = []
                 for point in shape['points']:
                     resized_point_dict = dict()

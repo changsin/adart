@@ -74,7 +74,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             // Add shapes to the canvas
             shapes.forEach((shape) => {
                 if (shape.shapeType === "box") {
-                    console.log(shape)
                     // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
                     Box({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
