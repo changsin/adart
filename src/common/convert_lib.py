@@ -305,12 +305,13 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
 
                 # Specific to Spline, it can have occlusion element
                 # Add it as an attribute
-                el_occlusion = el_spline.findall('Occlusion')
-                if el_occlusion:
-                    occlusion_dict = dict()
-                    for attr_name, attr_value in el_occlusion[0].attrib.items():
-                        occlusion_dict[attr_name] = attr_value
-                    attributes_dict['occlusion'] = occlusion_dict
+                el_occlusions = el_spline.findall('Occlusion')
+                if el_occlusions:
+                    occlusions = []
+                    for el_occlusion in el_occlusions:
+                        for attr_name, attr_value in el_occlusion.attrib.items():
+                            occlusions.append({attr_name: attr_value})
+                    attributes_dict['occlusions'] = occlusions
 
                 spline_dict['attributes'] = attributes_dict
 

@@ -118,16 +118,16 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 untagged_object = DataLabels.Object.from_json(untagged_dict)
                 data_labels.images[image_index].objects.append(untagged_object)
             else:
-                print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
-                                                                     len(data_labels.images[image_index]
-                                                       .objects)))
+                # print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
+                #                                                      len(data_labels.images[image_index]
+                #                                        .objects)))
                 if data_labels.images[image_index].objects[selected_shape_id].attributes:
                     df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
                                                            .objects[selected_shape_id].attributes,
                                                            orient='index')
                 else:
-                    print(data_labels.images[image_index]
-                                                           .objects[selected_shape_id])
+                    # print(data_labels.images[image_index]
+                    #                                        .objects[selected_shape_id])
                     st.write(data_labels.images[image_index]
                                                            .objects[selected_shape_id])
                     # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)

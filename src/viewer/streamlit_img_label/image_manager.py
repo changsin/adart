@@ -44,7 +44,6 @@ class DartImageManager:
         for label_object in self.image_labels.objects:
             shape = dict()
             if label_object.type == 'box':
-                print(label_object.points)
                 left, top, right, bottom = label_object.points[0]
                 width = right - left
                 height = bottom - top
@@ -56,6 +55,8 @@ class DartImageManager:
                 shape['points'] = [point_dict]
                 shape['label'] = label_object.label
                 shape['shapeType'] = 'box'
+                shape['attributes'] = label_object.attributes
+                shape['verification_result'] = label_object.verification_result
             elif label_object.type == 'spline' or label_object.type == 'boundary':
                 points = []
                 for point in label_object.points:

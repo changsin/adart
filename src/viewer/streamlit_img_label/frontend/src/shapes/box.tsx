@@ -1,6 +1,6 @@
 import React from "react";
 import { fabric } from "fabric"
-import { BoxPoint, ShapeProps, ShapeRenderProps } from "../interfaces";
+import { BoxPoint, ShapeRenderProps } from "../interfaces";
 import { sendSelectedShape } from "../streamlit-utils";
 
 export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
@@ -41,7 +41,7 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
             height: h,
             objectCaching: true,
             stroke: color,
-            strokeWidth: 10,
+            strokeWidth: 5,
             strokeUniform: true,
             hasRotatingPoint: false,
             selectable: false,
