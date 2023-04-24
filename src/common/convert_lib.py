@@ -345,25 +345,37 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
 
         el_boundaries = root.find('Boundarys')
         if el_boundaries:
-            for boundary in el_boundaries.findall('Boundary'):
+            for el_boundary in el_boundaries.findall('Boundary'):
                 boundary_dict = dict()
                 boundary_dict['label'] = 'boundary'
                 boundary_dict['type'] = 'boundary'
 
                 points = []
-                for point in boundary.findall('Point'):
+                for point in el_boundary.findall('Point'):
                     x = point.get('x')
                     y = point.get('y')
                     r = point.get('r')
                     points.append((float(x), float(y), int(r)))
 
-                boundary_dict['points'] = points
+                # sort the control points by y as they can be out of order
+                boundary_dict['points'] = sorted(points, key=lambda p: p[1])
 
                 attributes_dict = dict()
                 # Iterate over the attributes of the element
-                for attr_name, attr_value in boundary.attrib.items():
+                for attr_name, attr_value in el_boundary.attrib.items():
                     attributes_dict[attr_name] = attr_value
                 attributes_dict['attributes'] = attributes_dict
+
+                # Specific to Spline, it can have occlusion element
+                # Add it as an attribute
+                el_occlusion = el_boundary.findall('Occlusion')
+                if el_occlusion:
+                    occlusion_dict = dict()
+                    for attr_name, attr_value in el_occlusion[0].attrib.items():
+                        occlusion_dict[attr_name] = attr_value
+                    attributes_dict['occlusion'] = occlusion_dict
+
+                boundary_dict['attributes'] = attributes_dict
 
                 label_objects.append(boundary_dict)
 
