@@ -3,7 +3,7 @@ import { fabric } from "fabric"
 import { SplinePoint, ShapeRenderProps } from "../interfaces";
 
 export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.3, canvas }) => {
-  const { points, label } = shape;
+  const { shapeType, points, label } = shape;
 
   let pathString = '';
   const firstPoint = new fabric.Point(points[0].x, points[0].y);
@@ -18,9 +18,14 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     pathString += `L${currPoint.x},${currPoint.y}`;
   }
 
+  if (shapeType === "boundary") {
+    color = "yellow"
+  }
+
   const path = new fabric.Path(pathString, {
     stroke: color,
     fill: '',
+    strokeWidth: 5,
     opacity,
   });
 

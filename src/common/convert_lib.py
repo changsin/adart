@@ -223,18 +223,14 @@ def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: 
     output_jdict['images'] = output_jdict_imgs
 
     # take the folder name as the fname
-    fname = os.path.basename(os.path.dirname(anno_file_list[0]))
+    filename = os.path.basename(os.path.dirname(anno_file_list[0]))
 
     # directly write to the destination
-    target_filename = os.path.join(target_folder, fname + '.json')
+    target_filename = os.path.join(target_folder, filename + '.json')
     with open(target_filename, 'w', encoding='utf-8') as jf:
-        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+        json.dump(output_jdict, jf, indent=2, ensure_ascii=False)
 
-    st.write("Converted {}".format(fname))
-
-    target_filename = os.path.join(target_folder, fname + '.json')
-    with open(target_filename, 'w', encoding='utf-8') as jf:
-        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+    st.write("Converted {}".format(filename))
 
     return target_filename
 
@@ -364,7 +360,6 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
                 # Iterate over the attributes of the element
                 for attr_name, attr_value in el_boundary.attrib.items():
                     attributes_dict[attr_name] = attr_value
-                attributes_dict['attributes'] = attributes_dict
 
                 # Specific to Spline, it can have occlusion element
                 # Add it as an attribute
@@ -384,19 +379,16 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
 
     output_jdict['images'] = output_jdict_imgs
 
-    # take the folder name as the fname
-    fname = os.path.basename(os.path.dirname(anno_file_list[0]))
+    # take the folder name as the filename
+    filename = os.path.basename(os.path.dirname(anno_file_list[0]))
 
     # directly write to the destination
-    target_filename = os.path.join(target_folder, fname + '.json')
-    with open(target_filename, 'w', encoding='utf-8') as jf:
-        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+    target_filename = os.path.join(target_folder, filename + '.json')
+    print(output_jdict)
+    json_data = json.dumps(output_jdict, default=utils.default, indent=2, ensure_ascii=False)
+    utils.to_file(json_data, target_filename)
 
-    st.write("Converted {}".format(fname))
-
-    target_filename = os.path.join(target_folder, fname + '.json')
-    with open(target_filename, 'w', encoding='utf-8') as jf:
-        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
+    st.write("Converted {}".format(filename))
 
     return target_filename
 

@@ -23,7 +23,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
-    const [opacity, setOpacity] = useState(0.4);
+    const [opacity, setOpacity] = useState(0.3);
     const [polygonVisible, togglePolygon] = useState(false);
 
     const handleOpacityChange = (value: number) => {
@@ -119,8 +119,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // Add new bounding box to the image
     const addBoxHandler = () => {
         const box = untaggedBox(newBBoxIndex)
-        const rect = 
-        setNewBBoxIndex(newBBoxIndex + 1)
+        const rect = setNewBBoxIndex(newBBoxIndex + 1)
+        shapes.push(box)
         canvas.add(
             new fabric.Rect({
                 top: box.points[0].y,
