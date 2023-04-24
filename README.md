@@ -26,3 +26,17 @@ This is done through Electron following (How to Convert a Streamlit App to an .E
 >npm run build
 ```
 
+# Implementation Details
+
+## 1. Rendering splines
+A splines is a smooth curve in mathematics. They can be used to label road lanes and edges.
+To implement them, they are represented as a collection of "control points" defined as x, y, and r.
+1. r refers to the width
+Usually, in the context of splines, 'r' refers to the 'radius' of a curve but, for our specific implementation,
+we are using r to refer to the width of a line.
+2. control points can be out-of-order
+Due to the artifacts that can occur during annotation process, control points can be out-of-order.
+To display them correctly, they are sorted when the xmls are parsed.
+The fidelity between the original out-of-order control points and the sorted equivalents should be identical.
+
+
