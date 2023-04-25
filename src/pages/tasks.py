@@ -18,7 +18,7 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
-import src.viewer.app as app
+import src.viewer.streamlit_img_label.app as app
 from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,

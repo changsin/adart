@@ -230,7 +230,10 @@ def show_label_metrics():
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.anno_file_name:
-                    data_label_files['.'] = [task.anno_file_name]
+                    if data_label_files.get('.'):
+                        data_label_files['.'].append(task.anno_file_name)
+                    else:
+                        data_label_files['.'] = [task.anno_file_name]
 
         class_labels, overlap_areas, dimensions, errors = get_label_metrics(data_label_files)
 

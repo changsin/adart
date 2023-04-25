@@ -3,7 +3,7 @@ import os
 import numpy as np
 import streamlit.components.v1 as components
 
-from .image_manager import DartImageManager
+from .image_manager import ImageManager
 
 _RELEASE = True
 
