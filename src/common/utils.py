@@ -96,6 +96,9 @@ def get_resolution(filename: str) -> (int, int):
 
     return width, height
 
+
+def from_text_file(text_file):
+    return Path(text_file).read_text()
     # if ext.lower() == '.jpg':
     #     with open(filename, 'rb') as f:
     #         # Jump to the start of the frame (SOI marker) and read 4 bytes

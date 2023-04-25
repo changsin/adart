@@ -139,8 +139,12 @@ def is_authenticated():
 def main():
     st.set_page_config(page_title="ART", layout="wide")
     st.header("**ART** - AI Reviewing Tool")
-    st.subheader("Under Construction")
-    st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
+    #st.subheader("Under Construction")
+    #st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
+    
+    intro_markdown = from_text_file("./adart_homepage.md")
+    st.markdown(intro_markdown, unsafe_allow_html=True)
+
 
 
 if __name__ == '__main__':
