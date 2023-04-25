@@ -141,9 +141,8 @@ def main():
     st.header("**ART** - AI Reviewing Tool")
     #st.subheader("Under Construction")
     #st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
-    def read_markdown_file(markdown_file):
-        return Path(markdown_file).read_text()
-    intro_markdown = read_markdown_file("./adart_homepage.md")
+    
+    intro_markdown = from_text_file("./adart_homepage.md")
     st.markdown(intro_markdown, unsafe_allow_html=True)
 
 
