@@ -12,9 +12,9 @@ from src.models.data_labels import DataLabels
 """
 
 
-class DartImageManager:
+class ImageManager:
     """ImageManager
-    Manage the image object.
+    Manages the image object.
 
     Args:
         image_folder(str): the image folder.
@@ -112,7 +112,19 @@ class DartImageManager:
 
         return resized_img
 
-    def _scale_down_shape(self, idx, shape):
+    def upscale_shape(self, shape):
+        if shape['shapeType'] == 'box':
+            points = shape['points'][0]
+            x = points['x'] * self._resized_ratio_w
+            y = points['y'] * self._resized_ratio_h
+            w = points['w'] * self._resized_ratio_w
+            h = points['h'] * self._resized_ratio_h
+            shape['points'] = [[x, y, x + w, y + h]]
+
+        # TODO: later upscale other shape types as needed
+        return shape
+
+    def _downscale_shape(self, idx, shape):
         if not shape:
             return shape
 
@@ -166,7 +178,7 @@ class DartImageManager:
         """
         resized_shapes = []
         for idx, shape in enumerate(self._shapes):
-            resized_shapes.append(self._scale_down_shape(idx, shape))
+            resized_shapes.append(self._downscale_shape(idx, shape))
 
         return resized_shapes
 
@@ -222,7 +234,12 @@ class DartImageManager:
                     elif pt['y'] > max_y:
                         max_y = int(pt['y'])
 
+                min_x = min_x if min_x >= 0 else 0
+                min_y = min_y if min_y >= 0 else 0
+                max_x = max_x if max_x < self._img.width else self._img.width
+                max_y = max_y if max_y < self._img.height else self._img.height
                 print("{}:{}, {}:{}".format(min_y, max_y, min_x, max_x))
+
                 prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
                 prev_img = prev_img[min_y:max_y, min_x:max_x]
 

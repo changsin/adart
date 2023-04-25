@@ -8,7 +8,7 @@ from src.home import select_task
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.viewer.streamlit_img_label import st_img_label
-from src.viewer.streamlit_img_label.image_manager import DartImageManager
+from src.viewer.streamlit_img_label.image_manager import ImageManager
 
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
@@ -85,7 +85,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         # Main content: review images
         image_index = st.session_state['image_index']
 
-        im = DartImageManager(task_folder, data_labels.images[image_index])
+        im = ImageManager(task_folder, data_labels.images[image_index])
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
@@ -100,22 +100,11 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             # if shape_id is new, it's an untagged label
             if selected_shape_id >= len(data_labels.images[image_index].objects):
                 st.write("Untagged box added")
-                untagged_dict = dict()
-                untagged_dict['label'] = selected_shape['label']
-                untagged_dict['type'] = selected_shape['shapeType']
-
+                selected_shape = im.upscale_shape(selected_shape)
+                selected_shape['type'] = selected_shape['shapeType']
+                del selected_shape['shapeType']
                 print(selected_shape)
-                resized_shape = selected_shape['points'][0]
-                x, y, w, h = (
-                    resized_shape['x'] * im._resized_ratio_w,
-                    resized_shape['y'] * im._resized_ratio_h,
-                    resized_shape['w'] * im._resized_ratio_w,
-                    resized_shape['h'] * im._resized_ratio_h
-                )
-                untagged_dict['points'] = [[x, y, x + w, y + h]]
-
-                untagged_dict['verification_result'] = selected_shape['verification_result']
-                untagged_object = DataLabels.Object.from_json(untagged_dict)
+                untagged_object = DataLabels.Object.from_json(selected_shape)
                 data_labels.images[image_index].objects.append(untagged_object)
             else:
                 # print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
