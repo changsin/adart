@@ -11,7 +11,7 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         color = "red";
         console.log(shape)
     }
-    const annotation = new fabric.Rect({
+    const box = new fabric.Rect({
         left: x,
         top: y,
         fill: "",
@@ -25,85 +25,85 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         opacity: opacity
     })
     const text = new fabric.Text(label, {
-            left: x,
-            top: y + 20,
-            fontFamily: "Arial",
-            fontSize: 14,
-            fontWeight: "bold",
-            fill: color,
-            opacity: opacity
-        })
-    const selectedAnnotation = new fabric.Rect({
-            left: x,
-            top: y,
-            fill: "",
-            width: w,
-            height: h,
-            objectCaching: true,
-            stroke: color,
-            strokeWidth: 5,
-            strokeUniform: true,
-            hasRotatingPoint: false,
-            selectable: false,
-            visible: false,
-            lockMovementX: true, // Set lockMovementX to true
-            lockMovementY: true, // Set lockMovementY to true
-            opacity: opacity
-        })
-    canvas.add(annotation)
+        left: x,
+        top: y + 20,
+        fontFamily: "Arial",
+        fontSize: 14,
+        fontWeight: "bold",
+        fill: color,
+        opacity: opacity
+    })
+    const selectedBox = new fabric.Rect({
+        left: x,
+        top: y,
+        fill: "",
+        width: w,
+        height: h,
+        objectCaching: true,
+        stroke: color,
+        strokeWidth: 5,
+        strokeUniform: true,
+        hasRotatingPoint: false,
+        selectable: false,
+        visible: false,
+        lockMovementX: true, // Set lockMovementX to true
+        lockMovementY: true, // Set lockMovementY to true
+        opacity: opacity
+    })
+    canvas.add(box)
     // canvas.add(text)
-    canvas.add(selectedAnnotation)
+    canvas.add(selectedBox)
 
-    annotation.on("mousedown", () => {
+    box.on("mousedown", () => {
         canvas.discardActiveObject(); // Deselect any previously selected object
         console.log("selectedAnnotation")
-        if (selectedAnnotation.visible) {
+        if (selectedBox.visible) {
             // If the annotation is already selected, deselect it
-            annotation.trigger("deselected"); // Manually trigger the deselected event
-            selectedAnnotation.visible = false;
+            box.trigger("deselected"); // Manually trigger the deselected event
+            selectedBox.visible = false;
         } else {
             // Otherwise, select the annotation
-            selectedAnnotation.set({
+            selectedBox.set({
             left: x,
             top: y,
             width: w,
             height: h,
             visible: true,
             });
-            canvas.setActiveObject(selectedAnnotation);
-            annotation.trigger("selected"); // Manually trigger the selected event
+            canvas.setActiveObject(selectedBox);
+            box.trigger("selected"); // Manually trigger the selected event
         }
     });
 
-    annotation.on("mouseup", (event) => {
+    box.on("mouseup", (event) => {
         if (!event.target) {
         // If no object is clicked, deselect any selected object
         const activeObject = canvas.getActiveObject();
-        if (activeObject === selectedAnnotation) {
-            annotation.trigger("deselected"); // Manually trigger the deselected event
-            selectedAnnotation.visible = false;
+        if (activeObject === selectedBox) {
+            box.trigger("deselected"); // Manually trigger the deselected event
+            selectedBox.visible = false;
         }
         }
     });
     
     // Add a click event listener to show the highlight rectangle
-    annotation.on("selected", () => {
-        selectedAnnotation.set({
+    box.on("selected", () => {
+        selectedBox.set({
         left: x,
         top: y,
         width: w,
         height: h,
         visible: true,
         });
-        canvas.setActiveObject(selectedAnnotation);
+        canvas.setActiveObject(selectedBox);
 
         console.log("selected " + shape)
         sendSelectedShape(shape)
     });
 
     // Add a click event listener to hide the highlight rectangle
-    annotation.on("deselected", () => {
-        selectedAnnotation.visible = false;
+    box.on("deselected", () => {
+        selectedBox.visible = false;
     });
 
     return null;
