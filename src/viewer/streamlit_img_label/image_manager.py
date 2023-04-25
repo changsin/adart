@@ -269,17 +269,21 @@ class ImageManager:
         # return [self._chop_shape_img(shape) for shape in self._current_shapes]
         return self._chop_shape_img(shape)
 
-    def set_annotation(self, index, label):
+    def set_error(self, index, label, comment):
         """set the label of the image.
 
         Args:
             index(int): the index of the list of bounding boxes of the image.
             label(str): the label of the bounding box
+            comment(str): comment
         """
         if label and label != 'No error':
             print("index {} label {}".format(index, label))
+            verification_result = dict()
+            if self.image_labels.objects[index].verification_result:
+                verification_result = self.image_labels.objects[index].verification_result
 
-            if not self.image_labels.objects[index].verification_result:
-                self.image_labels.objects[index].verification_result = dict()
+            verification_result['error_code'] = label
+            verification_result['comment'] = comment
 
-            self.image_labels.objects[index].verification_result['error_code'] = label
+            self.image_labels.objects[index].verification_result = verification_result

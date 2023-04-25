@@ -137,8 +137,11 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     st.dataframe(selected_shape)
                 with col2:
                     default_index = 0
+                    default_comment = None
+                    verification_result = im.image_labels.objects[selected_shape_id].verification_result
                     if im.image_labels.objects[selected_shape_id].verification_result:
-                        error_code = im.image_labels.objects[selected_shape_id].verification_result['error_code']
+                        error_code = verification_result['error_code']
+                        default_comment = verification_result.get('comment', None)
                         default_index = error_codes.index(error_code)
 
                     select_label = col2.selectbox(
@@ -147,7 +150,9 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     if select_label:
                         print("verification_result {}".format(im.image_labels.objects[selected_shape_id]
                                                               .verification_result))
-                        im.set_annotation(selected_shape_id, select_label)
+
+                        comment = col2.text_input("Comment", default_comment)
+                        im.set_error(selected_shape_id, select_label, comment)
 
 #
 # if __name__ == "__main__":

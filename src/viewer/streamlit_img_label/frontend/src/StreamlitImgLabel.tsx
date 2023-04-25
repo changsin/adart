@@ -77,12 +77,18 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         if (canvas) {
             // Add shapes to the canvas
             shapes.forEach((shape) => {
+                let color = shapeColor;
+                if (shape.verification_result?.error_code &&
+                    shape.verification_result?.error_code.length > 0) {
+                    console.log(shape.verification_result)
+                    color = "red";
+                }
                 if (shape.shapeType === "box") {
                 // // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
-                  Box({shape, color: shapeColor, opacity, canvas});
+                  Box({shape, color: color, opacity, canvas});
                 // FabricShape({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                    Spline({shape, color: shapeColor, opacity, canvas});
+                    Spline({shape, color: color, opacity, canvas});
                 } else if (shape.shapeType === "polygon" && polygonVisible === true) {
                     FabricShape({shape, color: "purple", opacity, canvas});
                 } else if (shape.shapeType === "VP") {

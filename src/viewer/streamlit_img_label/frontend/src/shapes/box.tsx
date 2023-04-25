@@ -6,11 +6,6 @@ import { sendSelectedShape } from "../streamlit-utils";
 export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
     const {shape_id, points, label } = shape;
     const {x, y, w, h} = points[0] as BoxPoint
-    if (label === "untagged") {
-        console.log("Detected " + shape.label + " " + shape.shape_id + " " + { x, y, w, h });
-        color = "red";
-        console.log(shape)
-    }
     const box = new fabric.Rect({
         left: x,
         top: y,
