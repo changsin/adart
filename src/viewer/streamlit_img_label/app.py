@@ -3,12 +3,64 @@ import os
 import pandas as pd
 import streamlit as st
 
-from src.common.constants import ADQ_WORKING_FOLDER, ErrorType
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    ErrorType,
+    Type1Shape1Q,
+    Type2SingleDoubleW,
+    Type3PositionE,
+    Type4UnusualCaseR,
+    Type5ColorS,
+    Type6BicycleD,
+    BoundaryType2R,
+    TypeRoadMarkerQ
+)
 from src.home import select_task
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import ImageManager
+
+
+def _show_road_attributes(selected_shape: dict):
+    shape_type = selected_shape["shapeType"]
+    attributes_dict = selected_shape["attributes"]
+    if shape_type == "spline":
+        type1value = attributes_dict.get('type1', None)
+        type2value = attributes_dict.get('type2', None)
+        type3value = attributes_dict.get('type3', None)
+        type4value = attributes_dict.get('type4', None)
+        type5value = attributes_dict.get('type5', None)
+        type6value = attributes_dict.get('type6', None)
+
+        print("{} {}".format(type3value, Type3PositionE.get_index(type3value)))
+        print("Type3 index value is {} ".format(Type3PositionE.get_all_types()[Type3PositionE.get_index(type3value)]))
+
+        st.selectbox("1.Shape1(Q)", Type1Shape1Q.get_all_types(),
+                     index=Type1Shape1Q.get_index(type1value) if type1value else 0)
+        st.selectbox("2.Single/Double(W)", Type2SingleDoubleW.get_all_types(),
+                     index=Type2SingleDoubleW.get_index(type2value) if type2value else 0)
+        st.selectbox("3.Position(E)", Type3PositionE.get_all_types(),
+                     index=Type3PositionE.get_index(type3value) if type3value else 0)
+        st.selectbox("4.Unusual Case(R)", Type4UnusualCaseR.get_all_types(),
+                     index=Type4UnusualCaseR.get_index(type4value) if type4value else 0)
+        st.selectbox("5.Color(S)", Type5ColorS.get_all_types(),
+                     index=Type5ColorS.get_index(type5value) if type5value else 0)
+        st.selectbox("6.Bicycle(S)", Type6BicycleD.get_all_types(),
+                     index=Type6BicycleD.get_index(type6value) if type6value else 0)
+    elif shape_type == "boundary":
+        type3value = attributes_dict.get('type3', None)
+        boundary4value = attributes_dict.get('boundary', None)
+
+        st.selectbox("3.Position(E)", Type3PositionE.get_all_types(),
+                     index=Type3PositionE.get_index(type3value) if type3value else 0)
+        st.selectbox("2.Boundary type)", Type4UnusualCaseR.get_all_types(),
+                     index=BoundaryType2R.get_index(boundary4value) if boundary4value else 0)
+
+    elif shape_type == "polygon":
+        type_value = attributes_dict.get('type', None)
+        st.selectbox("1.Road marker type(Q)", Type3PositionE.get_all_types(),
+                     index=TypeRoadMarkerQ.get_index(type_value) if type_value else 0)
 
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
@@ -130,12 +182,15 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
             if preview_img and preview_label:
                 preview_img.thumbnail((200, 200))
-                col1, col2 = st.columns(2)
+                col1, col2, col3 = st.columns(3)
                 with col1:
                     col1.image(preview_img)
                     st.write(preview_label)
                     st.dataframe(selected_shape)
                 with col2:
+                    print(selected_shape)
+                    _show_road_attributes(selected_shape)
+                with col3:
                     default_index = 0
                     default_comment = None
                     verification_result = im.image_labels.objects[selected_shape_id].verification_result
@@ -144,15 +199,11 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                         default_comment = verification_result.get('comment', None)
                         default_index = error_codes.index(error_code)
 
-                    select_label = col2.selectbox(
+                    select_label = col3.selectbox(
                         "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
                     )
-                    if select_label:
-                        print("verification_result {}".format(im.image_labels.objects[selected_shape_id]
-                                                              .verification_result))
-
-                        comment = col2.text_input("Comment", default_comment)
-                        im.set_error(selected_shape_id, select_label, comment)
+                    comment = col3.text_input("Comment", default_comment)
+                    im.set_error(selected_shape_id, select_label, comment)
 
 #
 # if __name__ == "__main__":

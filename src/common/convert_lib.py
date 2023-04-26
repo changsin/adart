@@ -197,7 +197,7 @@ def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: 
         bbox_w, bbox_h = annotation['bbox_w'], annotation['bbox_h']
         bbox_xM, bbox_yM = annotation['bbox_xM'], annotation['bbox_yM']
 
-        object_dict['points'] = [int(bbox_x), int(bbox_y), int(bbox_x) + int(bbox_w), int(bbox_y) + int(bbox_h)]
+        object_dict['points'] = [[int(bbox_x), int(bbox_y), int(bbox_x) + int(bbox_w), int(bbox_y) + int(bbox_h)]]
         object_dict['label'] = annotation['classes']
         object_dict['group_id'] = annotation['bbox_id']
         object_dict['type'] = 'box'
@@ -236,6 +236,42 @@ def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: 
 
 
 def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_folder: str) -> str:
+    def _parse_points(element: ET.Element) -> list:
+        points = []
+        for point in element.findall('Point'):
+            x = point.get('x')
+            y = point.get('y')
+            if point.get('r'):
+                r = point.get('r')
+                points.append((float(x), float(y), float(r)))
+            else:
+                points.append((float(x), float(y)))
+        return points
+
+    def _parse_attributes(element: ET.Element) -> dict:
+        attributes_dict = dict()
+        # Iterate over the attributes of the element
+        for attr_name, attr_value in element.attrib.items():
+            # the attribute values are string in xml but converting them to numbers for ease of handling later on
+            if element.tag.lower() == "occlusion":
+                attributes_dict[attr_name] = float(attr_value)
+            else:
+                attributes_dict[attr_name] = int(attr_value)
+        return attributes_dict
+
+    def _parse_attributes_occlusions(element: ET.Element) -> dict:
+        attributes_dict = _parse_attributes(element)
+
+        # Specific to Spline & Boundary, it can have occlusion element
+        # Add it as an attribute
+        el_occlusions = element.findall('Occlusion')
+        if el_occlusions:
+            attributes_dict['occlusions'] = []
+            for el_occlusion in el_occlusions:
+                attributes_dict['occlusions'].append(_parse_attributes(el_occlusion))
+
+        return attributes_dict
+
     if img_annof_relation != '11':
         return
 
@@ -268,10 +304,8 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
         el_vanishing_point = root.find('VP')
         if el_vanishing_point is not None and el_vanishing_point.get('hasVP'):
             vanishing_point_dict = dict()
-
             vanishing_point_dict['label'] = 'VP'
             vanishing_point_dict['type'] = 'VP'
-
             # Extract the VP coordinates
             x_ratio = float(el_vanishing_point.get('x_ratio'))
             y_ratio = float(el_vanishing_point.get('y_ratio'))
@@ -286,57 +320,21 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
         if el_splines:
             for el_spline in el_splines.findall('Spline'):
                 spline_dict = dict()
-                spline_dict['label'] = 'spline'
-                spline_dict['type'] = 'spline'
-
-                points = []
-                for point in el_spline.findall('Point'):
-                    x = point.get('x')
-                    y = point.get('y')
-                    r = point.get('r')
-                    points.append((float(x), float(y), float(r)))
+                spline_dict['label'] = el_spline.tag.lower()
+                spline_dict['type'] = el_spline.tag.lower()
                 # sort the control points by y as they can be out of order
-                spline_dict['points'] = sorted(points, key=lambda p: p[1])
-
-                attributes_dict = dict()
-                # Iterate over the attributes of the element
-                for attr_name, attr_value in el_spline.attrib.items():
-                    attributes_dict[attr_name] = attr_value
-
-                # Specific to Spline, it can have occlusion element
-                # Add it as an attribute
-                el_occlusions = el_spline.findall('Occlusion')
-                if el_occlusions:
-                    occlusions = []
-                    for el_occlusion in el_occlusions:
-                        for attr_name, attr_value in el_occlusion.attrib.items():
-                            occlusions.append({attr_name: attr_value})
-                    attributes_dict['occlusions'] = occlusions
-
-                spline_dict['attributes'] = attributes_dict
-
+                spline_dict['points'] = sorted(_parse_points(el_spline), key=lambda p: p[1])
+                spline_dict['attributes'] = _parse_attributes_occlusions(el_spline)
                 label_objects.append(spline_dict)
 
         el_polygons = root.find('Polygons')
         if el_polygons:
-            for polygon in el_polygons.findall('Polygon'):
+            for el_polygon in el_polygons.findall('Polygon'):
                 polygon_dict = dict()
-                polygon_dict['label'] = 'polygon'
-                polygon_dict['type'] = 'polygon'
-
-                points = []
-                for point in polygon.findall('Point'):
-                    x = point.get('x')
-                    y = point.get('y')
-                    points.append((float(x), float(y)))
-
-                polygon_dict['points'] = points
-
-                attributes_dict = dict()
-                # Iterate over the attributes of the element
-                for attr_name, attr_value in polygon.attrib.items():
-                    attributes_dict[attr_name] = attr_value
-                polygon_dict['attributes'] = attributes_dict
+                polygon_dict['label'] = el_polygon.tag.lower()
+                polygon_dict['type'] = el_polygon.tag.lower()
+                polygon_dict['points'] = sorted(_parse_points(el_polygon), key=lambda p: p[1])
+                polygon_dict['attributes'] = _parse_attributes(el_polygon)
 
                 label_objects.append(polygon_dict)
 
@@ -344,35 +342,10 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
         if el_boundaries:
             for el_boundary in el_boundaries.findall('Boundary'):
                 boundary_dict = dict()
-                boundary_dict['label'] = 'boundary'
-                boundary_dict['type'] = 'boundary'
-
-                points = []
-                for point in el_boundary.findall('Point'):
-                    x = point.get('x')
-                    y = point.get('y')
-                    r = point.get('r')
-                    points.append((float(x), float(y), int(r)))
-
-                # sort the control points by y as they can be out of order
-                boundary_dict['points'] = sorted(points, key=lambda p: p[1])
-
-                attributes_dict = dict()
-                # Iterate over the attributes of the element
-                for attr_name, attr_value in el_boundary.attrib.items():
-                    attributes_dict[attr_name] = attr_value
-
-                # Specific to Spline, it can have occlusion element
-                # Add it as an attribute
-                el_occlusion = el_boundary.findall('Occlusion')
-                if el_occlusion:
-                    occlusion_dict = dict()
-                    for attr_name, attr_value in el_occlusion[0].attrib.items():
-                        occlusion_dict[attr_name] = attr_value
-                    attributes_dict['occlusion'] = occlusion_dict
-
-                boundary_dict['attributes'] = attributes_dict
-
+                boundary_dict['label'] = el_boundary.tag.lower()
+                boundary_dict['type'] = el_boundary.tag.lower()
+                boundary_dict['points'] = sorted(_parse_points(el_boundary), key=lambda p: p[1])
+                boundary_dict['attributes'] = _parse_attributes_occlusions(el_boundary)
                 label_objects.append(boundary_dict)
 
         cur_img['objects'] = label_objects
@@ -385,7 +358,6 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
 
     # directly write to the destination
     target_filename = os.path.join(target_folder, filename + '.json')
-    print(output_jdict)
     json_data = json.dumps(output_jdict, default=utils.default, indent=2, ensure_ascii=False)
     utils.to_file(json_data, target_filename)
 

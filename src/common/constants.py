@@ -47,6 +47,246 @@ class ErrorType(Enum):
         return [""] + [error_type.description for error_type in ErrorType]
 
 
+# Type1
+class Type1Shape1Q(Enum):
+    NONE = (0, "None")
+    SOLID = (1, "Solid")
+    DOTTED = (2, "Dotted")
+    CATSEYE = (3, "CatsEye")
+    ZIGZAG = (4, "Zigzag")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type1Shape1Q):
+            print("{} {}".format(member, value))
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type1Shape1Q]
+
+
+# Type2
+class Type2SingleDoubleW(Enum):
+    NONE = (0, "None")
+    SINGLE = (1, "Single")
+    DOUBLE = (2, "Double")
+    ACCESSORIES = (3, "Accessories")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type2SingleDoubleW):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type2SingleDoubleW]
+
+
+# Type3
+class Type3PositionE(Enum):
+    NONE = (0, "None")
+    L = (-255, "L")     # together with Opposite Type4
+    L1 = (1, "L1")
+    L1_2 = (1537, "L1_2")
+    L2 = (257, "L2")
+    L3 = (513, "L3")
+    L4 = (769, "L4")
+    L5 = (1025, "L5")
+    L6 = (1281, "L6")
+    LU = (1793, "U(LU)")
+
+    R = (-254, "R")     # together with Opposite Type4
+    R1 = (2, "R1")
+    R1_2 = (1538, "R1_2")
+    R2 = (258, "R2")
+    R3 = (514, "R3")
+    R4 = (770, "R4")
+    R5 = (1026, "R5")
+    R6 = (1282, "R6")
+    RU = (1784, "U(RU)")
+
+    U = (-253, "U")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type3PositionE):
+            if member.value == value:
+                return i
+        # TODO: not all values are known
+        print('Invalid value')
+        return 0
+        # raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type3PositionE]
+
+
+# Type4
+class Type4UnusualCaseR(Enum):
+    NONE = (0, "None")
+    COMBINATION = (1, "Combination")
+    BRANCH = (2, "Branch")
+    UNUSED = (3, "Unused")
+    OPPOSITE = (4, "Opposite")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type4UnusualCaseR):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type4UnusualCaseR]
+
+
+# Type4
+class BoundaryType2R(Enum):
+    NONE = (0, "None")
+    BEACON = (9, "Beacon(1)")
+    PLASTIC_WALL = (7, "Plastic wall(2)")
+    DRUM = (8, "Drum(3)")
+    CONE = (10, "Cone(4)")
+    WALL = (1, "Wall(5)")
+    GUARDRAIL = (3, "Guardrail(6)")
+    FIXED_DIVIDER = (4, "Fixed divider(7)")
+    TEMPORARY_DIVIDER = (6, "Temporary divider(8)")
+    FIXED_PARKING = (2, "Fixed parking(9)")
+    STRUCTURE = (14, "Structure(10)")
+    CURB = (5, "Curb(11)")
+    EDGE = (11, "Edge(12)")
+    INDOOR_PARKING_LOT = (12, "Indoor parking lot(13)")
+    UNEXPLAINABLE = (13, "Unexplainable(14)")
+    ETC = (15, "Etc.(15)")
+    LOW_CURB = (16, "Low curb(16)")
+    LOW_BOUNDARY = (17, "Low boundary(17)")
+    SNOW_PILE = (18, "Snow pile(18)")
+    SNOW_WALL = (19, "Snow wall(19)")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type4UnusualCaseR):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type4UnusualCaseR]
+
+
+# Type5
+class Type5ColorS(Enum):
+    NONE = (0, "None")
+    WHITE = (1, "White")
+    YELLOW = (2, "Yellow")
+    BLUE = (3, "Blue")
+    OTHER = (4, "Other")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type5ColorS):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type5ColorS]
+
+
+# Type6
+class Type6BicycleD(Enum):
+    NONE = (0, "None")
+    BICYCLED = (1, "Bicycle")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(Type6BicycleD):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in Type6BicycleD]
+
+
+# Type road marker
+class TypeRoadMarkerQ(Enum):
+    NONE = (0, "Uncertain/difficult to classify")
+    STOP_LINE = (1, "Stop line")
+    PEDESTRIAN_CROSSING = (2, "Pedestrian crossing")
+    DIRECTIONAL_ARROWS = (3, "Directional arrows")
+    SPEED_BREAKER = (4, "Speed breaker")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+        return obj
+
+    @staticmethod
+    def get_index(value):
+        for i, member in enumerate(TypeRoadMarkerQ):
+            if member.value == value:
+                return i
+        raise ValueError('Invalid value')
+
+    @staticmethod
+    def get_all_types():
+        return [item.description for item in TypeRoadMarkerQ]
+
+
 class DomainCode(Enum):
     DMN_FARM = (1, "Farming")   # "농,축,수산업"
     DMN_CULTURE = (2, "Culture, Sports, Tourism")       # "문화,스포츠,관광
