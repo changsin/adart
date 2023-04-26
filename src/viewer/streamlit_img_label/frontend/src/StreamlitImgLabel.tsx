@@ -1,11 +1,11 @@
-import { useEffect, useState, ChangeEvent } from "react"
-import { Range, getTrackBackground } from 'react-range'
+import { useEffect, useState } from "react"
 import {
     ComponentProps,
     Streamlit,
     withStreamlitConnection,
 } from "streamlit-component-lib"
 import { fabric } from "fabric"
+import { inflateSync } from "zlib"
 import styles from "./StreamlitImgLabel.module.css"
 import {
     BoxPoint,
@@ -45,6 +45,19 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     invisCanvas.width = canvasWidth
     invisCanvas.height = canvasHeight
+  
+    // Decompress imageData on mount
+    const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
+        new Uint8ClampedArray()
+    );
+    useEffect(() => {
+        // decompress imageData using zlib
+        const compressedArray = new Uint8Array(imageData);
+        const compressedBuffer = Buffer.from(compressedArray);
+        const decompressedArray = inflateSync(compressedBuffer);
+        const decompressedData = new Uint8ClampedArray(decompressedArray);
+        setDecompressedData(decompressedData);
+    }, [imageData]);
 
     // create imageData object
     let dataUri: any
@@ -52,7 +65,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         var idata = ctx.createImageData(canvasWidth, canvasHeight)
 
         // set our buffer as source
-        idata.data.set(imageData)
+        idata.data.set(decompressedData)
 
         // update canvas with new data
         ctx.putImageData(idata, 0, 0)

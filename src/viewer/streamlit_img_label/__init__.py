@@ -1,4 +1,5 @@
 import os
+import zlib
 
 import numpy as np
 import streamlit.components.v1 as components
@@ -44,7 +45,8 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None) -> d
     canvasHeight = resized_img.height
 
     # Translates image to a list for passing to Javascript
-    imageData = np.array(resized_img.convert("RGBA")).flatten().tolist()
+    # imageData = np.array(resized_img.convert("RGBA")).flatten().tolist()
+    imageData = np.array(resized_img.convert("RGBA")).flatten().tobytes()
 
     # Call through to our private component function. Arguments we pass here
     # will be sent to the frontend, where they'll be available in an "args"
@@ -53,12 +55,14 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None) -> d
     # Defaults to a box whose vertices are at 20% and 80% of height and width.
     # The _recommended_box function could be replaced with some kind of image
     # detection algorith if it suits your needs.
+    # compress the imageData using gzip
+    compressed_image_data = zlib.compress(imageData)
     component_value = _component_func(
         canvasWidth=canvasWidth,
         canvasHeight=canvasHeight,
         shapes=shape_props,
         shapeColor=shape_color,
-        imageData=imageData,
+        imageData=compressed_image_data,
         key=key,
     )
 

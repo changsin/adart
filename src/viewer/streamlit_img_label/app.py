@@ -147,6 +147,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         # Display cutout boxes
         selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
         if selected_shape:
+            print(selected_shape)
             selected_shape_id = selected_shape["shape_id"]
             # preview_img, preview_label = im.init_annotation(selected_shape)
             # if shape_id is new, it's an untagged label
@@ -155,7 +156,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 selected_shape = im.upscale_shape(selected_shape)
                 selected_shape['type'] = selected_shape['shapeType']
                 del selected_shape['shapeType']
-                print(selected_shape)
                 untagged_object = DataLabels.Object.from_json(selected_shape)
                 data_labels.images[image_index].objects.append(untagged_object)
             else:
@@ -188,7 +188,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 # st.write(preview_label)
                 st.dataframe(selected_shape)
             with col2:
-                print(selected_shape)
                 _show_road_attributes(selected_shape)
             with col3:
                 default_index = 0
