@@ -142,8 +142,9 @@ def main():
     #st.subheader("Under Construction")
     #st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
     
-    intro_markdown = from_text_file("./adart_homepage.md")
+    intro_markdown = utils.from_text_file("/home/adqdev/workspace/dart/adart_homepage.md")
     st.markdown(intro_markdown, unsafe_allow_html=True)
+    st.image(os.path.join(os.pardir, "data", "/home/adqdev/workspace/dart/workflow1.png"), use_column_width=False)
 
 
 
