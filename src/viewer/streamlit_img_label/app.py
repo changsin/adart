@@ -54,12 +54,12 @@ def _show_road_attributes(selected_shape: dict):
 
         st.selectbox("3.Position(E)", Type3PositionE.get_all_types(),
                      index=Type3PositionE.get_index(type3value) if type3value else 0)
-        st.selectbox("2.Boundary type)", Type4UnusualCaseR.get_all_types(),
+        st.selectbox("2.Boundary type(R)", BoundaryType2R.get_all_types(),
                      index=BoundaryType2R.get_index(boundary4value) if boundary4value else 0)
 
     elif shape_type == "polygon":
         type_value = attributes_dict.get('type', None)
-        st.selectbox("1.Road marker type(Q)", Type3PositionE.get_all_types(),
+        st.selectbox("1.Road marker type(Q)", TypeRoadMarkerQ.get_all_types(),
                      index=TypeRoadMarkerQ.get_index(type_value) if type_value else 0)
 
 
@@ -148,7 +148,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
         if selected_shape:
             selected_shape_id = selected_shape["shape_id"]
-            preview_img, preview_label = im.init_annotation(selected_shape)
+            # preview_img, preview_label = im.init_annotation(selected_shape)
             # if shape_id is new, it's an untagged label
             if selected_shape_id >= len(data_labels.images[image_index].objects):
                 st.write("Untagged box added")
@@ -180,30 +180,30 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     #          .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
                     #          .to_html(), unsafe_allow_html=True)
 
-            if preview_img and preview_label:
-                preview_img.thumbnail((200, 200))
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    col1.image(preview_img)
-                    st.write(preview_label)
-                    st.dataframe(selected_shape)
-                with col2:
-                    print(selected_shape)
-                    _show_road_attributes(selected_shape)
-                with col3:
-                    default_index = 0
-                    default_comment = None
-                    verification_result = im.image_labels.objects[selected_shape_id].verification_result
-                    if im.image_labels.objects[selected_shape_id].verification_result:
-                        error_code = verification_result['error_code']
-                        default_comment = verification_result.get('comment', None)
-                        default_index = error_codes.index(error_code)
+            # if preview_img and preview_label:
+            #     preview_img.thumbnail((200, 200))
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                # col1.image(preview_img)
+                # st.write(preview_label)
+                st.dataframe(selected_shape)
+            with col2:
+                print(selected_shape)
+                _show_road_attributes(selected_shape)
+            with col3:
+                default_index = 0
+                default_comment = None
+                verification_result = im.image_labels.objects[selected_shape_id].verification_result
+                if im.image_labels.objects[selected_shape_id].verification_result:
+                    error_code = verification_result['error_code']
+                    default_comment = verification_result.get('comment', None)
+                    default_index = error_codes.index(error_code)
 
-                    select_label = col3.selectbox(
-                        "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
-                    )
-                    comment = col3.text_input("Comment", default_comment)
-                    im.set_error(selected_shape_id, select_label, comment)
+                select_label = col3.selectbox(
+                    "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
+                )
+                comment = col3.text_input("Comment", default_comment)
+                im.set_error(selected_shape_id, select_label, comment)
 
 #
 # if __name__ == "__main__":

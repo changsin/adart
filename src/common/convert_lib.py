@@ -333,7 +333,7 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
                 polygon_dict = dict()
                 polygon_dict['label'] = el_polygon.tag.lower()
                 polygon_dict['type'] = el_polygon.tag.lower()
-                polygon_dict['points'] = sorted(_parse_points(el_polygon), key=lambda p: p[1])
+                polygon_dict['points'] = _parse_points(el_polygon)
                 polygon_dict['attributes'] = _parse_attributes(el_polygon)
 
                 label_objects.append(polygon_dict)

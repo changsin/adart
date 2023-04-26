@@ -67,7 +67,7 @@ class Type1Shape1Q(Enum):
             print("{} {}".format(member, value))
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -92,7 +92,7 @@ class Type2SingleDoubleW(Enum):
         for i, member in enumerate(Type2SingleDoubleW):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -135,10 +135,7 @@ class Type3PositionE(Enum):
         for i, member in enumerate(Type3PositionE):
             if member.value == value:
                 return i
-        # TODO: not all values are known
-        print('Invalid value')
-        return 0
-        # raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -164,7 +161,7 @@ class Type4UnusualCaseR(Enum):
         for i, member in enumerate(Type4UnusualCaseR):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -202,14 +199,14 @@ class BoundaryType2R(Enum):
 
     @staticmethod
     def get_index(value):
-        for i, member in enumerate(Type4UnusualCaseR):
+        for i, member in enumerate(BoundaryType2R):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
-        return [item.description for item in Type4UnusualCaseR]
+        return [item.description for item in BoundaryType2R]
 
 
 # Type5
@@ -231,7 +228,7 @@ class Type5ColorS(Enum):
         for i, member in enumerate(Type5ColorS):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -254,7 +251,7 @@ class Type6BicycleD(Enum):
         for i, member in enumerate(Type6BicycleD):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
@@ -267,7 +264,7 @@ class TypeRoadMarkerQ(Enum):
     STOP_LINE = (1, "Stop line")
     PEDESTRIAN_CROSSING = (2, "Pedestrian crossing")
     DIRECTIONAL_ARROWS = (3, "Directional arrows")
-    SPEED_BREAKER = (4, "Speed breaker")
+    SPEED_BREAKER = (4, "Speed bump/Speed breaker")
 
     def __new__(cls, value, description):
         obj = object.__new__(cls)
@@ -280,7 +277,7 @@ class TypeRoadMarkerQ(Enum):
         for i, member in enumerate(TypeRoadMarkerQ):
             if member.value == value:
                 return i
-        raise ValueError('Invalid value')
+        raise ValueError('Invalid value {}'.format(value))
 
     @staticmethod
     def get_all_types():
