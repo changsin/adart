@@ -1,3 +1,4 @@
+import copy
 import os
 
 import numpy as np
@@ -25,6 +26,7 @@ class ImageManager:
         """initiate module"""
         self.image_labels = image_labels
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
+        # NB: note that the shapes should be all in the ShapeProps format defined in interfaces.tsx in the frontend
         self._shapes = []
         self._selected_shape = dict()
         self._load_shapes()
@@ -40,6 +42,11 @@ class ImageManager:
         return self._img
 
     def _load_shapes(self):
+        """
+        loads shapes from DataLabels - note that the format of Objects (labels) changes as well.
+        Notably, points -> [[pts],[pts]...] to [[x: ..][y: ..]...] and type -> shapeType
+        :return:
+        """
         converted_shapes = []
         for label_object in self.image_labels.objects:
             shape = dict()
@@ -86,6 +93,34 @@ class ImageManager:
 
         self._shapes = converted_shapes
 
+    @staticmethod
+    def to_data_labels_shape(shape):
+        """
+        convert ShapeProps to DataLabels format
+        :param shape: shape in the ShapeProps format
+        :return: converted shape in the DataLabels format
+        """
+        converted_shape = copy.deepcopy(shape)
+        converted_points = []
+        if shape['shapeType'] == 'box':
+            points = shape['points'][0]
+            xtl, ytl = points['x'], points['y']
+            xbr, ybr = xtl + points['w'], ytl + points['h']
+            converted_points.append((xtl, ytl, xbr, ybr))
+        elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
+            for point in shape['points']:
+                x, y, r = point['x'], point['y'], point['r']
+                converted_points.append((x, y, r))
+        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+            for point in shape['points']:
+                x, y = point['x'], point['y']
+                converted_points.append((x, y))
+
+        converted_shape['points'] = converted_points
+        converted_shape['type'] = shape['shapeType']
+        del converted_shape['shapeType']
+        return converted_shape
+
     def resizing_img(self, max_height=1500, max_width=1500):
         """resizing the image by max_height and max_width.
 
@@ -113,16 +148,23 @@ class ImageManager:
         return resized_img
 
     def upscale_shape(self, shape):
-        if shape['shapeType'] == 'box':
-            points = shape['points'][0]
-            x = points['x'] * self._resized_ratio_w
-            y = points['y'] * self._resized_ratio_h
-            w = points['w'] * self._resized_ratio_w
-            h = points['h'] * self._resized_ratio_h
-            shape['points'] = [[x, y, x + w, y + h]]
+        scaled_shape = copy.deepcopy(shape)
+        if scaled_shape['shapeType'] == 'box':
+            print("shape['points'][0]: {}".format(shape['points'][0]))
+            points = scaled_shape['points'][0]
+            points['x'] = points['x'] * self._resized_ratio_w
+            points['y'] = points['y'] * self._resized_ratio_h
+            points['w'] = points['w'] * self._resized_ratio_w
+            points['h'] = points['h'] * self._resized_ratio_h
+            scaled_shape['points'] = [points]
+
+            print("points: {}".format(points))
+
+            print("shape: {} \nscaled: {} {}x{}".format(shape, scaled_shape,
+                                                       self._resized_ratio_w, self._resized_ratio_h))
 
         # TODO: later upscale other shape types as needed
-        return shape
+        return scaled_shape
 
     def _downscale_shape(self, idx, shape):
         if not shape:
@@ -131,7 +173,7 @@ class ImageManager:
         resized_shape = dict()
         resized_shape['shape_id'] = idx
         resized_shape['attributes'] = shape['attributes'] if shape['attributes'] else {}
-        resized_shape['verification_result'] = shape['verification_result'] if shape['verification_result']  else {}
+        resized_shape['verification_result'] = shape['verification_result'] if shape['verification_result'] else {}
         resized_shape['shapeType'] = shape['shapeType']
 
         if 'label' in shape:
@@ -171,10 +213,10 @@ class ImageManager:
         return resized_shape
 
     def get_resized_shapes(self):
-        """get resized the rects according to the resized image.
+        """get the resized shape according to the resized image.
 
         Returns:
-            resized_rects(list): the resized bounding boxes of the image.
+            resized_shapes(list): the resized shapes.
         """
         resized_shapes = []
         for idx, shape in enumerate(self._shapes):
@@ -191,35 +233,27 @@ class ImageManager:
 
         label = ""
         if shape:
+            print(shape)
             if shape['shapeType'] == 'box':
                 point_dict = shape['points'][0]
-                resized_points = dict()
-                resized_points['x'] = int(point_dict['x'] * self._resized_ratio_w)
-                resized_points['w'] = int(point_dict['w'] * self._resized_ratio_w)
-                resized_points['y'] = int(point_dict['y'] * self._resized_ratio_h)
-                resized_points['h'] = int(point_dict['h'] * self._resized_ratio_h)
-
                 x, y, w, h = (
-                    resized_points['x'],
-                    resized_points['y'],
-                    resized_points['w'],
-                    resized_points['h']
+                    int(point_dict['x']),
+                    int(point_dict['y']),
+                    int(point_dict['w']),
+                    int(point_dict['h'])
                 )
                 x = x if x > 0 else 0
                 y = y if y > 0 else 0
                 w = w if w > 0 else 1
                 h = h if h > 0 else 1
-                prev_img[y: y + h, x: x + w] = raw_image[y: y + h, x: x + w]
-                prev_img = prev_img[y: y + h, x: x + w]
+
+                x_end = x + w if x + w <= height else height
+                y_end = y + h if y + h <= width else width
+
+                prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
+                prev_img = prev_img[y:y_end, x:x_end]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
-                resized_points = []
-                for point in shape['points']:
-                    resized_point_dict = dict()
-                    resized_point_dict['x'] = point['x'] * self._resized_ratio_w
-                    resized_point_dict['y'] = point['y'] * self._resized_ratio_h
-
-                    resized_points.append(resized_point_dict)
-
+                resized_points = shape['points']
                 min_x = max_x = int(resized_points[0]['x'])
                 min_y = max_y = int(resized_points[0]['y'])
 
@@ -269,8 +303,8 @@ class ImageManager:
         # return [self._chop_shape_img(shape) for shape in self._current_shapes]
         return self._chop_shape_img(shape)
 
-    def set_error(self, index, label, comment):
-        """set the label of the image.
+    def set_review(self, index, label, comment):
+        """set the review label and comment.
 
         Args:
             index(int): the index of the list of bounding boxes of the image.

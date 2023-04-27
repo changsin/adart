@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import {
     ComponentProps,
     Streamlit,
@@ -46,26 +46,39 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     invisCanvas.width = canvasWidth
     invisCanvas.height = canvasHeight
   
-    // Decompress imageData on mount
-    const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
-        new Uint8ClampedArray()
-    );
-    useEffect(() => {
-        // decompress imageData using zlib
-        const compressedArray = new Uint8Array(imageData);
-        const compressedBuffer = Buffer.from(compressedArray);
-        const decompressedArray = inflateSync(compressedBuffer);
-        const decompressedData = new Uint8ClampedArray(decompressedArray);
-        setDecompressedData(decompressedData);
-    }, [imageData]);
+    // // Decompress imageData on mount
+    // const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
+    //     new Uint8ClampedArray()
+    // );
+    // // useEffect(() => {
+    // //     // decompress imageData using zlib
+    // //     const compressedArray = new Uint8Array(imageData);
+    // //     const compressedBuffer = Buffer.from(compressedArray);
+    // //     const decompressedArray = inflateSync(compressedBuffer);
+    // //     const decompressedData = new Uint8ClampedArray(decompressedArray);
+    // //     setDecompressedData(decompressedData);
+    // // }, [imageData]);
 
+    // const decompressedImageData = useMemo(() => {
+    //     // decompress imageData using zlib
+    //     const compressedArray = new Uint8Array(imageData);
+    //     const compressedBuffer = Buffer.from(compressedArray);
+    //     const decompressedArray = inflateSync(compressedBuffer);
+    //     return new Uint8ClampedArray(decompressedArray);
+    // }, [imageData]);
+      
+    // useEffect(() => {
+    //     setDecompressedData(decompressedImageData);
+    // }, [decompressedImageData]);
+      
     // create imageData object
     let dataUri: any
     if (ctx) {
         var idata = ctx.createImageData(canvasWidth, canvasHeight)
 
         // set our buffer as source
-        idata.data.set(decompressedData)
+        // idata.data.set(decompressedData)
+        idata.data.set(imageData)
 
         // update canvas with new data
         ctx.putImageData(idata, 0, 0)
@@ -93,7 +106,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 let color = shapeColor;
                 if (shape.verification_result?.error_code &&
                     shape.verification_result?.error_code.length > 0) {
-                    console.log(shape.verification_result)
                     color = "red";
                 }
                 if (shape.shapeType === "box") {
@@ -162,6 +174,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             (box.points[0] as BoxPoint).w = newRect.width ?? 0;
             (box.points[0] as BoxPoint).h = newRect.height ?? 0;
 
+            console.log("sending ");
+            console.log(box);
             sendSelectedShape(box);
             shapes.push(box)
         })

@@ -56,13 +56,14 @@ def st_img_label(resized_img, shape_color="blue", shape_props=[], key=None) -> d
     # The _recommended_box function could be replaced with some kind of image
     # detection algorith if it suits your needs.
     # compress the imageData using gzip
-    compressed_image_data = zlib.compress(imageData)
+    # compressed_image_data = zlib.compress(imageData)
     component_value = _component_func(
         canvasWidth=canvasWidth,
         canvasHeight=canvasHeight,
         shapes=shape_props,
         shapeColor=shape_color,
-        imageData=compressed_image_data,
+        # imageData=compressed_image_data,
+        imageData=imageData,
         key=key,
     )
 

@@ -141,23 +141,20 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
-
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
-        # Display cutout boxes
+        # Display the selected shape
         selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
         if selected_shape:
             print(selected_shape)
+            scaled_shape = im.upscale_shape(selected_shape)
             selected_shape_id = selected_shape["shape_id"]
-            # preview_img, preview_label = im.init_annotation(selected_shape)
             # if shape_id is new, it's an untagged label
             if selected_shape_id >= len(data_labels.images[image_index].objects):
                 st.write("Untagged box added")
-                selected_shape = im.upscale_shape(selected_shape)
-                selected_shape['type'] = selected_shape['shapeType']
-                del selected_shape['shapeType']
-                untagged_object = DataLabels.Object.from_json(selected_shape)
-                data_labels.images[image_index].objects.append(untagged_object)
+                untagged_object_to_save = DataLabels.Object.from_json(im.to_data_labels_shape(scaled_shape))
+                # Add the new untagged box to the data_labels
+                data_labels.images[image_index].objects.append(untagged_object_to_save)
             else:
                 # print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
                 #                                                      len(data_labels.images[image_index]
@@ -180,12 +177,14 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     #          .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
                     #          .to_html(), unsafe_allow_html=True)
 
-            # if preview_img and preview_label:
-            #     preview_img.thumbnail((200, 200))
             col1, col2, col3 = st.columns(3)
             with col1:
-                # col1.image(preview_img)
-                # st.write(preview_label)
+                preview_img, preview_label = im.init_annotation(scaled_shape)
+                if preview_img and preview_label:
+                    preview_img.thumbnail((200, 200))
+                    col1.image(preview_img)
+                    st.write(preview_label)
+
                 st.dataframe(selected_shape)
             with col2:
                 _show_road_attributes(selected_shape)
@@ -202,7 +201,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
                 )
                 comment = col3.text_input("Comment", default_comment)
-                im.set_error(selected_shape_id, select_label, comment)
+                im.set_review(selected_shape_id, select_label, comment)
 
 #
 # if __name__ == "__main__":
