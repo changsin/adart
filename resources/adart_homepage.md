@@ -11,4 +11,3 @@ This tool will also have provision for visual representation of both dataset sta
 
 ## ADaRT Workflows
 
-![image info](./workflow1.png)
