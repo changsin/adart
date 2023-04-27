@@ -26,7 +26,7 @@ def _display_attributes(selected_shape: dict):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
     if shape_type == "box":
-        st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index').transpose())
+        st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index'))
         points = selected_shape["points"]
         st.dataframe(pd.DataFrame(points))
     elif shape_type == "spline":
@@ -68,26 +68,27 @@ def _display_attributes(selected_shape: dict):
 
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
+    def save():
+        data_labels.save(selected_task.anno_file_name)
+
     def refresh():
         data_labels.save(selected_task.anno_file_name)
         st.session_state["img_files"] = image_filenames
         st.session_state["image_index"] = 0
 
-    def next_image():
-        data_labels.save(selected_task.anno_file_name)
-        image_index = st.session_state["image_index"]
-        if image_index < len(st.session_state["img_files"]) - 1:
-            st.session_state["image_index"] += 1
-        else:
-            st.warning('This is the last image.')
-
     def previous_image():
         data_labels.save(selected_task.anno_file_name)
-        image_index = st.session_state["image_index"]
-        if image_index > 0:
+        if st.session_state["image_index"] > 0:
             st.session_state["image_index"] -= 1
         else:
             st.warning('This is the first image.')
+
+    def next_image():
+        data_labels.save(selected_task.anno_file_name)
+        if st.session_state["image_index"] < len(st.session_state["img_files"]) - 1:
+            st.session_state["image_index"] += 1
+        else:
+            st.warning('This is the last image.')
 
     def go_to_image():
         data_labels.save(selected_task.anno_file_name)
@@ -115,9 +116,10 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         col1, col2 = st.sidebar.columns(2)
         with col1:
             st.button(label="< Previous", on_click=previous_image)
+            st.button(label="**Save**", on_click=save)
         with col2:
             st.button(label="Next >", on_click=next_image)
-        st.sidebar.button(label="Refresh", on_click=refresh)
+            st.button(label="Refresh", on_click=refresh)
 
         return image_index
 
