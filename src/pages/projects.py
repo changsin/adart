@@ -35,6 +35,7 @@ from src.home import (
     logout,
     select_project)
 from src.models.projects_info import Project, ModelProject
+from src.models.tasks_info import TasksInfo
 
 MULTI_SELECT_SEP = ';'
 
@@ -296,7 +297,7 @@ def delete_project():
                 shutil.rmtree(folder_path)
 
             # Then all the tasks
-            tasks_info = get_tasks_info()
+            tasks_info = TasksInfo.get_tasks_info()
             for selected_task in tasks_info.tasks:
                 if selected_task.project_id == selected_project.id:
                     tasks_info.tasks.remove(selected_task)

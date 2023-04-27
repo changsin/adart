@@ -119,6 +119,13 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
+        # Main content: review images
+        image_index = st.session_state['image_index']
+
+        if image_index >= n_files:
+            st.session_state['image_index'] = 0
+            image_index = 0
+
         st.sidebar.write("Total files:", n_files)
         st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
 
@@ -133,9 +140,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         with col2:
             st.button(label="Next >", on_click=next_image)
         st.sidebar.button(label="Refresh", on_click=refresh)
-
-        # Main content: review images
-        image_index = st.session_state['image_index']
 
         im = ImageManager(task_folder, data_labels.images[image_index])
         resized_img = im.resizing_img()
@@ -156,27 +160,12 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 # Add the new untagged box to the data_labels
                 data_labels.images[image_index].objects.append(untagged_object_to_save)
             else:
-                # print("accessing image_index {}, shape_id {}/{}".format(image_index, selected_shape_id,
-                #                                                      len(data_labels.images[image_index]
-                #                                        .objects)))
                 if data_labels.images[image_index].objects[selected_shape_id].attributes:
                     df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
                                                            .objects[selected_shape_id].attributes,
                                                            orient='index')
                 else:
-                    # print(data_labels.images[image_index]
-                    #                                        .objects[selected_shape_id])
-                    st.write(data_labels.images[image_index]
-                                                           .objects[selected_shape_id])
-                    # st.write(df_attributes.to_html(index=False, justify='center', classes='dataframe'), unsafe_allow_html=True)
-
-                    # # Display the dataframe as an HTML table with custom styling using st.write()
-                    # st.write(df_attributes.style.set_table_styles(
-                    #     [{'selector': 'th', 'props': [('background', '#3366cc'), ('color', 'white'), ('text-align', 'center')]},
-                    #      {'selector': 'td', 'props': [('text-align', 'center')]}])
-                    #          .set_properties(**{'font-size': '12pt', 'border-collapse': 'collapse', 'border': '1px solid black'})
-                    #          .to_html(), unsafe_allow_html=True)
-
+                    st.write(data_labels.images[image_index].objects[selected_shape_id])
             col1, col2, col3 = st.columns(3)
             with col1:
                 preview_img, preview_label = im.init_annotation(scaled_shape)

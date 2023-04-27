@@ -121,23 +121,25 @@ class ImageManager:
         del converted_shape['shapeType']
         return converted_shape
 
-    def resizing_img(self, max_height=1500, max_width=1500):
+    def resizing_img(self, min_width=700, min_height=700, max_height=1000, max_width=1000):
         """resizing the image by max_height and max_width.
 
         Args:
-            max_height(int): the max_height of the frame.
+            min_width(int): the min_width of the frame.
+            min_height(int): the min_height of the frame.
             max_width(int): the max_width of the frame.
+            max_height(int): the max_height of the frame.
         Returns:
             resized_img(PIL.Image): the resized image.
         """
         resized_img = self._img.copy()
-        if resized_img.height > max_height:
-            ratio = max_height / resized_img.height
+        if resized_img.height < min_height or resized_img.width < min_width:
+            ratio = max(min_height / resized_img.height, min_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
-        if resized_img.width > max_width:
-            ratio = max_width / resized_img.width
+        if resized_img.height > max_height or resized_img.width > max_width:
+            ratio = min(max_height / resized_img.height, max_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
