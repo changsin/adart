@@ -64,59 +64,33 @@ def _show_road_attributes(selected_shape: dict):
 
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
-    selected_task, selected_index = select_task(selected_project.id)
-    if selected_task:
-        task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                   str(selected_project.id),
-                                   str(selected_task.id))
-        data_labels = DataLabels.load(selected_task.anno_file_name)
-        if not data_labels:
-            st.warning("Data labels are empty")
-            return
+    def refresh():
+        data_labels.save(selected_task.anno_file_name)
+        st.session_state["img_files"] = image_filenames
+        st.session_state["image_index"] = 0
 
-        image_filenames = [image.name for image in data_labels.images]
-
-        if not st.session_state.get('image_index'):
-            st.session_state["img_files"] = image_filenames
-            st.session_state["image_index"] = 0
+    def next_image():
+        data_labels.save(selected_task.anno_file_name)
+        image_index = st.session_state["image_index"]
+        if image_index < len(st.session_state["img_files"]) - 1:
+            st.session_state["image_index"] += 1
         else:
-            st.session_state["img_files"] = image_filenames
+            st.warning('This is the last image.')
 
-        def refresh():
-            data_labels.save(selected_task.anno_file_name)
-            st.session_state["img_files"] = image_filenames
-            st.session_state["image_index"] = 0
+    def previous_image():
+        data_labels.save(selected_task.anno_file_name)
+        image_index = st.session_state["image_index"]
+        if image_index > 0:
+            st.session_state["image_index"] -= 1
+        else:
+            st.warning('This is the first image.')
 
-        def next_image():
-            data_labels.save(selected_task.anno_file_name)
-            image_index = st.session_state["image_index"]
-            if image_index < len(st.session_state["img_files"]) - 1:
-                st.session_state["image_index"] += 1
-            else:
-                st.warning('This is the last image.')
+    def go_to_image():
+        data_labels.save(selected_task.anno_file_name)
+        image_index = st.session_state["img_files"].index(st.session_state["img_file"])
+        st.session_state["image_index"] = image_index
 
-        def previous_image():
-            data_labels.save(selected_task.anno_file_name)
-            image_index = st.session_state["image_index"]
-            if image_index > 0:
-                st.session_state["image_index"] -= 1
-            else:
-                st.warning('This is the first image.')
-
-        def go_to_image():
-            data_labels.save(selected_task.anno_file_name)
-            image_index = st.session_state["img_files"].index(st.session_state["img_file"])
-            st.session_state["image_index"] = image_index
-
-        def _pick_color(label: str, default_color: str) -> str:
-            color_dict = {
-                'boundary': 'blue',
-                'spline': 'green',
-                'polygon': 'purple'
-            }
-
-            return color_dict.get(label, default_color)
-
+    def viewer_menu():
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         # Main content: review images
@@ -141,32 +115,78 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             st.button(label="Next >", on_click=next_image)
         st.sidebar.button(label="Refresh", on_click=refresh)
 
-        im = ImageManager(task_folder, data_labels.images[image_index])
+        return image_index
+
+    def call_frontend(im: ImageManager, image_index: int) -> dict:
         resized_img = im.resizing_img()
         resized_shapes = im.get_resized_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
         # Display the selected shape
-        selected_shape = st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
+        return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
+
+    def process_selected_shape(selected_shape: dict):
+        scaled_shape = im.upscale_shape(selected_shape)
+        selected_shape_id = selected_shape["shape_id"]
+        # if shape_id is new, it's an untagged label
+        if selected_shape_id >= len(data_labels.images[image_index].objects):
+            st.write("Untagged box added")
+            untagged_object_to_save = DataLabels.Object.from_json(im.to_data_labels_shape(scaled_shape))
+            # Add the new untagged box to the data_labels
+            data_labels.images[image_index].objects.append(untagged_object_to_save)
+        else:
+            if data_labels.images[image_index].objects[selected_shape_id].attributes:
+                df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
+                                                       .objects[selected_shape_id].attributes,
+                                                       orient='index')
+            else:
+                st.write(data_labels.images[image_index].objects[selected_shape_id])
+
+        return scaled_shape
+
+    def _pick_color(label: str, default_color: str) -> str:
+        color_dict = {
+            'boundary': 'blue',
+            'spline': 'green',
+            'polygon': 'purple'
+        }
+        return color_dict.get(label, default_color)
+
+    selected_task, _ = select_task(selected_project.id)
+    if selected_task:
+
+        # Load up the images and the labels
+        task_folder = os.path.join(ADQ_WORKING_FOLDER,
+                                   str(selected_project.id),
+                                   str(selected_task.id))
+        data_labels = DataLabels.load(selected_task.anno_file_name)
+        if not data_labels:
+            st.warning("Data labels are empty")
+            return
+
+        # set session states
+        image_filenames = [image.name for image in data_labels.images]
+        if not st.session_state.get('image_index'):
+            st.session_state["img_files"] = image_filenames
+            st.session_state["image_index"] = 0
+        else:
+            st.session_state["img_files"] = image_filenames
+
+        image_index = viewer_menu()
+        im = ImageManager(task_folder, data_labels.images[image_index])
+
+        # call the frontend
+        selected_shape = call_frontend(im, image_index)
         if selected_shape:
             print(selected_shape)
-            scaled_shape = im.upscale_shape(selected_shape)
-            selected_shape_id = selected_shape["shape_id"]
-            # if shape_id is new, it's an untagged label
-            if selected_shape_id >= len(data_labels.images[image_index].objects):
-                st.write("Untagged box added")
-                untagged_object_to_save = DataLabels.Object.from_json(im.to_data_labels_shape(scaled_shape))
-                # Add the new untagged box to the data_labels
-                data_labels.images[image_index].objects.append(untagged_object_to_save)
-            else:
-                if data_labels.images[image_index].objects[selected_shape_id].attributes:
-                    df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
-                                                           .objects[selected_shape_id].attributes,
-                                                           orient='index')
-                else:
-                    st.write(data_labels.images[image_index].objects[selected_shape_id])
+            scaled_shape = process_selected_shape(selected_shape)
+
+            # present 3 columns for the selected shape
+            selected_shape_id = selected_shape['shape_id']
             col1, col2, col3 = st.columns(3)
+
+            # thumbnail image
             with col1:
                 preview_img, preview_label = im.init_annotation(scaled_shape)
                 if preview_img and preview_label:
@@ -175,8 +195,12 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     st.write(preview_label)
 
                 st.dataframe(selected_shape)
+
+            # attributes
             with col2:
                 _show_road_attributes(selected_shape)
+
+            # verification result
             with col3:
                 default_index = 0
                 default_comment = None
