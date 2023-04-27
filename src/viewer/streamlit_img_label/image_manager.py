@@ -28,7 +28,6 @@ class ImageManager:
         self._img = Image.open(os.path.join(image_folder, image_labels.name))
         # NB: note that the shapes should be all in the ShapeProps format defined in interfaces.tsx in the frontend
         self._shapes = []
-        self._selected_shape = dict()
         self._load_shapes()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
@@ -122,7 +121,7 @@ class ImageManager:
         return converted_shape
 
     @staticmethod
-    def get_rectangle(shape) -> list:
+    def get_bounding_rectangle(shape) -> list:
         resized_points = shape['points']
         min_x = max_x = int(resized_points[0]['x'])
         min_y = max_y = int(resized_points[0]['y'])
@@ -264,7 +263,14 @@ class ImageManager:
 
         return resized_shapes
 
-    def _chop_shape_img(self, shape):
+    def get_preview_thumbnail(self, shape: dict) -> Image:
+        """init annotation for current shapes.
+
+        Args:
+            shape(dict): the bounding boxes of the image.
+        Returns:
+            prev_img(list): list of preview images with default label.
+        """
         raw_image = np.asarray(self._img).astype("uint8")
         width, height, alpha = raw_image.shape
         width = width if width > 0 else 1
@@ -293,7 +299,7 @@ class ImageManager:
                 prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
                 prev_img = prev_img[y:y_end, x:x_end]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
-                min_x, min_y, max_x, max_y = ImageManager.get_rectangle(shape)
+                min_x, min_y, max_x, max_y = ImageManager.get_bounding_rectangle(shape)
                 min_x = min_x if min_x >= 0 else 0
                 min_y = min_y if min_y >= 0 else 0
                 max_x = max_x if max_x < self._img.width else self._img.width
@@ -312,22 +318,7 @@ class ImageManager:
 
                     resized_points.append(resized_points)
 
-            if "label" in shape:
-                label = shape["label"]
-
-        return Image.fromarray(prev_img), label
-
-    def init_annotation(self, shape: dict):
-        """init annotation for current shapes.
-
-        Args:
-            shape(dict): the bounding boxes of the image.
-        Returns:
-            prev_img(list): list of preview images with default label.
-        """
-        self._selected_shape = shape
-        # return [self._chop_shape_img(shape) for shape in self._current_shapes]
-        return self._chop_shape_img(shape)
+        return Image.fromarray(prev_img)
 
     def set_review(self, index, label, comment):
         """set the review label and comment.

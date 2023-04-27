@@ -22,10 +22,14 @@ from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import ImageManager
 
 
-def _show_road_attributes(selected_shape: dict):
+def _display_attributes(selected_shape: dict):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
-    if shape_type == "spline":
+    if shape_type == "box":
+        st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index').transpose())
+        points = selected_shape["points"]
+        st.dataframe(pd.DataFrame(points))
+    elif shape_type == "spline":
         type1value = attributes_dict.get('type1', None)
         type2value = attributes_dict.get('type2', None)
         type3value = attributes_dict.get('type3', None)
@@ -136,12 +140,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             # Add the new untagged box to the data_labels
             data_labels.images[image_index].objects.append(untagged_object_to_save)
         else:
-            if data_labels.images[image_index].objects[selected_shape_id].attributes:
-                df_attributes = pd.DataFrame.from_dict(data_labels.images[image_index]
-                                                       .objects[selected_shape_id].attributes,
-                                                       orient='index')
-            else:
-                st.write(data_labels.images[image_index].objects[selected_shape_id])
+            st.write(data_labels.images[image_index].objects[selected_shape_id])
 
         return scaled_shape
 
@@ -188,17 +187,17 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
             # thumbnail image
             with col1:
-                preview_img, preview_label = im.init_annotation(scaled_shape)
-                if preview_img and preview_label:
+                preview_img = im.get_preview_thumbnail(scaled_shape)
+                if preview_img:
                     preview_img.thumbnail((200, 200))
                     col1.image(preview_img)
-                    st.write(preview_label)
+                    st.write(scaled_shape["label"])
 
                 st.dataframe(selected_shape)
 
             # attributes
             with col2:
-                _show_road_attributes(selected_shape)
+                _display_attributes(selected_shape)
 
             # verification result
             with col3:
