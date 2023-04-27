@@ -160,8 +160,8 @@ def plot_file_info(title: str, files_dict: dict):
     chart_ctime = alt.Chart(df_ctime).mark_circle().encode(
         x='date',
         y='time',
-        tooltip=['date', 'time', 'size', 'file']
-        ).properties(
+        tooltip=['date', 'time', 'size', 'file'],
+    ).properties(
             title="Created Time"
         )
 
@@ -191,6 +191,9 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         y_label: data_dict.values()
     })
 
+    # Create a dropdown menu for the user to select which items to display
+    selection = alt.selection_multi(fields=[x_label], bind='legend')
+
     # Create a histogram using Altair
     if chart_type == "circle":
         # Convert the date field to a datetime format
@@ -198,7 +201,8 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         chart = alt.Chart(data).mark_circle(size=200).encode(
             x=alt.X(x_label),
             y=alt.Y(y_label),
-            tooltip=[x_label, y_label]
+            tooltip=[x_label, y_label],
+            color=alt.Color(x_label, legend=alt.Legend(title=x_label))
         ).properties(
             title=title
         )
@@ -206,7 +210,8 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         chart = alt.Chart(data).mark_line().encode(
             x=alt.X(x_label),
             y=alt.Y(y_label),
-            tooltip=[x_label, y_label]
+            tooltip=[x_label, y_label],
+            color=alt.Color(x_label, legend=alt.Legend(title=x_label))
         ).properties(
             title=title
         )
@@ -214,7 +219,8 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         chart = alt.Chart(data).mark_bar().encode(
             x=alt.X(x_label),
             y=alt.Y(y_label),
-            tooltip=[x_label, y_label]
+            tooltip=[x_label, y_label],
+            color=alt.Color(x_label, legend=alt.Legend(title=x_label))
         ).properties(
             title=title
         )
@@ -228,7 +234,7 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         alt.selection_interval(bind='scales', encodings=['x', 'y'])
     ).add_selection(
         alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-    )
+    ).add_selection(selection)
 
     return chart
 

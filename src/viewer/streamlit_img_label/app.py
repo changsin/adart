@@ -192,8 +192,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     preview_img.thumbnail((200, 200))
                     col1.image(preview_img)
                     st.write(scaled_shape["label"])
-                st.dataframe(selected_shape['points'])
-                # st.dataframe(selected_shape)
 
             # attributes
             with col2:
