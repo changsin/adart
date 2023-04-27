@@ -4,6 +4,11 @@ import { ShapeRenderProps, Point } from "../interfaces";
 import { sendSelectedShape } from "../streamlit-utils";
   
 export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color = 'red', opacity = 0.5, canvas }) => {
+    if (!shape || !shape.points) {
+        // Handle error when shape or points is null/undefined
+        return null;
+    }
+
     const { points, label } = shape
 
     const { x, y } = points[0] as Point
@@ -28,6 +33,11 @@ export const VanishingPoint: React.FC<ShapeRenderProps> = ({ shape, color = 'red
 }
 
 export const Polygon: React.FC<ShapeRenderProps> = ({ shape, color = 'purple', opacity = 0.3, canvas }) => {
+    if (!shape || !shape.points) {
+        // Handle error when shape or points is null/undefined
+        return null;
+    }
+
     const { points, label } = shape
     const polygon = new fabric.Polygon(points, {
         fill: color,

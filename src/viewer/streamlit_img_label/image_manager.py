@@ -159,11 +159,30 @@ class ImageManager:
             points['w'] = points['w'] * self._resized_ratio_w
             points['h'] = points['h'] * self._resized_ratio_h
             scaled_shape['points'] = [points]
+        elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
+            scaled_points = []
+            for point in shape['points']:
+                scaled_point = dict()
+                scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
+                scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
+                scaled_point['r'] = int(point['r'] * self._resized_ratio_w)
+                scaled_points.append(scaled_point)
 
-            print("points: {}".format(points))
+            scaled_shape['points'] = scaled_points
+
+        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+            scaled_points = []
+            for point in shape['points']:
+                scaled_point = dict()
+                scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
+                scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
+
+                scaled_points.append(scaled_point)
+
+            scaled_shape['points'] = scaled_points
 
             print("shape: {} \nscaled: {} {}x{}".format(shape, scaled_shape,
-                                                       self._resized_ratio_w, self._resized_ratio_h))
+                                                        self._resized_ratio_w, self._resized_ratio_h))
 
         # TODO: later upscale other shape types as needed
         return scaled_shape
