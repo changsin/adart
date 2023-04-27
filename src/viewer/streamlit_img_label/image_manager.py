@@ -121,6 +121,25 @@ class ImageManager:
         del converted_shape['shapeType']
         return converted_shape
 
+    @staticmethod
+    def get_rectangle(shape) -> list:
+        resized_points = shape['points']
+        min_x = max_x = int(resized_points[0]['x'])
+        min_y = max_y = int(resized_points[0]['y'])
+
+        # Iterate over the remaining control points and update the minimum and maximum x and y values
+        for pt in resized_points[1:]:
+            if pt['x'] < min_x:
+                min_x = int(pt['x'])
+            elif pt['x'] > max_x:
+                max_x = int(pt['x'])
+            if pt['y'] < min_y:
+                min_y = int(pt['y'])
+            elif pt['y'] > max_y:
+                max_y = int(pt['y'])
+
+        return [min_x, min_y, max_x, max_y]
+
     def resizing_img(self, min_width=700, min_height=700, max_height=1000, max_width=1000):
         """resizing the image by max_height and max_width.
 
@@ -133,13 +152,13 @@ class ImageManager:
             resized_img(PIL.Image): the resized image.
         """
         resized_img = self._img.copy()
-        if resized_img.height < min_height or resized_img.width < min_width:
-            ratio = max(min_height / resized_img.height, min_width / resized_img.width)
+        if resized_img.height > max_height or resized_img.width > max_width:
+            ratio = min(max_height / resized_img.height, max_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
-        if resized_img.height > max_height or resized_img.width > max_width:
-            ratio = min(max_height / resized_img.height, max_width / resized_img.width)
+        if resized_img.height < min_height or resized_img.width < min_width:
+            ratio = max(min_height / resized_img.height, min_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
@@ -274,21 +293,7 @@ class ImageManager:
                 prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
                 prev_img = prev_img[y:y_end, x:x_end]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
-                resized_points = shape['points']
-                min_x = max_x = int(resized_points[0]['x'])
-                min_y = max_y = int(resized_points[0]['y'])
-
-                # Iterate over the remaining control points and update the minimum and maximum x and y values
-                for pt in resized_points[1:]:
-                    if pt['x'] < min_x:
-                        min_x = int(pt['x'])
-                    elif pt['x'] > max_x:
-                        max_x = int(pt['x'])
-                    if pt['y'] < min_y:
-                        min_y = int(pt['y'])
-                    elif pt['y'] > max_y:
-                        max_y = int(pt['y'])
-
+                min_x, min_y, max_x, max_y = ImageManager.get_rectangle(shape)
                 min_x = min_x if min_x >= 0 else 0
                 min_y = min_y if min_y >= 0 else 0
                 max_x = max_x if max_x < self._img.width else self._img.width

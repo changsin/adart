@@ -112,6 +112,35 @@ def show_image_metrics():
         st.write("No image data")
 
 
+def get_rectangle(label_object) -> list:
+    """
+    get the rectangle of a polygon or a spline
+    :param label_object: label object whose points could be [[x,y,r]...] or [[x,y]...]
+    :return: xtl,ytl, xbr,ybr
+    """
+    if label_object.type == 'box':
+        return label_object.points[0]
+
+    x_index, y_index = 0, 1
+    points = label_object.points
+
+    print(points)
+    min_x = max_x = points[0][x_index]
+    min_y = max_y = points[0][y_index]
+
+    # Iterate over the remaining control points and update the minimum and maximum x and y values
+    for pt in points[1:]:
+        if pt[x_index] < min_x:
+            min_x = int(pt[x_index])
+        elif pt[x_index] > max_x:
+            max_x = int(pt[x_index])
+        if pt[y_index] < min_y:
+            min_y = int(pt[y_index])
+        elif pt[y_index] > max_y:
+            max_y = int(pt[y_index])
+
+    return [min_x, min_y, max_x, max_y]
+
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 
@@ -138,30 +167,37 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     else:
                         errors[error_code] = 1
 
-                if object_cur.type == 'box':
-                    xtl1, ytl1, xbr1, ybr1 = object_cur.points[0]
-                    rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
-                    width1 = rect1.xmax - rect1.xmin
-                    height1 = rect1.ymax - rect1.ymin
+                if not object_cur.points:
+                    print("empty points in {}".format(object_cur.label))
+                    continue
 
-                    if dimensions.get(image.name):
-                        dimensions[image.name].append((width1, height1, image.objects[ob_id1].label))
-                    else:
-                        dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
+                xtl1, ytl1, xbr1, ybr1 = get_rectangle(object_cur)
+                rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
+                width1 = rect1.xmax - rect1.xmin
+                height1 = rect1.ymax - rect1.ymin
 
-                    for ob_id2 in range(ob_id1 + 1, count):
-                        xtl2, ytl2, xbr2, ybr2 = image.objects[ob_id2].points[0]
-                        rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
+                if dimensions.get(image.name):
+                    dimensions[image.name].append((width1, height1, image.objects[ob_id1].label))
+                else:
+                    dimensions[image.name] = [(width1, height1, image.objects[ob_id1].label)]
 
-                        overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
+                for ob_id2 in range(ob_id1 + 1, count):
+                    if not image.objects[ob_id2].points:
+                        print("empty points in {}".format(image.objects[ob_id2].label))
+                        continue
 
-                        if overlap_area > 0:
-                            overlap_percent = format(overlap_area/max_area, '.2f')
-                            overlap_percent = float(overlap_percent) * 100
-                            if overlap_areas.get(overlap_percent):
-                                overlap_areas[overlap_percent] += 1
-                            else:
-                                overlap_areas[overlap_percent] = 1
+                    xtl2, ytl2, xbr2, ybr2 = get_rectangle(image.objects[ob_id2])
+                    rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
+
+                    overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
+
+                    if overlap_area > 0:
+                        overlap_percent = format(overlap_area/max_area, '.2f')
+                        overlap_percent = float(overlap_percent) * 100
+                        if overlap_areas.get(overlap_percent):
+                            overlap_areas[overlap_percent] += 1
+                        else:
+                            overlap_areas[overlap_percent] = 1
 
     return class_labels, overlap_areas, dimensions, errors
 
