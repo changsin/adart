@@ -26,6 +26,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [polygonVisible, togglePolygon] = useState(false);
     const [opacity, setOpacity] = useState<number>(0.3);
+    const [zoomLevel, setZoomLevel] = useState(1);
+
 
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;
@@ -134,6 +136,71 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
 
+    useEffect(() => {
+        const handleMouseWheel = (event: fabric.IEvent) => {
+            if (event.e instanceof WheelEvent) {
+              const delta = event.e.deltaY;
+              let zoom = canvas.getZoom();
+              zoom *= 0.999 ** delta;
+              if (zoom > 20) zoom = 20;
+              if (zoom < 0.01) zoom = 0.01;
+              const { x, y } = canvas.getPointer(event as any);
+              canvas.zoomToPoint(new fabric.Point(x, y), zoomLevel);
+              setZoomLevel(zoom);
+
+              //   canvas.zoomToPoint({ x: event.e.offsetX, y: event.e.offsetY }, zoom);
+              event.e.preventDefault();
+              event.e.stopPropagation();
+            }
+          };
+                                  
+        canvas.on("mouse:wheel", handleMouseWheel);
+    
+        return () => {
+            canvas.off("mouse:wheel", handleMouseWheel);
+        };
+    }, [canvas]);
+
+    useEffect(() => {
+        let isDragging = false;
+        let lastX: number;
+        let lastY: number;
+    
+        const handleMouseDown = (event: fabric.IEvent) => {
+            isDragging = true;
+            const pointer = canvas.getPointer(event.e);
+            lastX = pointer.x;
+            lastY = pointer.y;
+        };
+    
+        const handleMouseMove = (event: fabric.IEvent) => {
+            if (isDragging) {
+                const pointer = canvas.getPointer(event.e);
+                const deltaX = pointer.x - lastX;
+                const deltaY = pointer.y - lastY;
+
+                canvas.relativePan(new fabric.Point(deltaX, deltaY));
+
+                lastX = pointer.x;
+                lastY = pointer.y;
+            }
+        };
+    
+        const handleMouseUp = (event: fabric.IEvent) => {
+            isDragging = false;
+        };
+    
+        canvas.on("mouse:down", handleMouseDown);
+        canvas.on("mouse:move", handleMouseMove);
+        canvas.on("mouse:up", handleMouseUp);
+    
+        return () => {
+            canvas.off("mouse:down", handleMouseDown);
+            canvas.off("mouse:move", handleMouseMove);
+            canvas.off("mouse:up", handleMouseUp);
+        };
+    }, [canvas]);
+    
     // Create a default bounding box
     const untaggedBox = (shape_id: number): ShapeProps  => ({
         shape_id: shape_id,
