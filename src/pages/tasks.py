@@ -190,11 +190,12 @@ def create_data_tasks(selected_project: Project):
 def assign_tasks():
     selected_project = select_project()
     if selected_project:
-        st.checkbox("Assign tasks", )
+        st.subheader(f"Assign tasks for project {selected_project.name}")
         tasks = TasksInfo.get_tasks(selected_project.id)
-        tasks_json = [task.to_json() for task in tasks]
-        st.dataframe(pd.DataFrame(tasks_json)[['id', 'name']])
-
+        for task in tasks:
+            if st.checkbox(task.name):
+                # Do something when the checkbox is selected
+                st.write(f"Task {task.name} is assigned")
 
 def add_task():
     selected_project = select_project()

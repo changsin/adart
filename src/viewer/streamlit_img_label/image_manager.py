@@ -170,7 +170,6 @@ class ImageManager:
     def upscale_shape(self, shape):
         scaled_shape = copy.deepcopy(shape)
         if scaled_shape['shapeType'] == 'box':
-            print("shape['points'][0]: {}".format(shape['points'][0]))
             points = scaled_shape['points'][0]
             points['x'] = points['x'] * self._resized_ratio_w
             points['y'] = points['y'] * self._resized_ratio_h
@@ -198,10 +197,6 @@ class ImageManager:
                 scaled_points.append(scaled_point)
 
             scaled_shape['points'] = scaled_points
-
-            print("shape: {} \nscaled: {} {}x{}".format(shape, scaled_shape,
-                                                        self._resized_ratio_w, self._resized_ratio_h))
-
         # TODO: later upscale other shape types as needed
         return scaled_shape
 
@@ -279,7 +274,6 @@ class ImageManager:
 
         label = ""
         if shape:
-            print(shape)
             if shape['shapeType'] == 'box':
                 point_dict = shape['points'][0]
                 x, y, w, h = (
@@ -329,7 +323,6 @@ class ImageManager:
             comment(str): comment
         """
         if label and label != 'No error':
-            print("index {} label {}".format(index, label))
             verification_result = dict()
             if self.image_labels.objects[index].verification_result:
                 verification_result = self.image_labels.objects[index].verification_result

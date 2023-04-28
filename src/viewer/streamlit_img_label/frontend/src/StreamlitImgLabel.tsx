@@ -371,14 +371,13 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 </button>
                 <div>
                 <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={opacity * 100}
-                        onChange={handleOpacityChange}
-                        />
-                        Opacity
-                        {/* <canvas id="canvas"></canvas> */}
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={opacity * 100}
+                    onChange={handleOpacityChange}
+                    />
+                    Label Opacity
                     </div>
               </div>
         </>

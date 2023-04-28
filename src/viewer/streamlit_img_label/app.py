@@ -26,9 +26,8 @@ def _display_attributes(selected_shape: dict):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
     if shape_type == "box":
-        st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index'))
-        points = selected_shape["points"]
-        st.dataframe(pd.DataFrame(points))
+        if attributes_dict:
+            st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index'))
     elif shape_type == "spline":
         type1value = attributes_dict.get('type1', None)
         type2value = attributes_dict.get('type2', None)
@@ -36,9 +35,6 @@ def _display_attributes(selected_shape: dict):
         type4value = attributes_dict.get('type4', None)
         type5value = attributes_dict.get('type5', None)
         type6value = attributes_dict.get('type6', None)
-
-        print("{} {}".format(type3value, Type3PositionE.get_index(type3value)))
-        print("Type3 index value is {} ".format(Type3PositionE.get_all_types()[Type3PositionE.get_index(type3value)]))
 
         st.selectbox("1.Shape1(Q)", Type1Shape1Q.get_all_types(),
                      index=Type1Shape1Q.get_index(type1value) if type1value else 0)
@@ -154,7 +150,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
     selected_task, _ = select_task(selected_project.id)
     if selected_task:
-
         # Load up the images and the labels
         task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                    str(selected_project.id),
@@ -178,9 +173,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         # call the frontend
         selected_shape = call_frontend(im, image_index)
         if selected_shape:
-            print(selected_shape)
             scaled_shape = process_selected_shape(selected_shape)
-
             # present 3 columns for the selected shape
             selected_shape_id = selected_shape['shape_id']
             col1, col2, col3 = st.columns(3)
@@ -192,6 +185,8 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     preview_img.thumbnail((200, 200))
                     col1.image(preview_img)
                     st.write(scaled_shape["label"])
+            points = selected_shape["points"]
+            st.dataframe(pd.DataFrame(points))
 
             # attributes
             with col2:
