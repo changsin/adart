@@ -26,7 +26,8 @@ def _display_attributes(selected_shape: dict):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
     if shape_type == "box":
-        st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index'))
+        if attributes_dict:
+            st.dataframe(pd.DataFrame.from_dict(attributes_dict, orient='index'))
     elif shape_type == "spline":
         type1value = attributes_dict.get('type1', None)
         type2value = attributes_dict.get('type2', None)
@@ -149,7 +150,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
     selected_task, _ = select_task(selected_project.id)
     if selected_task:
-
         # Load up the images and the labels
         task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                    str(selected_project.id),
