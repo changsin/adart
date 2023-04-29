@@ -64,7 +64,6 @@ class Type1Shape1Q(Enum):
     @staticmethod
     def get_index(value):
         for i, member in enumerate(Type1Shape1Q):
-            print("{} {}".format(member, value))
             if member.value == value:
                 return i
         raise ValueError('Invalid value {}'.format(value))

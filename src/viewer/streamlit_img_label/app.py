@@ -64,30 +64,29 @@ def _display_attributes(selected_shape: dict):
 
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
-    def save():
+    def save(image_index: int, im: ImageManager):
+        data_labels.images[image_index] = im.get_data_label_image()
         data_labels.save(selected_task.anno_file_name)
 
     def refresh():
-        data_labels.save(selected_task.anno_file_name)
-        st.session_state["img_files"] = image_filenames
-        st.session_state["image_index"] = 0
+        save(st.session_state["image_index"], im)
 
     def previous_image():
-        data_labels.save(selected_task.anno_file_name)
+        save(st.session_state["image_index"], im)
         if st.session_state["image_index"] > 0:
             st.session_state["image_index"] -= 1
         else:
             st.warning('This is the first image.')
 
     def next_image():
-        data_labels.save(selected_task.anno_file_name)
+        save(st.session_state["image_index"], im)
         if st.session_state["image_index"] < len(st.session_state["img_files"]) - 1:
             st.session_state["image_index"] += 1
         else:
             st.warning('This is the last image.')
 
     def go_to_image():
-        data_labels.save(selected_task.anno_file_name)
+        save(st.session_state["image_index"], im)
         image_index = st.session_state["img_files"].index(st.session_state["img_file"])
         st.session_state["image_index"] = image_index
 
@@ -121,7 +120,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
     def call_frontend(im: ImageManager, image_index: int) -> dict:
         resized_img = im.resizing_img()
-        resized_shapes = im.get_resized_shapes()
+        resized_shapes = im.get_downscaled_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
@@ -132,11 +131,12 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         scaled_shape = im.upscale_shape(selected_shape)
         selected_shape_id = selected_shape["shape_id"]
         # if shape_id is new, it's an untagged label
-        if selected_shape_id >= len(data_labels.images[image_index].objects):
+        if not im.get_shape_by_id(selected_shape_id):
+            im.add_shape(scaled_shape)
             st.write("Untagged box added")
-            untagged_object_to_save = DataLabels.Object.from_json(im.to_data_labels_shape(scaled_shape))
-            # Add the new untagged box to the data_labels
-            data_labels.images[image_index].objects.append(untagged_object_to_save)
+            # untagged_object_to_save = DataLabels.Object.from_json(im.to_data_labels_shape(scaled_shape))
+            # # Add the new untagged box to the data_labels
+            # data_labels.images[image_index].objects.append(untagged_object_to_save)
 
         return scaled_shape
 
@@ -151,9 +151,6 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
     selected_task, _ = select_task(selected_project.id)
     if selected_task:
         # Load up the images and the labels
-        task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                   str(selected_project.id),
-                                   str(selected_task.id))
         data_labels = DataLabels.load(selected_task.anno_file_name)
         if not data_labels:
             st.warning("Data labels are empty")
@@ -168,7 +165,9 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             st.session_state["img_files"] = image_filenames
 
         image_index = viewer_menu()
-        im = ImageManager(task_folder, data_labels.images[image_index])
+        task_folder = os.path.dirname(selected_task.anno_file_name)
+        image_filename = os.path.join(task_folder, image_filenames[image_index])
+        im = ImageManager(image_filename, data_labels.images[image_index])
 
         # call the frontend
         selected_shape = call_frontend(im, image_index)
@@ -195,18 +194,26 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
             # verification result
             with col3:
                 default_index = 0
-                default_comment = None
-                verification_result = im.image_labels.objects[selected_shape_id].verification_result
-                if im.image_labels.objects[selected_shape_id].verification_result:
+                verification_result = im.get_shape_by_id(selected_shape_id)['verification_result']
+                if verification_result:
                     error_code = verification_result['error_code']
-                    default_comment = verification_result.get('comment', None)
                     default_index = error_codes.index(error_code)
 
                 select_label = col3.selectbox(
                     "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
                 )
-                comment = col3.text_input("Comment", default_comment)
+
+                comment = None
+                if select_label:
+                    if not verification_result:
+                        verification_result = dict()
+
+                    default_comment = verification_result.get('comment', None)
+                    comment = col3.text_input("Comment", default_comment)
+
+                # save the verification result
                 im.set_review(selected_shape_id, select_label, comment)
+                save(image_index, im)
 
 #
 # if __name__ == "__main__":

@@ -1,5 +1,4 @@
 import copy
-import os
 
 import numpy as np
 from PIL import Image
@@ -15,30 +14,50 @@ from src.models.data_labels import DataLabels
 
 class ImageManager:
     """ImageManager
-    Manages the image object.
+    Manages the image object - basically translating between DataLabel shapes and frontend shapes
 
     Args:
         image_folder(str): the image folder.
-        image_labels(DataLabels.Image): parsed image labels object
+        data_label_image(DataLabels.Image): parsed image labels object
     """
 
-    def __init__(self, image_folder, image_labels: DataLabels.Image):
+    def __init__(self, image_filename: str, data_label_image: DataLabels.Image):
         """initiate module"""
-        self.image_labels = image_labels
-        self._img = Image.open(os.path.join(image_folder, image_labels.name))
+        self._data_label_image = data_label_image
+        self._image = Image.open(image_filename)
         # NB: note that the shapes should be all in the ShapeProps format defined in interfaces.tsx in the frontend
         self._shapes = []
         self._load_shapes()
         self._resized_ratio_w = 1
         self._resized_ratio_h = 1
 
-    def get_img(self):
+    def get_image(self) -> Image:
         """get the image object
 
         Returns:
-            img(PIL.Image): the image object.
+            image (PIL.Image): the image object.
         """
-        return self._img
+        return self._image
+
+    def get_data_label_image(self) -> DataLabels.Image:
+        """
+        :return: DataLabels.Image
+        """
+        return self._data_label_image
+
+    def get_shape_by_id(self, shape_id: int) -> dict:
+        for shape in self._shapes:
+            if shape['shape_id'] == shape_id:
+                return shape
+
+    def add_shape(self, shape: dict):
+        self._shapes.append(shape)
+        self._data_label_image.objects.append(shape)
+
+    def remove_shape(self, shape):
+        shape_to_remove = self.get_shape_by_id(shape.id)
+        if shape_to_remove:
+            self._shapes.remove(shape_to_remove)
 
     def _load_shapes(self):
         """
@@ -47,8 +66,9 @@ class ImageManager:
         :return:
         """
         converted_shapes = []
-        for label_object in self.image_labels.objects:
+        for shape_id, label_object in enumerate(self._data_label_image.objects):
             shape = dict()
+            shape['shape_id'] = shape_id
             shape['label'] = label_object.label
             shape['attributes'] = label_object.attributes
             shape['verification_result'] = label_object.verification_result
@@ -150,7 +170,7 @@ class ImageManager:
         Returns:
             resized_img(PIL.Image): the resized image.
         """
-        resized_img = self._img.copy()
+        resized_img = self._image.copy()
         if resized_img.height > max_height or resized_img.width > max_width:
             ratio = min(max_height / resized_img.height, max_width / resized_img.width)
             resized_img = resized_img.resize(
@@ -162,8 +182,8 @@ class ImageManager:
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
 
-        self._resized_ratio_w = self._img.width / resized_img.width
-        self._resized_ratio_h = self._img.height / resized_img.height
+        self._resized_ratio_w = self._image.width / resized_img.width
+        self._resized_ratio_h = self._image.height / resized_img.height
 
         return resized_img
 
@@ -200,19 +220,12 @@ class ImageManager:
         # TODO: later upscale other shape types as needed
         return scaled_shape
 
-    def _downscale_shape(self, idx, shape):
+    def downscale_shape(self, shape):
         if not shape:
             return shape
 
-        resized_shape = dict()
-        resized_shape['shape_id'] = idx
-        resized_shape['attributes'] = shape['attributes'] if shape['attributes'] else {}
-        resized_shape['verification_result'] = shape['verification_result'] if shape['verification_result'] else {}
-        resized_shape['shapeType'] = shape['shapeType']
-
-        if 'label' in shape:
-            resized_shape['label'] = shape['label']
-
+        resized_shape = copy.deepcopy(shape)
+        resized_points = []
         if shape['shapeType'] == 'box':
             point_dict = shape['points'][0]
             resized_point = dict()
@@ -220,43 +233,32 @@ class ImageManager:
             resized_point['w'] = point_dict['w'] / self._resized_ratio_w
             resized_point['y'] = point_dict['y'] / self._resized_ratio_h
             resized_point['h'] = point_dict['h'] / self._resized_ratio_h
-            resized_shape['points'] = [resized_point]
+            resized_points.append(resized_point)
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
-            resized_points = []
             for point in shape['points']:
                 resized_point = dict()
                 resized_point['x'] = int(point['x'] / self._resized_ratio_w)
                 resized_point['y'] = int(point['y'] / self._resized_ratio_h)
                 resized_point['r'] = int(point['r'] / self._resized_ratio_w)
-
                 resized_points.append(resized_point)
-
-            resized_shape['points'] = resized_points
-
         elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
             resized_points = []
             for point in shape['points']:
                 resized_point = dict()
                 resized_point['x'] = int(point['x'] / self._resized_ratio_w)
                 resized_point['y'] = int(point['y'] / self._resized_ratio_h)
-
                 resized_points.append(resized_point)
 
-            resized_shape['points'] = resized_points
-
+        resized_shape['points'] = resized_points
         return resized_shape
 
-    def get_resized_shapes(self):
+    def get_downscaled_shapes(self):
         """get the resized shape according to the resized image.
 
         Returns:
             resized_shapes(list): the resized shapes.
         """
-        resized_shapes = []
-        for idx, shape in enumerate(self._shapes):
-            resized_shapes.append(self._downscale_shape(idx, shape))
-
-        return resized_shapes
+        return [self.downscale_shape(shape) for shape in self._shapes]
 
     def get_preview_thumbnail(self, shape: dict) -> Image:
         """init annotation for current shapes.
@@ -266,7 +268,7 @@ class ImageManager:
         Returns:
             prev_img(list): list of preview images with default label.
         """
-        raw_image = np.asarray(self._img).astype("uint8")
+        raw_image = np.asarray(self._image).astype("uint8")
         width, height, alpha = raw_image.shape
         width = width if width > 0 else 1
         height = height if height > 0 else 1
@@ -296,9 +298,8 @@ class ImageManager:
                 min_x, min_y, max_x, max_y = ImageManager.get_bounding_rectangle(shape)
                 min_x = min_x if min_x >= 0 else 0
                 min_y = min_y if min_y >= 0 else 0
-                max_x = max_x if max_x < self._img.width else self._img.width
-                max_y = max_y if max_y < self._img.height else self._img.height
-                print("{}:{}, {}:{}".format(min_y, max_y, min_x, max_x))
+                max_x = max_x if max_x < self._image.width else self._image.width
+                max_y = max_y if max_y < self._image.height else self._image.height
 
                 prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
                 prev_img = prev_img[min_y:max_y, min_x:max_x]
@@ -314,20 +315,18 @@ class ImageManager:
 
         return Image.fromarray(prev_img)
 
-    def set_review(self, index, label, comment):
+    def set_review(self, shape_id, error_code, comment):
         """set the review label and comment.
 
         Args:
-            index(int): the index of the list of bounding boxes of the image.
-            label(str): the label of the bounding box
+            shape_id(int): shape id.
+            error_code(str): the error code
             comment(str): comment
         """
-        if label and label != 'No error':
+        verification_result = None
+        if error_code and error_code != 'No error':
             verification_result = dict()
-            if self.image_labels.objects[index].verification_result:
-                verification_result = self.image_labels.objects[index].verification_result
-
-            verification_result['error_code'] = label
+            verification_result['error_code'] = error_code
             verification_result['comment'] = comment
 
-            self.image_labels.objects[index].verification_result = verification_result
+        self._data_label_image.objects[shape_id].verification_result = verification_result
