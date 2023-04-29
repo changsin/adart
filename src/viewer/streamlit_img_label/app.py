@@ -4,7 +4,6 @@ import pandas as pd
 import streamlit as st
 
 from src.common.constants import (
-    ADQ_WORKING_FOLDER,
     ErrorType,
     Type1Shape1Q,
     Type2SingleDoubleW,
@@ -111,7 +110,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         col1, col2 = st.sidebar.columns(2)
         with col1:
             st.button(label="< Previous", on_click=previous_image)
-            st.button(label="**Save**", on_click=save)
+            # st.button(label="**Save**", on_click=save)
         with col2:
             st.button(label="Next >", on_click=next_image)
             st.button(label="Refresh", on_click=refresh)
@@ -207,12 +206,18 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 if select_label:
                     if not verification_result:
                         verification_result = dict()
-
                     default_comment = verification_result.get('comment', None)
                     comment = col3.text_input("Comment", default_comment)
 
                 # save the verification result
                 im.set_review(selected_shape_id, select_label, comment)
+
+                if verification_result:
+                    delete_shape = st.button("Delete")
+                    if delete_shape:
+                        im.remove_shape(selected_shape)
+                        print(f"Deleted {selected_shape}")
+
                 save(image_index, im)
 
 #

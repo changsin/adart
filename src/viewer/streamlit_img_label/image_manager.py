@@ -50,14 +50,15 @@ class ImageManager:
             if shape['shape_id'] == shape_id:
                 return shape
 
-    def add_shape(self, shape: dict):
-        self._shapes.append(shape)
-        self._data_label_image.objects.append(shape)
+    def add_shape(self, scaled_shape: dict):
+        self._shapes.append(scaled_shape)
+        self._data_label_image.objects.append(ImageManager.to_data_labels_object(scaled_shape))
 
     def remove_shape(self, shape):
-        shape_to_remove = self.get_shape_by_id(shape.id)
+        shape_to_remove = self.get_shape_by_id(shape['shape_id'])
         if shape_to_remove:
             self._shapes.remove(shape_to_remove)
+            self._data_label_image.objects.append(shape_to_remove)
 
     def _load_shapes(self):
         """
@@ -113,12 +114,7 @@ class ImageManager:
         self._shapes = converted_shapes
 
     @staticmethod
-    def to_data_labels_shape(shape):
-        """
-        convert ShapeProps to DataLabels format
-        :param shape: shape in the ShapeProps format
-        :return: converted shape in the DataLabels format
-        """
+    def to_data_labels_object(shape: dict) -> DataLabels.Object:
         converted_shape = copy.deepcopy(shape)
         converted_points = []
         if shape['shapeType'] == 'box':
@@ -138,7 +134,21 @@ class ImageManager:
         converted_shape['points'] = converted_points
         converted_shape['type'] = shape['shapeType']
         del converted_shape['shapeType']
-        return converted_shape
+
+        return DataLabels.Object.from_json(converted_shape)
+
+    def to_data_labels_image(self) -> DataLabels.Image:
+        """
+        convert ShapeProps to DataLabels format
+        :param shape: shape in the ShapeProps format
+        :return: converted shape in the DataLabels format
+        """
+        converted_objects = []
+        for shape in self._shapes:
+            converted_objects.append(ImageManager.to_data_labels_object(shape))
+
+        self._data_label_image.objects = converted_objects
+        return self._data_label_image
 
     @staticmethod
     def get_bounding_rectangle(shape) -> list:
