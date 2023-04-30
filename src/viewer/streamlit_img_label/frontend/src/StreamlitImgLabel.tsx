@@ -22,15 +22,11 @@ import { FabricShape } from "./shapes/fabric-shape"
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
-    // const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [polygonVisible, togglePolygon] = useState(false);
     const [opacity, setOpacity] = useState<number>(0.3);
-    const [zoomLevel, setZoomLevel] = useState(1);
-    const canvasRef = useRef(null);
-
 
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;

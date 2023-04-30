@@ -212,7 +212,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                 # save the verification result
                 im.set_review(selected_shape_id, select_label, comment)
 
-                if verification_result:
+                if verification_result and verification_result['error_code'] == 'untagged':
                     delete_shape = st.button("Delete")
                     if delete_shape:
                         im.remove_shape(selected_shape)
