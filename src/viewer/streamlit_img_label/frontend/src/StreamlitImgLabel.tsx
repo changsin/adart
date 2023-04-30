@@ -27,6 +27,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [polygonVisible, togglePolygon] = useState(false);
     const [opacity, setOpacity] = useState<number>(0.3);
+    const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
 
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;
@@ -111,7 +112,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 }
                 if (shape.shapeType === "box") {
                 // // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
-                  Box({shape, color: color, opacity, canvas});
+                    Box({shape, color: color, opacity, canvas});
                 // FabricShape({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     Spline({shape, color: color, opacity, canvas});
@@ -180,6 +181,11 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             sendSelectedShape(box);
             shapes.push(box)
         })
+
+        newRect.on('mousedown', () => setIsInteractingWithBox(true));
+        newRect.on('mouseup', () => setIsInteractingWithBox(false));
+        newRect.on('mousemove', () => setIsInteractingWithBox(true));
+        
         canvas.add(newRect)
     }
 
@@ -195,18 +201,23 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         clearHandler();
       
         shapes.forEach((shape) => {
-          if (shape.shapeType === "box") {
-            Box({ shape, color: shapeColor, opacity, canvas });
-          } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-            Spline({ shape, color: shapeColor, opacity, canvas });
-          } else if (shape.shapeType === "polygon" && polygonVisible === true) {
-            Polygon({ shape, color: "purple", opacity, canvas });
-          } else if (shape.shapeType === "VP") {
-            VanishingPoint({ shape, color: "red", opacity, canvas });
-          } else {
-            console.warn(`Invalid shape "${shape}" specified". Skipping...`);
-            return;
-          }
+            let color = shapeColor;
+            if (shape.verification_result?.error_code &&
+                shape.verification_result?.error_code.length > 0) {
+                color = "red";
+            }
+            if (shape.shapeType === "box") {
+                Box({ shape, color: shapeColor, opacity, canvas });
+            } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
+                Spline({ shape, color: shapeColor, opacity, canvas });
+            } else if (shape.shapeType === "polygon" && polygonVisible === true) {
+                Polygon({ shape, color: "purple", opacity, canvas });
+            } else if (shape.shapeType === "VP") {
+                VanishingPoint({ shape, color: "red", opacity, canvas });
+            } else {
+                console.warn(`Invalid shape "${shape}" specified". Skipping...`);
+                return;
+            }
         });
       };
       
@@ -266,7 +277,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     return (
         <>
-            <TransformWrapper>
+            <TransformWrapper disabled={isInteractingWithBox}
+            >
                 <TransformComponent>
                     <canvas
                             id="c"
