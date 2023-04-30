@@ -43,6 +43,26 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             canvas.renderAll();
         }
     };
+
+    function is_error(shape: ShapeProps): boolean {
+        if (shape.verification_result?.error_code &&
+            shape.verification_result?.error_code.length > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    function pickColor(shape: ShapeProps): string {
+        let color = shapeColor;
+        if (is_error(shape)) {
+            color = "red";
+        } else if (shape.shapeType === "polygon") {
+            color = "purple";
+        } else if (shape.shapeType === "boundary") {
+            color = "yellow";
+        }
+        return color;
+    }
       
     // // Decompress imageData on mount
     // const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
@@ -105,19 +125,17 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         if (canvas) {
             // Add shapes to the canvas
             shapes.forEach((shape) => {
-                let color = shapeColor;
-                if (shape.verification_result?.error_code &&
-                    shape.verification_result?.error_code.length > 0) {
-                    color = "red";
-                }
+                let color = pickColor(shape);
                 if (shape.shapeType === "box") {
                 // // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
                     Box({shape, color: color, opacity, canvas});
                 // FabricShape({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                     Spline({shape, color: color, opacity, canvas});
-                } else if (shape.shapeType === "polygon" && polygonVisible === true) {
-                    Polygon({shape, color: "purple", opacity, canvas});
+                } else if (shape.shapeType === "polygon") {
+                    if (polygonVisible === true || is_error(shape)) {
+                        Polygon({shape, color: color, opacity, canvas});
+                    }
                 } else if (shape.shapeType === "VP") {
                     VanishingPoint({shape, color: shapeColor, opacity, canvas});
                 } else {
@@ -201,19 +219,17 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         clearHandler();
       
         shapes.forEach((shape) => {
-            let color = shapeColor;
-            if (shape.verification_result?.error_code &&
-                shape.verification_result?.error_code.length > 0) {
-                color = "red";
-            }
+            let color = pickColor(shape);
             if (shape.shapeType === "box") {
-                Box({ shape, color: shapeColor, opacity, canvas });
+                Box({ shape, color: color, opacity, canvas });
             } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                Spline({ shape, color: shapeColor, opacity, canvas });
+                Spline({ shape, color: color, opacity, canvas });
             } else if (shape.shapeType === "polygon" && polygonVisible === true) {
-                Polygon({ shape, color: "purple", opacity, canvas });
+                if (polygonVisible === true || is_error(shape)) {
+                    Polygon({shape, color: color, opacity, canvas});
+                }
             } else if (shape.shapeType === "VP") {
-                VanishingPoint({ shape, color: "red", opacity, canvas });
+                VanishingPoint({ shape, color: color, opacity, canvas });
             } else {
                 console.warn(`Invalid shape "${shape}" specified". Skipping...`);
                 return;
