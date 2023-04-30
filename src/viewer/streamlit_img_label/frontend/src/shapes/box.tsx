@@ -51,7 +51,6 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
 
     box.on("mousedown", () => {
         canvas.discardActiveObject(); // Deselect any previously selected object
-        console.log("selectedAnnotation")
         if (selectedBox.visible) {
             // If the annotation is already selected, deselect it
             box.trigger("deselected"); // Manually trigger the deselected event

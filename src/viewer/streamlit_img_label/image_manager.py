@@ -7,7 +7,24 @@ from src.models.data_labels import DataLabels
 
 """
 .. module:: streamlit_img_label
-   :synopsis: manage.
+   :synopsis: manages the current image and shapes (labels)
+   NB: the shapes are all in frontend coordinates (ShapeProps) and thus even the format is as such
+    So here is the translation between DataLabels.Object and ShapeProps
+                        DataLabels.Object                  ShapeProps
+     shape type key:    type                               shapeType
+     points format      points - list of list of           list of dictionaries,
+                          floating point numbers             each of which has keyed values: x: 1 y: 2, etc
+     point values       in image coordinates                screen coordinates,
+                                                              specifically canvas coordinates
+                                                              (700 or 1000 width)
+
+    Inside ImageManager, it uses ShapeProps exclusively after the labels are loaded through DataLabels.
+    The only exception is when the preview image is generated. In this case, the SHapeProps shape is
+    converted into image coordinates.
+    The other exception is, of course, when the shapes are saved into DataLabels.
+    
+    It is important to keep the format consistent. Inconsistent format standards will result in many woes.
+         
 .. module author:: Changsin Lee
 """
 
@@ -39,12 +56,6 @@ class ImageManager:
         """
         return self._image
 
-    def get_data_label_image(self) -> DataLabels.Image:
-        """
-        :return: DataLabels.Image
-        """
-        return self._data_label_image
-
     def get_shape_by_id(self, shape_id: int) -> dict:
         for shape in self._shapes:
             if shape['shape_id'] == shape_id:
@@ -52,13 +63,11 @@ class ImageManager:
 
     def add_shape(self, scaled_shape: dict):
         self._shapes.append(scaled_shape)
-        self._data_label_image.objects.append(ImageManager.to_data_labels_object(scaled_shape))
 
     def remove_shape(self, shape):
         shape_to_remove = self.get_shape_by_id(shape['shape_id'])
         if shape_to_remove:
             self._shapes.remove(shape_to_remove)
-            self._data_label_image.objects.append(shape_to_remove)
 
     def _load_shapes(self):
         """
@@ -260,6 +269,9 @@ class ImageManager:
                 resized_points.append(resized_point)
 
         resized_shape['points'] = resized_points
+        # Null out comment since it is not used by the frontend and will only make rendering slower
+        if resized_shape['verification_result']:
+            resized_shape['verification_result']['comment'] = None
         return resized_shape
 
     def get_downscaled_shapes(self):
@@ -339,4 +351,4 @@ class ImageManager:
             verification_result['error_code'] = error_code
             verification_result['comment'] = comment
 
-        self._data_label_image.objects[shape_id].verification_result = verification_result
+        self._shapes[shape_id]['verification_result'] = verification_result

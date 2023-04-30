@@ -64,7 +64,7 @@ def _display_attributes(selected_shape: dict):
 
 def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
     def save(image_index: int, im: ImageManager):
-        data_labels.images[image_index] = im.get_data_label_image()
+        data_labels.images[image_index] = im.to_data_labels_image()
         data_labels.save(selected_task.anno_file_name)
 
     def refresh():

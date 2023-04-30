@@ -73,34 +73,29 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     //     setDecompressedData(decompressedImageData);
     // }, [decompressedImageData]);
       
-    // create imageData object
-    let dataUri: any
-    if (ctx) {
-        var idata = ctx.createImageData(canvasWidth, canvasHeight)
+    // // create imageData object
+    const canvasDataUri = useMemo(() => {
+        let dataUri = ""
+        if (ctx) {
+          const idata = ctx.createImageData(canvasWidth, canvasHeight)
+          idata.data.set(imageData)
+          ctx.putImageData(idata, 0, 0)
+          dataUri = invisCanvas.toDataURL()
+        }
+        return dataUri
+    }, [imageData, ctx, canvasWidth, canvasHeight, invisCanvas])
 
-        // set our buffer as source
-        // idata.data.set(decompressedData)
-        idata.data.set(imageData)
 
-        // update canvas with new data
-        ctx.putImageData(idata, 0, 0)
-        dataUri = invisCanvas.toDataURL()
-    } else {
-        dataUri = ""
-    }
-
-    // Initialize canvas on mount and add shapes
     useEffect(() => {
         const canvasTmp = new fabric.Canvas("c", {
-            enableRetinaScaling: false,
-            backgroundImage: dataUri,
-            uniScaleTransform: true,
+          enableRetinaScaling: false,
+          backgroundImage: canvasDataUri,
+          uniScaleTransform: true,
         })
         setCanvas(canvasTmp)
-    }, [dataUri])
+    }, [canvasDataUri])
 
-
-    // Add shapes to the canvas
+      // Add shapes to the canvas
     useEffect(() => {
         if (canvas) {
             // Add shapes to the canvas
@@ -162,45 +157,45 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     }, [canvas]);
 
     useEffect(() => {
-        let isDragging = false;
-        let lastX: number;
-        let lastY: number;
-    
+        let isDragging = false
+        let lastX: number
+        let lastY: number
+      
         const handleMouseDown = (event: fabric.IEvent) => {
-            isDragging = true;
-            const pointer = canvas.getPointer(event.e);
-            lastX = pointer.x;
-            lastY = pointer.y;
-        };
-    
+          isDragging = true
+          const pointer = canvas.getPointer(event.e)
+          lastX = pointer.x
+          lastY = pointer.y
+        }
+      
         const handleMouseMove = (event: fabric.IEvent) => {
-            if (isDragging) {
-                const pointer = canvas.getPointer(event.e);
-                const deltaX = pointer.x - lastX;
-                const deltaY = pointer.y - lastY;
-
-                canvas.relativePan(new fabric.Point(deltaX, deltaY));
-
-                lastX = pointer.x;
-                lastY = pointer.y;
-            }
-        };
-    
+          if (isDragging) {
+            const pointer = canvas.getPointer(event.e)
+            const deltaX = pointer.x - lastX
+            const deltaY = pointer.y - lastY
+      
+            canvas.relativePan(new fabric.Point(deltaX, deltaY))
+      
+            lastX = pointer.x
+            lastY = pointer.y
+          }
+        }
+      
         const handleMouseUp = (event: fabric.IEvent) => {
-            isDragging = false;
-        };
-    
-        canvas.on("mouse:down", handleMouseDown);
-        canvas.on("mouse:move", handleMouseMove);
-        canvas.on("mouse:up", handleMouseUp);
-    
+          isDragging = false
+        }
+      
+        canvas.on("mouse:down", handleMouseDown)
+        canvas.on("mouse:move", handleMouseMove)
+        canvas.on("mouse:up", handleMouseUp)
+      
         return () => {
-            canvas.off("mouse:down", handleMouseDown);
-            canvas.off("mouse:move", handleMouseMove);
-            canvas.off("mouse:up", handleMouseUp);
-        };
-    }, [canvas]);
-    
+          canvas.off("mouse:down", handleMouseDown)
+          canvas.off("mouse:move", handleMouseMove)
+          canvas.off("mouse:up", handleMouseUp)
+        }
+      }, [canvas])
+          
     // Create a default bounding box
     const untaggedBox = (shape_id: number): ShapeProps  => ({
         shape_id: shape_id,
