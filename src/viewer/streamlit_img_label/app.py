@@ -21,7 +21,7 @@ from src.viewer.streamlit_img_label import st_img_label
 from src.viewer.streamlit_img_label.image_manager import ImageManager
 
 
-def _display_attributes(selected_shape: dict):
+def _display_type_attributes(selected_shape: dict):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
     if shape_type == "box":
@@ -188,7 +188,7 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
             # attributes
             with col2:
-                _display_attributes(selected_shape)
+                _display_type_attributes(selected_shape)
 
             # verification result
             with col3:

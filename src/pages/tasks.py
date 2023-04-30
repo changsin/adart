@@ -41,6 +41,7 @@ from src.home import (
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TasksInfo, TaskState
+from src.pages.users import select_user
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml']
@@ -190,12 +191,22 @@ def create_data_tasks(selected_project: Project):
 def assign_tasks():
     selected_project = select_project()
     if selected_project:
-        st.subheader(f"Assign tasks for project {selected_project.name}")
-        tasks = TasksInfo.get_tasks(selected_project.id)
-        for task in tasks:
-            if st.checkbox(task.name):
-                # Do something when the checkbox is selected
-                st.write(f"Task {task.name} is assigned")
+        with st.form("Add Data Task"):
+            st.subheader(f"Assign tasks to users for project {selected_project.name}")
+            tasks = TasksInfo.get_tasks(selected_project.id)
+            for task in tasks:
+                if st.checkbox(task.name):
+                    # Do something when the checkbox is selected
+                    st.write(f"Task {task.name} is checked")
+
+            selected_user = select_user(is_sidebar=False)
+            if selected_user:
+                st.write(f"User {selected_user} is picked")
+
+            assigned = st.form_submit_button("Assign tasks")
+            if assigned:
+                st.write(f"Assigned {tasks} to {selected_user}")
+
 
 def add_task():
     selected_project = select_project()

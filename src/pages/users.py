@@ -9,7 +9,7 @@ from src.home import (
 from src.models.users_info import User, UsersInfo
 
 
-def select_user():
+def select_user(is_sidebar=True):
     users_info = UsersInfo.get_users_info()
     if users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
@@ -18,9 +18,14 @@ def select_user():
                    for user_id, name in df_users_id_names[["id", "email"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
-        selected_user_id_name = st.sidebar.selectbox("Select user",
-                                                     options=options,
-                                                     index=len(options) - 1)
+        if is_sidebar:
+            selected_user_id_name = st.sidebar.selectbox("Select user",
+                                                         options=options,
+                                                         index=len(options) - 1)
+        else:
+            selected_user_id_name = st.selectbox("Select user",
+                                                 options=options,
+                                                 index=len(options) - 1)
 
         if selected_user_id_name:
             user_id, email, = selected_user_id_name.split('-', maxsplit=1)
