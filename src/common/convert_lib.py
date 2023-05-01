@@ -165,6 +165,76 @@ def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
     return target_filename
 
 
+def from_yolo_txt(img_annof_relation: str, anno_files: list, image_files: list, target_folder: str) -> str:
+    def _parse_yolov5_label_file(label_file_path: str, width: int, height: int) -> list:
+        with open(label_file_path, 'r') as label_file:
+            print(f"Parsing {label_file_path}")
+            lines = label_file.readlines()
+            objects = []
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                label, *points = line.split(' ')
+                if len(points) != 4:
+                    print(f"Skipping invalid entry {line}")
+                    continue
+                points = [float(p) for p in points]
+                cx, cy, cw, ch = points
+
+                shape_width_offset = (cw * width) / 2
+                shape_height_offset = (ch * height) / 2
+                xtl = (cx * width) - shape_width_offset
+                ytl = (cy * height) - shape_height_offset
+                xbr = (cx * width) + shape_width_offset
+                ybr = (cy * height) + shape_height_offset
+                obj = {'label': label, 'type': 'box', 'points': [[xtl, ytl, xbr, ybr]]}
+                objects.append(obj)
+        return objects
+
+    if img_annof_relation != '11':
+        return
+
+    output_jdict = dict()
+    output_jdict['mode'] = 'annotation'
+    output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
+    output_jdict['template_version'] = "0.1"
+
+    output_jdict_imgs = list()
+
+    for image_id, (anno_filename, image_filename) in enumerate(zip(anno_files, image_files)):
+        cur_img = dict()
+        cur_img['image_id'] = str(image_id)
+
+        image_dir = os.path.dirname(os.path.dirname(anno_filename))
+        image_filename = os.path.join(image_dir, image_filename)
+        cur_img['name'] = os.path.basename(image_filename)
+
+        width, height = utils.get_resolution(image_filename)
+        cur_img['width'] = int(width)
+        cur_img['height'] = int(height)
+
+        objects_dict = _parse_yolov5_label_file(anno_filename, width, height)
+        cur_img['objects'] = objects_dict
+
+        output_jdict_imgs.append(cur_img)
+
+    output_jdict['images'] = output_jdict_imgs
+
+    # take the folder name as the fname
+    filename = os.path.basename(os.path.dirname(anno_files[0]))
+
+    # directly write to the destination
+    target_filename = os.path.join(target_folder, filename + '.json')
+    with open(target_filename, 'w', encoding='utf-8') as jf:
+        json.dump(output_jdict, jf, indent=2, ensure_ascii=False)
+
+    st.write("Converted {}".format(filename))
+
+    return target_filename
+
+
 def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: str) -> str:
     if img_annof_relation != '11':
         return

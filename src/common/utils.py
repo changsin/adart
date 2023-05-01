@@ -1,8 +1,7 @@
 import glob
 import json
 import os
-import struct
-import cv2
+from PIL import Image
 from pathlib import Path
 
 
@@ -89,12 +88,16 @@ def step_size(value):
 
 
 def get_resolution(filename: str) -> (int, int):
-    width, height = 0, 0
-    # Read the image using opencv-python
-    img = cv2.imread(filename)
-    if img is not None:
+    with Image.open(filename) as img:
         # Get the width and height of the image
-        height, width, _ = img.shape
+        width, height = img.size
+
+    # width, height = 0, 0
+    # # Read the image using opencv-python
+    # img = cv2.imread(filename)
+    # if img is not None:
+    #     # Get the width and height of the image
+    #     height, width, _ = img.shape
 
     return width, height
 

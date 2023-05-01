@@ -144,15 +144,19 @@ def plot_file_info(title: str, files_dict: dict):
             for file in files:
                 file_stat = os.stat(os.path.join(folder, file))
                 dt_cdatetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
-                st.markdown("📄{} ({}) {}".format(file,
-                                                 utils.humanize_bytes(file_stat.st_size),
-                                                 dt_cdatetime.date()))
+                st.markdown("📄{} ({}) created: {}".format(file,
+                                                           utils.humanize_bytes(file_stat.st_size),
+                                                           dt_cdatetime.date()))
+                # st.markdown("📄{} ({}) {}".format(file,
+                #                                  utils.humanize_bytes(file_stat.st_size),
+                #                                  dt_cdatetime.date()))
                 ctime_object = dt_cdatetime.time()
                 # Append date and time to x and y data lists
                 file_info_dict[file] = (dt_cdatetime.date(), float(ctime_object.strftime('%H.%M')), file_stat.st_size)
 
     df_ctime = pd.DataFrame.from_dict(file_info_dict, orient='index', columns=['date', 'time', 'size'])
     df_ctime = df_ctime.assign(file=file_info_dict.keys())
+    # df_ctime = df_ctime.assign(file=file_info_dict.keys(), modified=[t[0] for t in file_info_dict.values()])
 
     # convert the date column to a string representation
     df_ctime['date'] = df_ctime['date'].astype(str)

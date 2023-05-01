@@ -112,7 +112,7 @@ def show_image_metrics():
         st.write("No image data")
 
 
-def get_rectangle(label_object) -> list:
+def get_bounding_rectangle(label_object) -> list:
     """
     get the rectangle of a polygon or a spline
     :param label_object: label object whose points could be [[x,y,r]...] or [[x,y]...]
@@ -171,7 +171,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     print("empty points in {}".format(object_cur.label))
                     continue
 
-                xtl1, ytl1, xbr1, ybr1 = get_rectangle(object_cur)
+                xtl1, ytl1, xbr1, ybr1 = get_bounding_rectangle(object_cur)
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                 width1 = rect1.xmax - rect1.xmin
                 height1 = rect1.ymax - rect1.ymin
@@ -186,7 +186,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         print("empty points in {}".format(image.objects[ob_id2].label))
                         continue
 
-                    xtl2, ytl2, xbr2, ybr2 = get_rectangle(image.objects[ob_id2])
+                    xtl2, ytl2, xbr2, ybr2 = get_bounding_rectangle(image.objects[ob_id2])
                     rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
 
                     overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)

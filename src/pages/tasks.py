@@ -27,11 +27,13 @@ from src.common.constants import (
     CVAT_XML,
     STRADVISION_XML,
     GPR_JSON,
+    YOLO_V5_TXT,
     ModelTaskType)
 from src.common.convert_lib import (
     convert_CVAT_to_Form,
     from_gpr_json,
-    from_strad_vision_xml)
+    from_strad_vision_xml,
+    from_yolo_txt)
 from src.home import (
     is_authenticated,
     login,
@@ -44,7 +46,7 @@ from src.models.tasks_info import Task, TasksInfo, TaskState
 from src.pages.users import select_user
 
 DATE_FORMAT = "%Y %B %d %A"
-LABEL_FILE_EXTENSIONS = ['json', 'xml']
+LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']
 
 
 def calculate_sample_count(count, percent):
@@ -242,12 +244,13 @@ def add_data_task(selected_project: Project):
         data_files = dict()
         if uploaded_data_files:
             # Save the uploaded files
-            saved_filenames = []
+            saved_data_filenames = []
             for file in uploaded_data_files:
                 with open(os.path.join(save_folder, file.name), "wb") as f:
                     f.write(file.getbuffer())
-                saved_filenames.append(file.name)
-            data_files[save_folder] = saved_filenames
+                saved_data_filenames.append(file.name)
+            data_files[save_folder] = saved_data_filenames
+            saved_data_filenames.sort()
 
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
         if uploaded_label_files:
@@ -256,20 +259,23 @@ def add_data_task(selected_project: Project):
             if not os.path.exists(ori_folder):
                 os.mkdir(ori_folder)
 
-            saved_filenames = []
+            saved_anno_filenames = []
             for file in uploaded_label_files:
                 with open(os.path.join(ori_folder, file.name), "wb") as f:
                     f.write(file.getbuffer())
-                saved_filenames.append(os.path.join(ori_folder, file.name))
+                saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
-            saved_filenames.sort()
+            saved_anno_filenames.sort()
             if labels_format_type == STRADVISION_XML:
-                converted_filename = from_strad_vision_xml("11", saved_filenames, save_folder)
+                converted_filename = from_strad_vision_xml("11", saved_anno_filenames, save_folder)
             elif labels_format_type == CVAT_XML:
                 # There should be only 1 per folder
-                converted_filename = convert_CVAT_to_Form("NN", saved_filenames[0], save_folder)
+                converted_filename = convert_CVAT_to_Form("NN", saved_anno_filenames[0], save_folder)
             elif labels_format_type == GPR_JSON:
-                converted_filename = from_gpr_json("11", saved_filenames, save_folder)
+                converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
+            elif labels_format_type == YOLO_V5_TXT:
+                print("parsing yolov5")
+                converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
 
         # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Task")
