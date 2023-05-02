@@ -124,7 +124,6 @@ def get_bounding_rectangle(label_object) -> list:
     x_index, y_index = 0, 1
     points = label_object.points
 
-    print(points)
     min_x = max_x = points[0][x_index]
     min_y = max_y = points[0][y_index]
 

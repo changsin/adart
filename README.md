@@ -1,7 +1,16 @@
 # ADaRT (AI Data Reviewing Tool)
-ADaRT is a data reviewing tool written in Streamlit and React JS.
+ADaRT is an AI data reviewing tool that can help you find errors in annotation as well as generate visual analytics of the errors.
+This tool will provide an easy way to parse the dataset (and the labels), and label and classify the errors.
 
 # 1. To developers
+The tool is written in Python (Streamlit) and React JS.
+All source code is under src package.
+Here are what each package does:
+- **common:** common utility modules, constants, label conversion functions
+- **models:** abstract interfaces of data labels, projects, tasks, and users
+- **notebooks:** playground for POCs
+- **pages:** web pages that take you to the rest of functions
+- **viewer:** image viewer (frontend)
 
 ## 1.1. To build the frontend
 
