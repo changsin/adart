@@ -137,7 +137,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         Polygon({shape, color: color, opacity, canvas});
                     }
                 } else if (shape.shapeType === "VP") {
-                    VanishingPoint({shape, color: shapeColor, opacity, canvas});
+                    VanishingPoint({shape, color: color, opacity, canvas});
                 } else {
                     console.warn(`Invalid shape "${shape.shapeType}" specified". Skipping...`)
                     return
