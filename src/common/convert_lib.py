@@ -35,6 +35,7 @@ def collect_org_annofile_as_list(target_data_directory, file_ext, image_annofile
 
     return org_annofile_list
 
+
 # Blackolive(CVAT) xml 파일을 검증도구에서 사용할 포맷으로 변경할 때 사용하는 함수
 def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
     # Blackolive가 지원하는 객체 타입
@@ -434,6 +435,7 @@ def from_strad_vision_xml(img_annof_relation: str, anno_file_list: list, target_
     st.write("Converted {}".format(filename))
 
     return target_filename
+
 
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
 def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):

@@ -115,7 +115,7 @@ def main():
         "List Users": lambda: list_users(),
         "Add User": lambda: add_user(),
         "Update User": lambda: update_user(),
-        "Delete Task": lambda: delete_user(),
+        "Delete User": lambda: delete_user(),
     }
 
     # Create a sidebar with menu options

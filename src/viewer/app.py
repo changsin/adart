@@ -17,8 +17,8 @@ from src.common.constants import (
 from src.home import select_task
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
-from src.viewer.streamlit_img_label import st_img_label
-from src.viewer.streamlit_img_label.image_manager import ImageManager
+from src.viewer import st_img_label
+from src.viewer.image_manager import ImageManager
 
 
 def _display_type_attributes(selected_shape: dict):
