@@ -1,3 +1,5 @@
+// definitions of interfaces used in StreamlitImgLabel
+
 export interface Point {
   x: number;
   y: number;
@@ -12,6 +14,8 @@ export interface BoxPoint extends Point {
   h: number;
 }
 
+// for now, comment is always null when sent through PythonArgs
+// to reduce the amount of re-drawing the canvas
 export interface VerificationResult {
   error_code: string;
   comment: string | null;
@@ -22,6 +26,7 @@ export interface Attributes {
   value: string;
 }
 
+// interface to use between StreamlitImgLabel and shape FCs
 export interface ShapeProps {
   shape_id: number;
   label: string;
@@ -31,6 +36,7 @@ export interface ShapeProps {
   verification_result: VerificationResult | null;
 }
 
+// interface between StreamlitImgLabel and shape FCs
 export interface ShapeRenderProps {
   shape: ShapeProps;
   color: string;
@@ -38,6 +44,7 @@ export interface ShapeRenderProps {
   canvas: fabric.Canvas;
 }
 
+// interface between python and frontend
 export interface PythonArgs {
   canvasWidth: number
   canvasHeight: number

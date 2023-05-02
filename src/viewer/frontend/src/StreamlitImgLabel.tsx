@@ -54,7 +54,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     function pickColor(shape: ShapeProps): string {
         let color = shapeColor;
-        if (is_error(shape)) {
+        if (is_error(shape) || shape.shapeType === "VP") {
             color = "red";
         } else if (shape.shapeType === "polygon") {
             color = "purple";

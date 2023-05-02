@@ -1,5 +1,5 @@
 # ADaRT (AI Data Reviewing Tool)
-ADaRT is a data reviewing tool written in Streamlit and React.
+ADaRT is a data reviewing tool written in Streamlit and React JS.
 
 To run:
 1.  Run the following
@@ -21,7 +21,7 @@ This is done through Electron following (How to Convert a Streamlit App to an .E
 # To build the frontend
 
 ```commandline
->cd view/streamlit_img_label/frontend
+>cd src/viewer/frontend
 >npm install
 >npm run build
 ```
