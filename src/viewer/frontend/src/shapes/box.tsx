@@ -1,9 +1,8 @@
 import React from "react";
 import { fabric } from "fabric"
 import { BoxPoint, ShapeRenderProps } from "../interfaces";
-import { sendSelectedShape } from "../streamlit-utils";
 
-export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas }) => {
+export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas, onSelectHandler }) => {
     const {shape_id, points, label } = shape;
     const {x, y, w, h} = points[0] as BoxPoint
     const box = new fabric.Rect({
@@ -91,8 +90,9 @@ export const Box: React.FC<ShapeRenderProps> = ({ shape, color, opacity, canvas 
         });
         canvas.setActiveObject(selectedBox);
 
-        console.log("selected " + shape)
-        sendSelectedShape(shape)
+        if (onSelectHandler) {
+            onSelectHandler(shape, box);
+        }
     });
 
     // Add a click event listener to hide the highlight rectangle

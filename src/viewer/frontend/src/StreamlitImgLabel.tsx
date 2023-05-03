@@ -128,13 +128,13 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 let color = pickColor(shape);
                 if (shape.shapeType === "box") {
                 // // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
-                    Box({shape, color: color, opacity, canvas});
+                    Box({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                 // FabricShape({shape, color: shapeColor, opacity, canvas});
                 } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                    Spline({shape, color: color, opacity, canvas});
+                    Spline({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                 } else if (shape.shapeType === "polygon") {
                     if (polygonVisible === true || is_error(shape)) {
-                        Polygon({shape, color: color, opacity, canvas});
+                        Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     }
                 } else if (shape.shapeType === "VP") {
                     VanishingPoint({shape, color: color, opacity, canvas});
@@ -153,6 +153,13 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         canvas.renderAll()
 
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
+
+    const onSelectShapeHandler = ((shape: ShapeProps, fabricShape: fabric.Object) => {
+        console.log(`onSelectedShape ${JSON.stringify(shape)}`)
+        canvas.remove(fabricShape);
+        sendSelectedShape(shape);
+        canvas.renderAll();
+    })
           
     // Create a default bounding box
     const untaggedBox = (shape_id: number): ShapeProps  => ({
@@ -210,6 +217,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // Remove the selected bounding box
     const removeBoxHandler = () => {
         const selectObject = canvas.getActiveObject()
+        console.log(`removeObject ${JSON.stringify(selectObject)}`)
         const selectIndex = canvas.getObjects().indexOf(selectObject)
         canvas.remove(selectObject)
         sendCoordinates(labels.filter((label, i) => i !== selectIndex))
@@ -240,7 +248,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     // Remove all the bounding boxes
     const clearHandler = () => {
-        // setNewBBoxIndex(0)
+        setNewBBoxIndex(0)
         canvas.getObjects().forEach((rect) => canvas.remove(rect))
         sendCoordinates([])
       }

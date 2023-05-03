@@ -42,6 +42,7 @@ export interface ShapeRenderProps {
   color: string;
   opacity: number;
   canvas: fabric.Canvas;
+  onSelectHandler?: (shape: ShapeProps, fabricsShape: fabric.Object) => void;
 }
 
 // interface between python and frontend
