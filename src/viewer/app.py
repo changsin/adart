@@ -90,6 +90,19 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
         st.session_state["image_index"] = image_index
 
     def viewer_menu():
+        def _write_class_stats():
+            # Create the HTML table string
+            custom_headers = ['class', 'count']
+            table_str = '<table><tr>'
+            for header in custom_headers:
+                table_str += f'<th>{header}</th>'
+            table_str += '</tr>'
+            for class_name, count in class_label_stats.items():
+                table_str += f'<tr><td>{class_name}</td><td>{count}</td></tr>'
+            table_str += '</table>'
+
+            st.sidebar.markdown(table_str, unsafe_allow_html=True)
+
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         # Main content: review images
@@ -101,6 +114,10 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
 
         st.sidebar.write("Total files:", n_files)
         st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
+
+        if data_labels.images[image_index]:
+            class_label_stats = data_labels.images[image_index].get_class_label_stats()
+            _write_class_stats()
 
         st.sidebar.selectbox("Files",
                              st.session_state["img_files"],

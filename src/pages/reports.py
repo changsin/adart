@@ -140,6 +140,7 @@ def get_bounding_rectangle(label_object) -> list:
 
     return [min_x, min_y, max_x, max_y]
 
+
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 

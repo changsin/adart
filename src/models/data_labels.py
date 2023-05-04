@@ -102,6 +102,16 @@ class DataLabels:
                 "objects": self.objects
             }
 
+        def get_class_label_stats(self):
+            class_labels = dict()
+            for obj in self.objects:
+                label = obj.label
+                if class_labels.get(label):
+                    class_labels[label] += 1
+                else:
+                    class_labels[label] = 1
+            return class_labels
+
         @staticmethod
         def from_json(json_dict):
             return DataLabels.Image(
