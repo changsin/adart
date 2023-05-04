@@ -86,11 +86,11 @@ def select_task(project_id: int) -> (list, int):
 
 
 def get_token(url, username: str, password: str):
-    if username == 'Admin' and password == 'aiworks1!':
+    if "http://localhost" == url and username == 'user' and password == 'password1234!':
         return 'token'
 
     if "http://localhost" == url:
-        if username == 'Admin' and password == "1234":
+        if username == 'user' and password == "password1234!":
             return "token"
     else:
         token = api.get_access_token(url + "/api/v1/login/access-token", username, password)

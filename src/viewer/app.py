@@ -215,15 +215,15 @@ def main(selected_project: Project, error_codes=ErrorType.get_all_types()):
                     error_code = verification_result['error_code']
                     default_index = error_codes.index(error_code)
 
-                select_label = col3.selectbox(
-                    "Error", error_codes, key=f"error_{selected_shape_id}", index=default_index
-                )
-
-                comment = None
+                comment = ""
+                select_label = col3.selectbox("Error",
+                                              error_codes,
+                                              key=f"error_{selected_shape_id}",
+                                              index=default_index)
                 if select_label:
                     if not verification_result:
                         verification_result = dict()
-                    default_comment = verification_result.get('comment', None)
+                    default_comment = verification_result.get('comment', "")
                     comment = col3.text_input("Comment", default_comment)
 
                 # save the verification result

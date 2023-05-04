@@ -109,58 +109,56 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     opacity,
   });
 
-  // const selectedPath = new fabric.Path(pathString, {
-  //   stroke: color,
-  //   fill: '',
-  //   strokeWidth: 8,
-  //   opacity,
-  //   visible: false
-  // });
+  const selectedPath = new fabric.Path(pathString, {
+    stroke: color,
+    fill: '',
+    strokeWidth: 10,
+    opacity,
+    visible: false
+  });
 
   canvas.add(path);
-  // canvas.add(selectedPath);
+  canvas.add(selectedPath);
 
   path.on("mousedown", () => {
     canvas.discardActiveObject(); // Deselect any previously selected object
-    path.strokeWidth = 10;
-    // if (selectedPath.visible) {
-    //     // If the annotation is already selected, deselect it
-    //     path.trigger("deselected"); // Manually trigger the deselected event
-    //     selectedPath.visible = false;
-    // } else {
-    //     // Otherwise, select the annotation
-    //     selectedPath.set({visible: true});
-    //     canvas.setActiveObject(selectedPath);
-    //     path.trigger("selected"); // Manually trigger the selected event
-    // }
-});
+    if (selectedPath.visible) {
+        // If the annotation is already selected, deselect it
+        path.trigger("deselected"); // Manually trigger the deselected event
+        selectedPath.visible = false;
+    } else {
+        // Otherwise, select the annotation
+        selectedPath.set({visible: true});
+        canvas.setActiveObject(selectedPath);
+        path.trigger("selected"); // Manually trigger the selected event
+    }
+  });
 
   path.on("mouseup", (event) => {
-    path.strokeWidth = 5;
-      // if (!event.target) {
+      if (!event.target) {
       // If no object is clicked, deselect any selected object
-      // const activeObject = canvas.getActiveObject();
-      // if (activeObject === selectedPath) {
-      //     path.trigger("deselected"); // Manually trigger the deselected event
-      //     selectedPath.visible = false;
-      // }
-    // }
+      const activeObject = canvas.getActiveObject();
+      if (activeObject === selectedPath) {
+          path.trigger("deselected"); // Manually trigger the deselected event
+          selectedPath.visible = false;
+      }
+    }
   });
 
   // // Add a click event listener to show the highlight rectangle
   path.on("selected", () => {
-  //   selectedPath.set({visible: true});
-  //   canvas.setActiveObject(selectedPath);
+    selectedPath.set({visible: true});
+    canvas.setActiveObject(selectedPath);
 
-    // if (onSelectHandler) {
-    //   onSelectHandler(shape, path, null);
-    // }
+    if (onSelectHandler) {
+      onSelectHandler(shape, path);
+    }
   });
 
   // Add a click event listener to hide the highlight rectangle
-  // path.on("deselected", () => {
-  //     selectedPath.visible = false;
-  // });
+  path.on("deselected", () => {
+      selectedPath.visible = false;
+  });
 
   const controlPoints = drawControlPoints(points as SplinePoint[], 'black')
   controlPoints.forEach(((point) => {
