@@ -1,0 +1,24 @@
+version: "3.3"
+services:
+
+  pgadmin:
+    ports:
+      - "5050:5050"
+
+  backend:
+    #ports:
+    #  - "8888:8888"
+    volumes:
+      - ./app:/app
+    environment:
+      #- JUPYTER=jupyter lab --ip=0.0.0.0 --allow-root --NotebookApp.custom_display_url=http://127.0.0.1:8888
+      - SERVER_HOST=http://${DOMAIN?Variable not set}
+      - FILE_SERVER_HOST=http://${DOMAIN?Variable not set}/static
+    build:
+      context: .
+      dockerfile: backend.dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-true}
+        INSTALL_JUPYTER: ${INSTALL_JUPYTER-true}
+    #command: bash -c "while true; do sleep 1; done"  # Infinite loop to keep container live doing nothing
+    command: /start-reload.sh
