@@ -41,9 +41,11 @@ from src.home import (
     select_project,
     select_task)
 from src.models.data_labels import DataLabels
+from src.models.adq_labels import AdqLabels
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TasksInfo, TaskState
 from src.pages.users import select_user
+from src.converters.cvat_reader import CVATReader
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']
@@ -266,15 +268,17 @@ def add_data_task(selected_project: Project):
                 saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
             saved_anno_filenames.sort()
+            converted_filename = os.path.join(save_folder, "origin.json")
             if labels_format_type == STRADVISION_XML:
                 converted_filename = from_strad_vision_xml("11", saved_anno_filenames, save_folder)
             elif labels_format_type == CVAT_XML:
-                # There should be only 1 per folder
-                converted_filename = convert_CVAT_to_Form("NN", saved_anno_filenames[0], save_folder)
+                reader = CVATReader()
+                parsed_dict = reader.parse(saved_anno_filenames, None)
+                data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
+                data_labels.save(converted_filename)
             elif labels_format_type == GPR_JSON:
                 converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
             elif labels_format_type == YOLO_V5_TXT:
-                print("parsing yolov5")
                 converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
 
         # label_files[save_folder] = [converted_filename]
