@@ -268,12 +268,13 @@ def add_data_task(selected_project: Project):
                 saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
             saved_anno_filenames.sort()
-            converted_filename = os.path.join(save_folder, "origin.json")
+            converted_filename = os.path.join(save_folder, "converted.json")
+
             if labels_format_type == STRADVISION_XML:
                 converted_filename = from_strad_vision_xml("11", saved_anno_filenames, save_folder)
             elif labels_format_type == CVAT_XML:
                 reader = CVATReader()
-                parsed_dict = reader.parse(saved_anno_filenames, None)
+                parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
                 data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
                 data_labels.save(converted_filename)
             elif labels_format_type == GPR_JSON:

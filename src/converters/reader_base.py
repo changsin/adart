@@ -1,4 +1,3 @@
-import attr
 from abc import ABC
 
 CONVERT_ID = "96E7D8C8-44E4-4055-8487-85B3208E51A2"

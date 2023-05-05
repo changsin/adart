@@ -8,72 +8,67 @@ class CVATReader(ReaderBase):
     def parse(self, label_files, data_files=None):
         super().parse(label_files, data_files)
 
-        label_file = label_files[0]
+        for label_file in label_files:
+            xml_structure = ET.parse(label_file)
 
-        xml_structure = ET.parse(label_file)
+            root_info = xml_structure.getroot()
+            if root_info.tag != 'annotations':
+                raise Exception(label_file + 'is not a supported CVAT format.')
 
-        root_info = xml_structure.getroot()
+            images = list()
+            el_images = root_info.findall('image')
+            for el_image in el_images:
+                image_dict = dict()
+                image_dict['image_id'] = el_image.attrib['id']
+                image_dict['name'] = el_image.attrib['name']
+                image_dict['width'] = el_image.attrib['width']
+                image_dict['height'] = el_image.attrib['height']
 
-        if root_info.tag != 'annotations':
-            raise Exception(label_file + 'is not a supported CVAT format.')
+                objects_list = list()
+                for object_type in BO_SHAPE_TYPES:
+                    el_objects = el_image.findall(object_type)
+                    for el_object in el_objects:
+                        object_dict = dict()
+                        object_dict['label'] = el_object.attrib['label']
+                        object_dict['type'] = object_type
 
-        image_info = root_info.findall('image')
+                        try:
+                            object_dict['occluded'] = el_object.attrib['occluded']
+                        except KeyError:
+                            object_dict['occluded'] = "0"
 
-        output_jdict_imgs = list()
-        for each_img_info in image_info:
-            cur_img = dict()
-            cur_img['image_id'] = each_img_info.attrib['id']
-            cur_img['name'] = each_img_info.attrib['name']
-            cur_img['width'] = each_img_info.attrib['width']
-            cur_img['height'] = each_img_info.attrib['height']
+                        try:
+                            object_dict['z_order'] = el_object.attrib['z_order']
+                        except KeyError:
+                            object_dict['z_order'] = "0"
 
-            cur_img_objlist = list()
+                        try:
+                            object_dict['group_id'] = el_object.attrib['group_id']
+                        except KeyError:
+                            object_dict['group_id'] = ""
 
-            for objtype in BO_SHAPE_TYPES:
-                obj_info = each_img_info.findall(objtype)
+                        if object_type == 'box':
+                            object_dict['position'] = "{}, {}, {}, {}".format(el_object.attrib['xtl'],
+                                                                              el_object.attrib['ytl'],
+                                                                              el_object.attrib['xbr'],
+                                                                              el_object.attrib['ybr'])
+                        else:
+                            object_dict['position'] = el_object.attrib['points']
 
-                for each_obj_info in obj_info:
-                    cur_obj = dict()
-                    cur_obj['label'] = each_obj_info.attrib['label']
-                    cur_obj['type'] = objtype
+                        attributes = list()
+                        el_attributes = el_object.findall('attribute')
+                        for each_attr in el_attributes:
+                            attributes_dict = dict()
+                            attributes_dict['attribute_name'] = each_attr.attrib['name']
+                            attributes_dict['attribute_value'] = each_attr.text
+                            attributes.append(attributes_dict)
 
-                    try:
-                        cur_obj['occluded'] = each_obj_info.attrib['occluded']
-                    except KeyError:
-                        cur_obj['occluded'] = "0"
+                        object_dict['attributes'] = attributes
+                        objects_list.append(object_dict)
 
-                    try:
-                        cur_obj['z_order'] = each_obj_info.attrib['z_order']
-                    except KeyError:
-                        cur_obj['z_order'] = "0"
+                image_dict['objects'] = objects_list
+                images.append(image_dict)
 
-                    try:
-                        cur_obj['group_id'] = each_obj_info.attrib['group_id']
-                    except KeyError:
-                        cur_obj['group_id'] = ""
-
-                    if objtype == 'box':
-                        cur_obj['position'] = each_obj_info.attrib['xtl'] + ', ' + each_obj_info.attrib['ytl'] + ', ' + \
-                                              each_obj_info.attrib['xbr'] + ', ' + each_obj_info.attrib['ybr']
-                    else:
-                        cur_obj['position'] = each_obj_info.attrib['points']
-
-                    cur_obj_attrlist = list()
-                    attr_infos = each_obj_info.findall('attribute')
-
-                    for each_attr in attr_infos:
-                        cur_attr = dict()
-                        cur_attr['attribute_name'] = each_attr.attrib['name']
-                        cur_attr['attribute_value'] = each_attr.text
-                        cur_obj_attrlist.append(cur_attr)
-
-                    cur_obj['attributes'] = cur_obj_attrlist
-
-                    cur_img_objlist.append(cur_obj)
-
-            cur_img['objects'] = cur_img_objlist
-            output_jdict_imgs.append(cur_img)
-
-        self.parsed_dict['images'] = output_jdict_imgs
+            self.parsed_dict['images'] = images
 
         return self.parsed_dict
