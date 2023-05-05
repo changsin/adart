@@ -1,5 +1,6 @@
-from .reader_base import ReaderBase
 import xml.etree.ElementTree as ET
+
+from .reader_base import ReaderBase
 
 BO_SHAPE_TYPES = ['box', 'polygon', 'polyline', 'points', 'face', 'body', 'leftHand', 'rightHand']
 
@@ -69,6 +70,5 @@ class CVATReader(ReaderBase):
                 image_dict['objects'] = objects_list
                 images.append(image_dict)
 
-            self.parsed_dict['images'] = images
-
-        return self.parsed_dict
+            self.data_labels_dict['images'] = images
+        return self.data_labels_dict

@@ -30,9 +30,7 @@ from src.common.constants import (
     YOLO_V5_TXT,
     ModelTaskType)
 from src.common.convert_lib import (
-    convert_CVAT_to_Form,
     from_gpr_json,
-    from_strad_vision_xml,
     from_yolo_txt)
 from src.home import (
     is_authenticated,
@@ -46,6 +44,7 @@ from src.models.projects_info import Project
 from src.models.tasks_info import Task, TasksInfo, TaskState
 from src.pages.users import select_user
 from src.converters.cvat_reader import CVATReader
+from src.converters.stvision_reader import StVisionReader
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']
@@ -271,7 +270,10 @@ def add_data_task(selected_project: Project):
             converted_filename = os.path.join(save_folder, "converted.json")
 
             if labels_format_type == STRADVISION_XML:
-                converted_filename = from_strad_vision_xml("11", saved_anno_filenames, save_folder)
+                reader = StVisionReader()
+                parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
+                data_labels = DataLabels.from_json(parsed_dict)
+                data_labels.save(converted_filename)
             elif labels_format_type == CVAT_XML:
                 reader = CVATReader()
                 parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)

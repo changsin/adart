@@ -6,10 +6,10 @@ CONVERT_VERSION = "0.1"
 
 class ReaderBase(ABC):
     def __init__(self):
-        self.parsed_dict = {}
+        self.data_labels_dict = {}
 
     def parse(self, label_files: list, data_files: list = None) -> dict:
-        self.parsed_dict['mode'] = 'annotation'
-        self.parsed_dict['twconverted'] = CONVERT_ID
-        self.parsed_dict['template_version'] = CONVERT_VERSION
-        return self.parsed_dict
+        self.data_labels_dict['mode'] = 'annotation'
+        self.data_labels_dict['twconverted'] = CONVERT_ID
+        self.data_labels_dict['template_version'] = CONVERT_VERSION
+        return self.data_labels_dict
