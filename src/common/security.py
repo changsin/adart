@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from typing import Any, Union
-import secrets
 from jose import jwt
 from passlib.context import CryptContext
 import importlib.util
@@ -16,7 +15,7 @@ if spec is None:
 from src.common.token_schema import TokenPayload
 
 ALGORITHM: str = "HS256"
-SECRET_KEY: str = secrets.token_urlsafe(32)
+SECRET_KEY: str = "TO_BE_FILLED"
 EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 
@@ -40,14 +39,8 @@ def create_access_token(
 def decode_token(token):
     try:
         print("decoding token {} with secret key {} {}".format(token, SECRET_KEY, ALGORITHM))
-
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        # print(decoded_token)
-        # return decoded_token["sub"]
-
-        print("payload {}".format(payload))
         token_data = TokenPayload(**payload)
-
         print("token_data {}".format(token_data))
     except jwt.ExpiredSignatureError as e:
         print('Error : decode_token() ExpiredSignatureError {}'.format(e))

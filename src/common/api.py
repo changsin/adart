@@ -63,7 +63,6 @@ def get_access_token(login_url, username, password):
         print('Error : get_access_token() - {0}'.format(e))
 
 
-
 if __name__ == '__main__':
     token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODIyMjYxMjksInN1YiI6IjIifQ.ASsV-z2NUCm5T-BHBaBzxkJHRsc5zUt7XPEjhhT-ip0"
     # token = create_access_token("test")
