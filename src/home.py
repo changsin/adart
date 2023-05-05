@@ -86,11 +86,8 @@ def select_task(project_id: int) -> (list, int):
 
 
 def get_token(url, username: str, password: str):
-    if "http://localhost" == url and username == 'user' and password == 'password1234!':
-        return 'token'
-
     if "http://localhost" == url:
-        if username == 'user' and password == "password1234!":
+        if username == 'admin' and password == "password1234!":
             return "token"
     else:
         token = api.get_access_token(url + "/api/v1/login/access-token", username, password)
@@ -100,7 +97,7 @@ def get_token(url, username: str, password: str):
 
 def login():
     selected_url = st.selectbox("Select server", [
-        "http://192.168.45.252",
+        "http://192.168.45.172",
         "http://localhost"
     ])
 
@@ -148,7 +145,6 @@ def main():
 
     image_path = os.path.join(resource_dir, 'workflow1.png')
     st.image(image_path, use_column_width=False)
-
 
 
 if __name__ == '__main__':
