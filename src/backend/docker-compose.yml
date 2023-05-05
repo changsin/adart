@@ -12,7 +12,6 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     networks:
-#      - ${TRAEFIK_PUBLIC_NETWORK?Variable not set}
       - default
     depends_on:
       - db
@@ -31,8 +30,8 @@ services:
       # Allow explicit env var override for tests
       - SMTP_HOST=${SMTP_HOST}
     build:
-      context: .
-      dockerfile: backend.dockerfile
+      context: ./app
+      dockerfile: app/backend.dockerfile
       args:
         INSTALL_DEV: ${INSTALL_DEV-false}
 
