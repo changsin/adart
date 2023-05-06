@@ -13,27 +13,34 @@ logger = get_logger(__name__)
 class ApiRemote(ApiBase):
 
     @staticmethod
-    def send_api_request(request):
+    def send_api_request(method: str, url: str, token: str):
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {token}",
+        }
+
         try:
-            response = requests.request(**request)
+            response = requests.request(method, url, headers=headers)
             response.raise_for_status()
 
             response_text = response.text
             code = response.status_code
             if code == requests.codes.ok or code == requests.codes.created:
-                return True, response_text
+                logger.info(f"send_api_request return {response}")
             else:
-                return False, response_text
+                logger.error(f"ERROR: send_api_request return {response}")
+
+            return response_text
         except requests.exceptions.RequestException as err:
             logger.error(f"Error: req_get_user_list_info - {err}")
             return False, err
 
     @staticmethod
-    def send_api_request_with_json_body(url, access_token, method, json_body):
+    def send_api_request_with_json_body(method: str, url: str, token: str, json_body: dict) -> dict:
         request = urllib.request.Request(url, method=method)
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {access_token}"
+            "Authorization": f"Bearer {token}"
         }
         for key, value in headers.items():
             request.add_header(key, value)
@@ -44,43 +51,30 @@ class ApiRemote(ApiBase):
         data = json_data.encode("utf-8")
         request.add_header("Content-Length", str(len(data)))
         request.data = data
-        with urllib.request.urlopen(request) as response:
-            return response.read()
-
-    def get_users_info(self):
-        url = f"{self.url_base}/api/v1/users/?&limit=99999"
-
-        headers = {
-            "Authorization": f"Bearer {self.token}",
-            "Accept": "application/json",
-        }
 
         try:
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-
-            json_data = json.loads(response.text)
-            users = []
-            for data in json_data:
-                users.append(data)
-
-            return UsersInfo.from_json({"num_count": len(users), "users": users})
-
+            with urllib.request.urlopen(request) as response:
+                return response.read()
         except requests.exceptions.RequestException as err:
-            logger.error(f"Error: req_get_user_list_info - {err}")
-            return None
+            logger.error(f"Error: create_user - {err}")
+        except Exception as e:
+            logger.error(f"Error: create_user - {e}")
+
+    def get_users_info(self) -> dict:
+        url = f"{self.url_base}/api/v1/users/?&limit=99999"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        json_data = json.loads(response_text)
+        users = []
+        for data in json_data:
+            users.append(data)
+
+        return {"num_count": len(users), "users": users}
 
     def create_user(self, new_user_dict: dict) -> dict:
         url = f"{self.url_base}/api/v1/users/"
+        return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_user_dict)
 
-        try:
-            response = ApiRemote.send_api_request_with_json_body(url, self.token, "POST", new_user_dict)
-            logger.info(f"response: {response}")
-            json_data = json.loads(response.text)
-            logger.info(f"response json_data: {json_data}")
-
-            return json_data
-
-        except requests.exceptions.RequestException as err:
-            logger.error(f"Error: create_user - {err}")
-            return None
+    def delete_user(self, user_id: int) -> dict:
+        url = f"{self.url_base}/api/v1/users/{user_id}"
+        response_text = ApiRemote.send_api_request("DELETE", url, self.token)
+        return json.loads(response_text)

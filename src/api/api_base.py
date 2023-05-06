@@ -14,10 +14,13 @@ class ApiBase(ABC):
         self.url_base = url_base
         self.token = token
 
-    def get_users_info(self):
+    def get_users_info(self) -> dict:
         pass
 
     def create_user(self, new_user_dict: dict) -> dict:
+        pass
+
+    def delete_user(self, user_id: int) -> dict:
         pass
 
 

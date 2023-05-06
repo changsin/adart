@@ -11,7 +11,8 @@ from src.models.users_info import User, UsersInfo
 
 
 def select_user(is_sidebar=True):
-    users_info = UsersInfo.get_users_info()
+    users_info_dict = api_target().get_users_info()
+    users_info = UsersInfo.from_json(users_info_dict)
     if users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
         df_users_id_names = df_users[["id", "email"]]
@@ -35,8 +36,9 @@ def select_user(is_sidebar=True):
 
 
 def list_users():
-    users_info = api_target().get_users_info()
-    if users_info.num_count > 0:
+    users_info_dict = api_target().get_users_info()
+    users_info = UsersInfo.from_json(users_info_dict)
+    if users_info and users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
         st.dataframe(df_users)
 
@@ -66,7 +68,6 @@ def create_user():
             new_user_dict['password'] = password
             del new_user_dict['id']
             response = api_target().create_user(new_user_dict)
-
             if response:
                 st.markdown(f"### User ({new_user}) ({email}) added with {response}")
             else:
@@ -108,11 +109,8 @@ def delete_user():
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the user {}-{}?"
                                              .format(selected_user.id, selected_user.email))
         if delete_confirmed:
-            users_info = UsersInfo.get_users_info()
-            users_info.users.remove(selected_user)
-            users_info.save()
-
-            st.markdown("### User ({}) ({}) deleted".format(selected_user, selected_user.email))
+            response = api_target().delete_user(selected_user.id)
+            st.markdown(f"### User ({selected_user.id}) deleted {response}")
 
 
 def main():

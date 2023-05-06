@@ -11,11 +11,11 @@ from .api_base import ApiBase
 
 
 class ApiLocal(ApiBase):
-    def get_users_info(self):
+    def get_users_info(self) -> dict:
         users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
-        json_users_info = utils.from_file(users_filename, "{\"num_count\": 0, \"users\":[]}")
+        users_info_dict = utils.from_file(users_filename, "{\"num_count\": 0, \"users\":[]}")
 
-        return UsersInfo.from_json(json_users_info)
+        return users_info_dict
 
     def create_user(self, new_user_dict: dict) -> dict:
         users_info = UsersInfo.get_users_info()
@@ -24,5 +24,13 @@ class ApiLocal(ApiBase):
         users_info.add(new_user)
         users_info.save()
         return new_user_dict
+
+    def delete_user(self, user_id: int) -> dict:
+        users_info = UsersInfo.get_users_info()
+        selected_user = users_info.get_user_by_id(user_id)
+        users_info.users.remove(selected_user)
+        users_info.save()
+        return selected_user.to_json()
+
 
 

@@ -138,6 +138,7 @@ def logout():
 def is_authenticated():
     return st.session_state.get('token')
 
+
 def main():
     st.header("**Adart** - AI Data Reviewing Tool")
 

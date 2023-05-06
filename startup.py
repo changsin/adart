@@ -26,7 +26,7 @@ def main():
     }
 
     # Create a sidebar with menu options
-    selected_action = st.sidebar.selectbox("Choose action", list(admin_menu.keys()))
+    selected_action = st.sidebar.selectbox("Go to page", list(admin_menu.keys()))
 
     if selected_action:
         # Call the selected method based on the user's selection
