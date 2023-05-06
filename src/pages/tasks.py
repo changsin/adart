@@ -25,17 +25,17 @@ from src.common.convert_lib import (
     from_yolo_txt)
 from src.converters.cvat_reader import CVATReader
 from src.converters.stvision_reader import StVisionReader
-from src.home import (
-    is_authenticated,
-    login,
-    logout,
-    select_project,
-    select_task)
 from src.models.adq_labels import AdqLabels
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TasksInfo, TaskState
 from src.pages.users import select_user
+from .home import (
+    is_authenticated,
+    login,
+    logout,
+    select_project,
+    select_task)
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']
@@ -440,6 +440,11 @@ def delete_task():
 
 
 def main():
+    # Clear the sidebar
+    st.sidebar.empty()
+    # Clear the main page
+    st.empty()
+
     menu = {
         "Add Task": lambda: add_task(),
         "Assign Tasks": lambda: assign_tasks(),

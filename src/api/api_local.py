@@ -6,7 +6,7 @@ from src.common.constants import (
     USERS,
     JSON_EXT
 )
-from src.models.users_info import UsersInfo
+from src.models.users_info import User, UsersInfo
 from .api_base import ApiBase
 
 
@@ -16,4 +16,13 @@ class ApiLocal(ApiBase):
         json_users_info = utils.from_file(users_filename, "{\"num_count\": 0, \"users\":[]}")
 
         return UsersInfo.from_json(json_users_info)
+
+    def create_user(self, new_user_dict: dict) -> dict:
+        users_info = UsersInfo.get_users_info()
+        new_user = User.from_json(new_user_dict)
+        new_user.id = users_info.get_next_user_id()
+        users_info.add(new_user)
+        users_info.save()
+        return new_user_dict
+
 

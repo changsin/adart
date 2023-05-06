@@ -4,6 +4,12 @@ import shutil
 
 import streamlit as st
 
+from .home import (
+    get_projects_info,
+    is_authenticated,
+    login,
+    logout,
+    select_project)
 from src.common import utils
 from src.common.constants import (
     SUPPORTED_AUDIO_FILE_EXTENSIONS,
@@ -19,12 +25,6 @@ from src.common.constants import (
     DomainCode
 )
 from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
-from src.home import (
-    get_projects_info,
-    is_authenticated,
-    login,
-    logout,
-    select_project)
 from src.models.projects_info import Project, ModelProject
 from src.models.tasks_info import TasksInfo
 
@@ -303,6 +303,11 @@ def delete_project():
 
 
 def main():
+    # Clear the sidebar
+    st.sidebar.empty()
+    # Clear the main page
+    st.empty()
+
     menu = {
         "Create Project": lambda: create_project(),
         "Update Project": lambda: update_project(),

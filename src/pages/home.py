@@ -1,28 +1,20 @@
-import importlib.util
 import os.path
-from pathlib import Path
 
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
+import pandas as pd
+import streamlit as st
 
-    path_root = Path(__file__).parent.parent if Path(__file__).parent.name == 'src' else Path(__file__).parent
-    sys.path.append(str(path_root))
-
-from src.common.charts import *
-from src.common import utils
-from src.models.projects_info import ProjectsInfo
-from src.models.tasks_info import TasksInfo
+import src.api.api_base
+import src.common.utils as utils
+from src.api.api_base import ApiBase
+from src.api.api_local import ApiLocal
+from src.api.api_remote import ApiRemote
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     PROJECTS,
     JSON_EXT
 )
-import src.api.api as api
-from src.api.api_base import ApiBase
-from src.api.api_local import ApiLocal
-from src.api.api_remote import ApiRemote
-
+from src.models.projects_info import ProjectsInfo
+from src.models.tasks_info import TasksInfo
 
 LOCALHOST = "http://localhost"
 
@@ -103,7 +95,7 @@ def get_token(url, username: str, password: str):
     if "http://localhost" == url and username == 'admin' and password == "password1234!":
         return "token"
     else:
-        token = api.get_access_token(url + "/api/v1/login/access-token", username, password)
+        token = src.api.api_base.get_access_token(url + "/api/v1/login/access-token", username, password)
         print("access token is {}".format(token))
         return token
 
@@ -146,16 +138,14 @@ def logout():
 def is_authenticated():
     return st.session_state.get('token')
 
-
 def main():
-    st.set_page_config(page_title="Adart", layout="wide")
-    st.header("**Adart** - AI Reviewing Tool")
+    st.header("**Adart** - AI Data Reviewing Tool")
 
-    resource_dir = os.path.join(os.pardir, 'resources')
-    intro_markdown = utils.from_text_file(os.path.join(resource_dir, 'adart_homepage.md'))
+    resources_dir = "resources"
+    intro_markdown = utils.from_text_file(os.path.join(resources_dir, 'adart_homepage.md'))
     st.markdown(intro_markdown, unsafe_allow_html=True)
 
-    image_path = os.path.join(resource_dir, 'workflow1.png')
+    image_path = os.path.join(resources_dir, 'workflow1.png')
     st.image(image_path, use_column_width=False)
 
 
@@ -165,4 +155,3 @@ if __name__ == '__main__':
     else:
         main()
         logout()
-

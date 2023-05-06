@@ -1,12 +1,12 @@
 import pandas as pd
 import streamlit as st
 
-from src.common.constants import USER_TYPES, USERS
-from src.home import (
+from .home import (
     is_authenticated,
     api_target,
     login,
     logout)
+from src.common.constants import USER_TYPES, USERS
 from src.models.users_info import User, UsersInfo
 
 
@@ -41,9 +41,10 @@ def list_users():
         st.dataframe(df_users)
 
 
-def add_user():
-    with st.form("Add User"):
+def create_user():
+    with st.form("Create User"):
         email = st.text_input("**Email:**")
+        password = st.text_input("**Password:**", type="password")
         full_name = st.text_input("**Full Name:**")
         description = st.text_area("**Description**")
         is_active = st.checkbox("Is active?", False)
@@ -52,21 +53,24 @@ def add_user():
 
         submitted = st.form_submit_button("Add User")
         if submitted:
-            users_info = UsersInfo.get_users_info()
-            next_user_id = users_info.get_next_user_id()
             new_user = User(
-                id=next_user_id,
+                id=0,
                 email=email,
                 full_name=full_name,
                 is_active=is_active,
-                group_id=USER_TYPES.index(group_id),
+                group_id=USER_TYPES.index(group_id) + 1,
                 is_superuser=False,
                 phone=phone,
                 description=description)
-            users_info.add(new_user)
-            users_info.save()
+            new_user_dict = new_user.to_json()
+            new_user_dict['password'] = password
+            del new_user_dict['id']
+            response = api_target().create_user(new_user_dict)
 
-            st.markdown("### User ({}) ({}) added".format(new_user, email))
+            if response:
+                st.markdown(f"### User ({new_user}) ({email}) added with {response}")
+            else:
+                st.warning(f"### Create user ({new_user}) ({email}) failed with {response}")
 
 
 def update_user():
@@ -112,9 +116,14 @@ def delete_user():
 
 
 def main():
+    # Clear the sidebar
+    st.sidebar.empty()
+    # Clear the main page
+    st.empty()
+
     menu = {
         "List Users": lambda: list_users(),
-        "Add User": lambda: add_user(),
+        "Create User": lambda: create_user(),
         "Update User": lambda: update_user(),
         "Delete User": lambda: delete_user(),
     }

@@ -2,15 +2,15 @@ from collections import namedtuple
 
 import shapely
 
-from src.common.charts import *
-from src.common.constants import (
-    ADQ_WORKING_FOLDER
-)
-from src.home import (
+from .home import (
     is_authenticated,
     login,
     logout,
     select_project)
+from src.common.charts import *
+from src.common.constants import (
+    ADQ_WORKING_FOLDER
+)
 from src.models.data_labels import DataLabels
 from src.models.tasks_info import TasksInfo
 
@@ -308,6 +308,11 @@ def show_label_metrics():
 
 
 def main():
+    # Clear the sidebar
+    st.sidebar.empty()
+    # Clear the main page
+    st.empty()
+
     menu = {
         "Show file metrics": lambda: show_file_metrics(),
         "Show image metrics": lambda: show_image_metrics(),

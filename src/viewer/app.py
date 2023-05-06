@@ -14,7 +14,7 @@ from src.common.constants import (
     BoundaryType2R,
     TypeRoadMarkerQ
 )
-from src.home import select_task
+from src.pages.home import select_task
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.viewer import st_img_label

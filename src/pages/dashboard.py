@@ -2,13 +2,13 @@ import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
-from src.common import constants
-from src.home import (
+from .home import (
     get_projects_info,
     is_authenticated,
     login,
     logout,
     select_project)
+from src.common import constants
 from src.models.tasks_info import TasksInfo
 
 
@@ -68,6 +68,11 @@ def dashboard():
 
 
 def main():
+    # Clear the sidebar
+    st.sidebar.empty()
+    # Clear the main page
+    st.empty()
+
     st.markdown("# Dashboard")
     dashboard()
 
