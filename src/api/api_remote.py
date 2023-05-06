@@ -33,7 +33,7 @@ class ApiRemote(ApiBase):
             return response_text
         except requests.exceptions.RequestException as err:
             logger.error(f"Error: req_get_user_list_info - {err}")
-            return False, err
+            return err
 
     @staticmethod
     def send_api_request_with_json_body(method: str, url: str, token: str, json_body: dict) -> dict:
@@ -63,12 +63,13 @@ class ApiRemote(ApiBase):
     def get_users_info(self) -> dict:
         url = f"{self.url_base}/api/v1/users/?&limit=99999"
         response_text = ApiRemote.send_api_request("GET", url, self.token)
-        json_data = json.loads(response_text)
-        users = []
-        for data in json_data:
-            users.append(data)
+        if response_text:
+            json_data = json.loads(response_text)
+            users = []
+            for data in json_data:
+                users.append(data)
 
-        return {"num_count": len(users), "users": users}
+            return {"num_count": len(users), "users": users}
 
     def create_user(self, new_user_dict: dict) -> dict:
         url = f"{self.url_base}/api/v1/users/"
