@@ -1,15 +1,6 @@
-import importlib.util
 from collections import namedtuple
 
 import shapely
-
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
-    from pathlib import Path
-
-    path_root = Path(__file__).parents[2]
-    sys.path.append(str(path_root))
 
 from src.common.charts import *
 from src.common.constants import (
@@ -20,8 +11,8 @@ from src.home import (
     login,
     logout,
     select_project)
-from src.models.tasks_info import TasksInfo
 from src.models.data_labels import DataLabels
+from src.models.tasks_info import TasksInfo
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 

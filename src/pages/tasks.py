@@ -1,6 +1,5 @@
 import copy
 import datetime as dt
-import importlib.util
 import json
 import os.path
 import random
@@ -9,14 +8,6 @@ from base64 import b64encode
 
 import pandas as pd
 import streamlit as st
-
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
-    from pathlib import Path
-
-    path_root = Path(__file__).parents[2]
-    sys.path.append(str(path_root))
 
 import src.viewer.app as app
 from src.common import utils
@@ -32,19 +23,19 @@ from src.common.constants import (
 from src.common.convert_lib import (
     from_gpr_json,
     from_yolo_txt)
+from src.converters.cvat_reader import CVATReader
+from src.converters.stvision_reader import StVisionReader
 from src.home import (
     is_authenticated,
     login,
     logout,
     select_project,
     select_task)
-from src.models.data_labels import DataLabels
 from src.models.adq_labels import AdqLabels
+from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
 from src.models.tasks_info import Task, TasksInfo, TaskState
 from src.pages.users import select_user
-from src.converters.cvat_reader import CVATReader
-from src.converters.stvision_reader import StVisionReader
 
 DATE_FORMAT = "%Y %B %d %A"
 LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']

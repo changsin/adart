@@ -15,27 +15,7 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
-from src.common.security import decode_token
-from src.common.constants import (
-    ADQ_WORKING_FOLDER,
-    USERS,
-    JSON_EXT
-)
-import src.common.utils as utils
-from src.models.users_info import User
-
-
-@attr.s(slots=True, frozen=False)
-class ServerApi(ABC):
-    def get_users(self):
-        users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
-        json_users = utils.from_file(users_filename, "{\"users\":[]}")
-
-        users = list()
-        for json_user in json_users:
-            user_info = User.from_json(json_user)
-            users.append(user_info)
-        return users
+from src.api.security import decode_token
 
 
 def get_access_token(login_url, username, password):

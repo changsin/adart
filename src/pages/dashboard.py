@@ -1,19 +1,8 @@
-import importlib.util
-import importlib.util
-
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
-    from pathlib import Path
-
-    path_root = Path(__file__).parents[2]
-    sys.path.append(str(path_root))
-
-from src.common import constants, utils
+from src.common import constants
 from src.home import (
     get_projects_info,
     is_authenticated,

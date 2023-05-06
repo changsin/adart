@@ -14,7 +14,7 @@ import src.common.utils as utils
 class User:
     id = attr.ib(validator=attr.validators.instance_of(int))
     email = attr.ib(validator=attr.validators.instance_of(str))
-    full_name = attr.ib(validator=attr.validators.instance_of(str))
+    full_name = attr.ib(default="", validator=attr.validators.instance_of(str))
     is_active = attr.ib(default=False, validator=attr.validators.instance_of(bool))
     group_id = attr.ib(default=0, validator=attr.validators.instance_of(int))
     is_superuser = attr.ib(default=False, validator=attr.validators.instance_of(bool))
@@ -38,12 +38,12 @@ class User:
         return User(
             id=json_dict["id"],
             email=json_dict["email"],
-            full_name=json_dict["full_name"],
+            full_name=json_dict["full_name"] if json_dict["full_name"] else "",
             is_active=json_dict["is_active"],
             group_id=json_dict["group_id"],
             is_superuser=json_dict["is_superuser"],
-            phone=json_dict["phone"],
-            description=json_dict["description"]
+            phone=json_dict["phone"] if json_dict["phone"] else "",
+            description=json_dict["description"] if json_dict["description"] else ""
         )
 
 

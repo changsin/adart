@@ -12,7 +12,7 @@ if spec is None:
     path_root = Path(__file__).parents[2]
     sys.path.append(str(path_root))
 
-from src.common.token_schema import TokenPayload
+from src.api.token_schema import TokenPayload
 
 ALGORITHM: str = "HS256"
 SECRET_KEY: str = "TO_BE_FILLED"

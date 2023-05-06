@@ -16,10 +16,24 @@ from src.models.tasks_info import TasksInfo
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     PROJECTS,
-    TASKS,
     JSON_EXT
 )
-import src.common.api as api
+import src.api.api as api
+from src.api.api_base import ApiBase
+from src.api.api_local import ApiLocal
+from src.api.api_remote import ApiRemote
+
+
+LOCALHOST = "http://localhost"
+
+
+def api_target() -> ApiBase:
+    token = st.session_state['token']
+    url_base = st.session_state['url_base']
+    if url_base == LOCALHOST:
+        return ApiLocal(url_base, token)
+    else:
+        return ApiRemote(url_base, token)
 
 
 def get_projects_info():
@@ -86,9 +100,8 @@ def select_task(project_id: int) -> (list, int):
 
 
 def get_token(url, username: str, password: str):
-    if "http://localhost" == url:
-        if username == 'admin' and password == "password1234!":
-            return "token"
+    if "http://localhost" == url and username == 'admin' and password == "password1234!":
+        return "token"
     else:
         token = api.get_access_token(url + "/api/v1/login/access-token", username, password)
         print("access token is {}".format(token))
@@ -98,7 +111,7 @@ def get_token(url, username: str, password: str):
 def login():
     selected_url = st.selectbox("Select server", [
         "http://192.168.45.172",
-        "http://localhost"
+        LOCALHOST
     ])
 
     col1, col2 = st.columns(2)
@@ -116,6 +129,7 @@ def login():
             return False
         else:
             st.session_state['token'] = token
+            st.session_state['url_base'] = selected_url
             return True
 
 
@@ -134,11 +148,9 @@ def is_authenticated():
 
 
 def main():
-    st.set_page_config(page_title="ART", layout="wide")
-    st.header("**ART** - AI Reviewing Tool")
-    #st.subheader("Under Construction")
-    #st.image(os.path.join(os.pardir, "data", "under-construction.jpg"), use_column_width=True)
-    
+    st.set_page_config(page_title="Adart", layout="wide")
+    st.header("**Adart** - AI Reviewing Tool")
+
     resource_dir = os.path.join(os.pardir, 'resources')
     intro_markdown = utils.from_text_file(os.path.join(resource_dir, 'adart_homepage.md'))
     st.markdown(intro_markdown, unsafe_allow_html=True)

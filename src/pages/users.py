@@ -4,6 +4,7 @@ import streamlit as st
 from src.common.constants import USER_TYPES, USERS
 from src.home import (
     is_authenticated,
+    api_target,
     login,
     logout)
 from src.models.users_info import User, UsersInfo
@@ -34,7 +35,7 @@ def select_user(is_sidebar=True):
 
 
 def list_users():
-    users_info = UsersInfo.get_users_info()
+    users_info = api_target().get_users_info()
     if users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
         st.dataframe(df_users)

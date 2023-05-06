@@ -1,17 +1,8 @@
 import datetime
-import importlib.util
 import os
 import shutil
-from pathlib import Path
 
 import streamlit as st
-
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
-
-    path_root = Path(__file__).parents[2]
-    sys.path.append(str(path_root))
 
 from src.common import utils
 from src.common.constants import (
