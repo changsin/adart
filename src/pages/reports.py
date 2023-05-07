@@ -4,6 +4,7 @@ import shapely
 
 from .home import (
     is_authenticated,
+    get_tasks_info,
     login,
     logout,
     select_project)
@@ -23,7 +24,8 @@ def get_data_files(selected_project):
         st.markdown("# Files Info")
         data_files = selected_project.data_files
     else:
-        tasks = TasksInfo.get_tasks(selected_project.id)
+        tasks_info = get_tasks_info()
+        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.data_files:
@@ -45,7 +47,8 @@ def get_label_files(selected_project):
     if len(selected_project.label_files) > 0:
         return selected_project.label_files
     else:
-        tasks = TasksInfo.get_tasks(selected_project.id)
+        tasks_info = get_tasks_info()
+        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.anno_file_name:
@@ -252,8 +255,8 @@ def show_label_metrics():
     selected_project = select_project()
     if selected_project:
         data_label_files = dict()
-
-        tasks = TasksInfo.get_tasks(selected_project.id)
+        tasks_info = get_tasks_info()
+        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
         if tasks and len(tasks) > 0:
             for task in tasks:
                 if task.anno_file_name:

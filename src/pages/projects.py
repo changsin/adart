@@ -6,6 +6,7 @@ import streamlit as st
 
 from .home import (
     get_projects_info,
+    get_tasks_info,
     is_authenticated,
     login,
     logout,
@@ -288,7 +289,7 @@ def delete_project():
                 shutil.rmtree(folder_path)
 
             # Then all the tasks
-            tasks_info = TasksInfo.get_tasks_info()
+            tasks_info = get_tasks_info()
             for selected_task in tasks_info.tasks:
                 if selected_task.project_id == selected_project.id:
                     tasks_info.tasks.remove(selected_task)

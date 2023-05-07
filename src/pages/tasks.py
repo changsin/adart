@@ -34,6 +34,7 @@ from .home import (
     is_authenticated,
     login,
     logout,
+    get_tasks_info,
     select_project,
     select_task)
 
@@ -121,7 +122,7 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
         utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
                       os.path.join(task_folder, label_filename))
 
-        tasks_info = TasksInfo.get_tasks_info()
+        tasks_info = get_tasks_info()
         task_id = tasks_info.get_next_task_id()
         task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
         new_task = Task(task_id,
@@ -187,7 +188,8 @@ def assign_tasks():
     if selected_project:
         with st.form("Add Data Task"):
             st.subheader(f"Assign tasks to users for project {selected_project.name}")
-            tasks = TasksInfo.get_tasks(selected_project.id)
+            tasks_info = get_tasks_info()
+            tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
             for task in tasks:
                 if st.checkbox(task.name):
                     # Do something when the checkbox is selected
@@ -226,7 +228,7 @@ def add_data_task(selected_project: Project):
                                                 LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
 
-        tasks_info = TasksInfo.get_tasks_info()
+        tasks_info = get_tasks_info()
         new_task_id = tasks_info.get_next_task_id()
 
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
@@ -296,7 +298,7 @@ def add_model_task(selected_project: Project):
 
         uploaded_files = st.file_uploader("Upload artifacts", accept_multiple_files=True)
 
-        tasks_info = TasksInfo.get_tasks_info()
+        tasks_info = get_tasks_info()
         new_task_id = tasks_info.get_next_task_id()
 
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
@@ -365,7 +367,7 @@ def update_model_task(selected_project):
             selected_task.state_name = task_stage
             selected_task.data_files = uploaded_files
 
-            tasks_info = TasksInfo.get_tasks_info()
+            tasks_info = get_tasks_info()
             tasks_info.update_task(selected_task)
             tasks_info.save()
 
@@ -426,7 +428,7 @@ def delete_task():
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the task ({}) of project ({}-{})?"
                                              .format(selected_task.id, selected_project.id, selected_project.name))
         if delete_confirmed:
-            tasks_info = TasksInfo.get_tasks_info()
+            tasks_info = get_tasks_info()
             tasks_info.remove(selected_task)
 
             task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,

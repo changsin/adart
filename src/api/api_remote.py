@@ -26,13 +26,13 @@ class ApiRemote(ApiBase):
             response_text = response.text
             code = response.status_code
             if code == requests.codes.ok or code == requests.codes.created:
-                logger.info(f"send_api_request return {response}")
+                logger.info(f"send_api_request returned {response_text}")
             else:
-                logger.error(f"ERROR: send_api_request return {response}")
+                logger.error(f"ERROR: send_api_request return {response_text}")
 
             return response_text
         except requests.exceptions.RequestException as err:
-            logger.error(f"Error: req_get_user_list_info - {err}")
+            logger.error(f"Error: send_api_request - {err}")
             return err
 
     @staticmethod
@@ -60,7 +60,7 @@ class ApiRemote(ApiBase):
         except Exception as e:
             logger.error(f"Error: create_user - {e}")
 
-    def get_users_info(self) -> dict:
+    def list_users(self) -> dict:
         url = f"{self.url_base}/api/v1/users/?&limit=99999"
         response_text = ApiRemote.send_api_request("GET", url, self.token)
         if response_text:
@@ -78,4 +78,36 @@ class ApiRemote(ApiBase):
     def delete_user(self, user_id: int) -> dict:
         url = f"{self.url_base}/api/v1/users/{user_id}"
         response_text = ApiRemote.send_api_request("DELETE", url, self.token)
+        return json.loads(response_text)
+
+    def list_groups(self) -> list:
+        """
+        :return:
+         [{"name":"user","is_admin":false,"is_user":true,"is_reviewer":false,"read_only":false,"id":1},
+         {"name":"reviewer","is_admin":true,"is_user":false,"is_reviewer":false,"read_only":false,"id":2},
+         {"name":"inspector","is_admin":false,"is_user":false,"is_reviewer":true,"read_only":false,"id":3},
+         {"name":"administrator","is_admin":false,"is_user":false,"is_reviewer":false,"read_only":true,"id":4}]
+        """
+        url = f"{self.url_base}/api/v1/group/?skip=0&limit=100"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        return json.loads(response_text)
+
+    def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
+        limit = f"limit={limit}"
+        date_start = f"date_start={date_start}"
+        date_end = f"date_end={date_end}"
+        url = f"{self.url_base}/api/v1/project/?skip=0&{limit}&is_dir_null=false&{date_start}&{date_end}"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        return json.loads(response_text)
+
+    def list_tasks(self, limit=100) -> dict:
+        limit = f"limit={limit}"
+        url = f"{self.url_base}/api/v1/task/?skip=0&{limit}"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        return json.loads(response_text)
+
+    def list_annotation_errors(self, limit=100) -> list:
+        limit = f"limit={limit}"
+        url = f"{self.url_base}/api/v1/annoerror/?skip=0&{limit}"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
         return json.loads(response_text)

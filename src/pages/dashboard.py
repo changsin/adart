@@ -3,13 +3,14 @@ import streamlit as st
 from st_aggrid import AgGrid
 
 from .home import (
+    api_target,
     get_projects_info,
+    get_tasks_info,
     is_authenticated,
     login,
     logout,
     select_project)
 from src.common import constants
-from src.models.tasks_info import TasksInfo
 
 
 def view_project():
@@ -26,11 +27,14 @@ def view_project():
                                                 orient='index'))
 
         st.markdown("# Tasks")
-        tasks_info = TasksInfo.get_tasks_info()
+        tasks_info = get_tasks_info()
         tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
         tasks_json = [task.to_json() for task in tasks]
         st.dataframe(pd.DataFrame(tasks_json))
 
+    st.markdown("### Annotation error types")
+    annotation_errors_dict = api_target().list_annotation_errors()
+    st.dataframe(annotation_errors_dict)
 
 # def model_validation_dashboard():
 #     projects_info = get_projects_info()
@@ -59,7 +63,7 @@ def dashboard():
     AgGrid(df_projects)
 
     st.subheader("**Tasks**")
-    tasks_info = TasksInfo.get_tasks_info()
+    tasks_info = get_tasks_info()
     if len(tasks_info.tasks) > 0:
         df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
         df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)

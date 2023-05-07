@@ -14,14 +14,26 @@ class ApiBase(ABC):
         self.url_base = url_base
         self.token = token
 
-    def get_users_info(self) -> dict:
-        pass
+    def list_users(self) -> dict:
+        raise "ERROR: The parent method should not be called directly"
 
     def create_user(self, new_user_dict: dict) -> dict:
-        pass
+        raise "ERROR: The parent method should not be called directly"
 
     def delete_user(self, user_id: int) -> dict:
-        pass
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_groups(self) -> list:
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_tasks(self, limit=100) -> dict:
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_annotation_errors(self, limit=100) -> list:
+        raise "ERROR: The parent method should not be called directly"
 
 
 def get_access_token(login_url, username, password):

@@ -1,3 +1,4 @@
+import json
 import os.path
 
 import pandas as pd
@@ -9,14 +10,15 @@ from src.api.api_base import ApiBase
 from src.api.api_local import ApiLocal
 from src.api.api_remote import ApiRemote
 from src.common.constants import (
-    ADQ_WORKING_FOLDER,
     PROJECTS,
-    JSON_EXT
 )
 from src.models.projects_info import ProjectsInfo
 from src.models.tasks_info import TasksInfo
+from src.common.logger import get_logger
 
 LOCALHOST = "http://localhost"
+
+logger = get_logger(__name__)
 
 
 def api_target() -> ApiBase:
@@ -29,14 +31,16 @@ def api_target() -> ApiBase:
 
 
 def get_projects_info():
-    if not os.path.exists(ADQ_WORKING_FOLDER):
-        os.mkdir(ADQ_WORKING_FOLDER)
+    return ProjectsInfo.from_json(api_target().list_projects())
 
-    projects_info_filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
-    json_projects = utils.from_file(projects_info_filename, "{\"num_count\":0,\"projects\":[]}")
 
-    projects_info = ProjectsInfo.from_json(json_projects)
-    return projects_info
+def get_tasks_info():
+    tasks_dict = api_target().list_tasks()
+    if not tasks_dict:
+        tasks_dict = json.loads("{\"num_count\":0,\"tasks\":[]}")
+
+    logger.info(tasks_dict)
+    return TasksInfo.from_json(tasks_dict)
 
 
 def select_project(is_sidebar=True):
@@ -65,8 +69,8 @@ def select_project(is_sidebar=True):
 
 
 def select_task(project_id: int) -> (list, int):
-    tasks_info = TasksInfo.get_tasks_info()
-    tasks = tasks_info.get_tasks(project_id)
+    tasks_info = get_tasks_info()
+    tasks = tasks_info.get_tasks_by_project_id(project_id)
     if tasks and len(tasks) > 0:
         df_tasks = pd.DataFrame([task.to_json() for task in tasks])
         df_tasks = df_tasks[["id", "name", "project_id"]]

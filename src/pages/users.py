@@ -11,7 +11,7 @@ from src.models.users_info import User, UsersInfo
 
 
 def select_user(is_sidebar=True):
-    users_info_dict = api_target().get_users_info()
+    users_info_dict = api_target().list_users()
     users_info = UsersInfo.from_json(users_info_dict)
     if users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
@@ -36,11 +36,16 @@ def select_user(is_sidebar=True):
 
 
 def list_users():
-    users_info_dict = api_target().get_users_info()
+    users_info_dict = api_target().list_users()
     users_info = UsersInfo.from_json(users_info_dict)
     if users_info and users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
         st.dataframe(df_users)
+
+
+def list_groups():
+    groups_dict = api_target().list_groups()
+    st.dataframe(groups_dict)
 
 
 def create_user():
@@ -124,6 +129,7 @@ def main():
         "Create User": lambda: create_user(),
         "Update User": lambda: update_user(),
         "Delete User": lambda: delete_user(),
+        "List Groups": lambda: list_groups(),
     }
 
     # Create a sidebar with menu options
