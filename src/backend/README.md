@@ -51,3 +51,48 @@ NB. Inside a docker, hba_file, etc. are located in
 ```commandline
 >cd /var/lib/postgresql/data/pgdata
 ```
+
+## To migrate DB
+The backend uses SQLAlechemy as the ORM and postgress as the DB.
+To make any changes in the DB, you need to modify the models and schemas.
+Then apply the changes through Alembic. Follow these steps to do so:
+
+1. Make changes in app/models and app/schemas for appropriate tables
+2. Inside the backend docker container, run:
+```commandline
+>alembic revision --autogenerate -m "message about the changes"
+```
+This will generate an automatically generated revision python module
+that contains two functions: upgrade and downgrade.
+
+3. Apply the changes by running:
+```commandline
+>alembci upgrade <revision id>
+```
+4. Check the DB changes in the DB docker.
+
+### Behind the scenes
+Alembic keeps track of the revisions applied to the DB in two places
+
+1. History table:
+```commandline
+root@4f1e130eb92b:/app# alembic history
+c4b798925338 -> 346d97176cde (head), Add columns data_labels, etc. to project
+b1fe564ba4a9 -> c4b798925338, add reviewer and inspector
+70393e6dbdbd -> b1fe564ba4a9, Set default value to state_id of Project
+40f23ea4e3af -> 70393e6dbdbd, Add Column state_id to Project table
+```
+
+2. DB:
+Inside the DB docker, you will see a table named "alembic" in the "app" database.
+It has just a single entry:
+```commandline
+app=# select * from "alembic_version";
+ version_num  
+--------------
+ 346d97176cde
+(1 row)
+```
+
+This tells you what the current version is. Based on the version number,
+Alembic knows how to apply the migration version scripts in the correct order.
