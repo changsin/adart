@@ -35,6 +35,12 @@ class ApiBase(ABC):
     def list_annotation_errors(self, limit=100) -> list:
         raise "ERROR: The parent method should not be called directly"
 
+    def list_states(self, limit=100) -> list:
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_annotation_types(self, limit=100) -> list:
+        raise "ERROR: The parent method should not be called directly"
+
 
 def get_access_token(login_url, username, password):
     try:

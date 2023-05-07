@@ -64,6 +64,25 @@ class ApiLocal(ApiBase):
             {"name": "Attributes_error", "code": "DVE_ATTR", "description": None, "is_default": True, "id": 5}
         ]
 
+    def list_states(self, limit=100) -> list:
+        return [
+            {"name": "New", "code": "DVS_NEW", "id": 1},
+            {"name": "Working", "code": "DVS_WORKING", "id": 2},
+            {"name": "Done", "code": "DVS_DONE", "id": 3},
+            {"name": "Closed", "code": "DVS_CLOSED", "id": 4}
+        ]
+
+    def list_annotation_types(self, limit=100) -> list:
+        return [
+            {"name": "Bounding Box", "id": 1},
+            {"name": "Polygon", "id": 2},
+            {"name": "Polyline", "id": 3},
+            {"name": "Point", "id": 4},
+            {"name": "Keypoint", "id": 5},
+            {"name": "Cuboid", "id": 6},
+            {"name": "Spline", "id": 7},
+        ]
+
 
 
 

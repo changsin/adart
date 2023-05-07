@@ -36,6 +36,14 @@ def view_project():
     annotation_errors_dict = api_target().list_annotation_errors()
     st.dataframe(annotation_errors_dict)
 
+    st.markdown("### State types")
+    states_dict = api_target().list_states()
+    st.dataframe(states_dict)
+
+    st.markdown("### Annotation types")
+    states_dict = api_target().list_annotation_types()
+    st.dataframe(states_dict)
+
 # def model_validation_dashboard():
 #     projects_info = get_projects_info()
 #     model_projects = []

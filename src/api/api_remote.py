@@ -111,3 +111,15 @@ class ApiRemote(ApiBase):
         url = f"{self.url_base}/api/v1/annoerror/?skip=0&{limit}"
         response_text = ApiRemote.send_api_request("GET", url, self.token)
         return json.loads(response_text)
+
+    def list_states(self, limit=100) -> list:
+        limit = f"limit={limit}"
+        url = f"{self.url_base}/api/v1/state/?skip=0&{limit}"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        return json.loads(response_text)
+
+    def list_annotation_types(self, limit=100) -> list:
+        limit = f"limit={limit}"
+        url = f"{self.url_base}/api/v1/annotype/?skip=0&{limit}"
+        response_text = ApiRemote.send_api_request("GET", url, self.token)
+        return json.loads(response_text)
