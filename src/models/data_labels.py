@@ -3,6 +3,9 @@ import json
 
 import src.common.utils as utils
 from src.models.adq_labels import AdqLabels
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 @attr.s(slots=True, frozen=False)
@@ -59,7 +62,7 @@ class DataLabels:
                 # convert to dart label format for easier processing
                 return DataLabels.from_adq_labels(adq_labels)
         else:
-            print("label file {} does not exist!".format(filename))
+            logger.error("label file {} does not exist!".format(filename))
 
     @staticmethod
     def load_from_dict(label_files_dict: dict) -> dict:

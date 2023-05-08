@@ -35,11 +35,7 @@ def get_projects_info():
 
 
 def get_tasks_info():
-    tasks_dict = api_target().list_tasks()
-    if not tasks_dict:
-        tasks_dict = json.loads("{\"num_count\":0,\"tasks\":[]}")
-
-    return TasksInfo.from_json(tasks_dict)
+    return TasksInfo.from_json(api_target().list_tasks())
 
 
 def select_project(is_sidebar=True):

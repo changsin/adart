@@ -6,6 +6,9 @@ import attr
 
 import src.common.utils as utils
 from src.common.constants import ADQ_WORKING_FOLDER, TASKS, JSON_EXT
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TaskState(Enum):
@@ -127,7 +130,6 @@ class TasksInfo:
 
     def remove(self, task_to_remove: Task):
         if task_to_remove in self.tasks:
-            print("Deleting task {}".format(task_to_remove))
             self.tasks.remove(task_to_remove)
             return
         else:
@@ -136,7 +138,7 @@ class TasksInfo:
                     self.tasks.remove(task)
                     return
 
-        print(f"**Error: Task {task_to_remove} not found in the list")
+        logger.error(f"**Error: Task {task_to_remove} not found in the list")
 
     def to_json(self):
         return {
@@ -188,7 +190,6 @@ class TasksInfo:
 
     @staticmethod
     def from_json(json_dict) -> 'TasksInfo':
-        print(json_dict["num_count"])
         num_count = json_dict["num_count"]
         tasks = []
         for json_task in json_dict["tasks"]:

@@ -31,139 +31,7 @@ def collect_org_annofile_as_list(target_data_directory, file_ext, image_annofile
             # 이미지가 다수인 것 대비, 어노테이션 파일은 1개이기 때문에
             if image_annofile_relationship == 'N1':
                 break
-
-
     return org_annofile_list
-
-
-# Blackolive(CVAT) xml 파일을 검증도구에서 사용할 포맷으로 변경할 때 사용하는 함수
-def convert_CVAT_to_Form(img_annof_relation, anno_file, target_folder):
-    # Blackolive가 지원하는 객체 타입
-    BO_object_types = ['box', 'polygon', 'polyline', 'points', 'face', 'body', 'leftHand', 'rightHand']
-
-    # # file_format : 어노테이션 파일 포맷('xml')
-    # # anno_file_list : 현재 데이터 폴더(data_directory)에 있는 어노테이션 파일의 목록
-    # file_format = annotation_fmt.split(' ')[-1]
-    # anno_file_list = collect_org_annofile_as_list(data_directory, file_format, img_annof_relation)
-
-    output_jdict = dict()
-
-    xml_structure = ET.parse(anno_file)
-
-    # tag 이름은 find_all로 찾는다.
-    # 대신, 중복된 태그가 있을 수 있으니 무조건 absolute path로 탐색
-    # root의 경우, ElementTree의 getroot 함수를 통해서 노드를 받아옴.
-    root_info = xml_structure.getroot()
-
-    # pascal voc tag의 root tag는 'annotation'이기 때문에
-    # 아닌 경우 Exception을 호출한다.
-    # added at 22.04.01
-    if root_info.tag != 'annotations':
-        raise Exception(anno_file + '는 Blackolive XML 포맷이 아닙니다.')
-
-    # 1개만 있는 태그는 find 명령어 사용
-    # N개 있는 태그는 findall 명령어를 통해서 탐색 수행
-    image_info = root_info.findall('image')
-
-    # 최종 산출물인 json 파일에 default로 들어있는 key-value값
-    output_jdict['mode'] = 'annotation'
-    output_jdict['twconverted'] = '96E7D8C8-44E4-4055-8487-85B3208E51A2'
-    output_jdict['template_version'] = "0.1"
-
-    # output_jdict_imgs : 최종 산출물인 json 파일의 images의 value가 될 이미지 list
-    output_jdict_imgs = list()
-    for each_img_info in image_info:
-        cur_img = dict()
-        cur_img['image_id'] = each_img_info.attrib['id']
-        cur_img['name'] = each_img_info.attrib['name']
-        cur_img['width'] = each_img_info.attrib['width']
-        cur_img['height'] = each_img_info.attrib['height']
-
-        # cur_img_objlist : 현재 이미지가 가지고 있는 객체('objects')의 value가 될 객체 list
-        cur_img_objlist = list()
-
-        # Blackolive가 지원하는 객체에 대한 태그를 모두 findall로 찾아서 탐색 필요하기 떄문에 선언한 for loop
-        for objtype in BO_object_types:
-            obj_info = each_img_info.findall(objtype)
-
-            # 각 객체 type에 대한 for loop
-            for each_obj_info in obj_info:
-                cur_obj = dict()
-                cur_obj['label'] = each_obj_info.attrib['label']
-                cur_obj['type'] = objtype
-
-                # occluded, z_order, group_id의 경우 필수 항목이 아니었던 거로 기억하기 때문에
-                # try ~ except 구문을 통해서 예외처리가 필요하다.
-                try:
-                    cur_obj['occluded'] = each_obj_info.attrib['occluded']
-                except KeyError:
-                    cur_obj['occluded'] = "0"
-
-                try:
-                    cur_obj['z_order'] = each_obj_info.attrib['z_order']
-                except KeyError:
-                    cur_obj['z_order'] = "0"
-
-                try:
-                    cur_obj['group_id'] = each_obj_info.attrib['group_id']
-                except KeyError:
-                    cur_obj['group_id'] = ""
-
-
-                # 현재 품질 검증 도구에서는
-                # box의 경우 "xtl_value, ytl_value, xbr_value, ybr_value"로
-                # 그 외의 경우에는, 태그에 points라는 속성의 값(x1_value,y1_value;x2_value,y2_value;...;)이 있어서
-                # 해당 값을 집어넣어주면 된다.
-                if objtype == 'box':
-                    cur_obj['position'] = each_obj_info.attrib['xtl'] + ', ' + each_obj_info.attrib['ytl'] + ', ' + each_obj_info.attrib['xbr'] + ', ' + each_obj_info.attrib['ybr']
-                else:
-                    cur_obj['position'] = each_obj_info.attrib['points']
-
-
-                # 추가적으로 blackolive는 속성 태그(attribute)가 존재하기 때문에
-                # 이에 대한 loop 처리도 필요하다.
-                cur_obj_attrlist = list()
-                attr_infos = each_obj_info.findall('attribute')
-
-                for each_attr in attr_infos:
-                    cur_attr = dict()
-                    cur_attr['attribute_name'] = each_attr.attrib['name']
-                    cur_attr['attribute_value'] = each_attr.text
-                    cur_obj_attrlist.append(cur_attr)
-
-                cur_obj['attributes'] = cur_obj_attrlist
-
-                # 각 객체에 대한 처리가 완료되면, cur_img_objlist에 현재 객체(cur_obj)를 추가해준다.
-                cur_img_objlist.append(cur_obj)
-
-
-        cur_img['objects'] = cur_img_objlist
-
-        # 현재 이미지(cur_img)에 대한 처리가 완료되면, output_jdict_imgs에 현재 이미지 관련 정보를 추가한다.
-        output_jdict_imgs.append(cur_img)
-
-    output_jdict['images'] = output_jdict_imgs
-
-    # 최종 산출물일 dictionary 객체(output_jdict) 연산이 완료되면
-    # 우선 원본 어노테이션 파일을 데이터 폴더\origin 폴더로 이동시켜서 원본 어노테이션 파일(xml)을 백업한다.
-    fname, ext = os.path.splitext(os.path.basename(anno_file))
-
-    ori_folder = os.path.join(target_folder, "origin")
-    if not os.path.exists(ori_folder):
-        os.mkdir(ori_folder)
-    ori_filename = os.path.join(ori_folder, os.path.basename(anno_file))
-    if anno_file != ori_filename:
-        print("Copying {} to {}".format(anno_file, os.path.join(ori_folder, os.path.basename(anno_file))))
-        shutil.copy(anno_file, ori_filename)
-
-    # directly write to the destination
-    target_filename = os.path.join(target_folder, fname + '.json')
-    with open(target_filename, 'w', encoding='utf-8') as jf:
-        json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
-
-    st.write("Converted {}".format(anno_file))
-
-    return target_filename
 
 
 def from_yolo_txt(img_annof_relation: str, anno_files: list, image_files: list, target_folder: str) -> str:
@@ -305,6 +173,7 @@ def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: 
 
     return target_filename
 
+
 # 우선은 default PASCAL VOC 포맷처럼, bounding box에 대한 변환작업만 수행
 def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):
     if img_annof_relation != '11':
@@ -423,6 +292,7 @@ def convert_PASCAL_to_Form(img_annof_relation, anno_file_list, target_folder):
         json.dump(output_jdict, jf, indent=4, ensure_ascii=False)
 
     return target_filename
+
 
 # COCO json 파일을 검증도구에서 사용할 포맷으로 변경할 때 사용하는 함수
 def convert_COCO_to_Form(img_annof_relation, data_directory, annotation_fmt):

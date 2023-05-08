@@ -18,9 +18,13 @@ from src.models.data_labels import DataLabels
 from src.models.tasks_info import Task
 from src.viewer import st_img_label
 from src.viewer.image_manager import ImageManager
+from src.common.logger import get_logger
 
 
-def _display_type_attributes(selected_shape: dict, suffix=" "):
+logger = get_logger(__name__)
+
+
+def _display_type_attributes(selected_shape: dict, key="1"):
     shape_type = selected_shape["shapeType"]
     attributes_dict = selected_shape["attributes"]
     if shape_type == "box":
@@ -34,30 +38,39 @@ def _display_type_attributes(selected_shape: dict, suffix=" "):
         type5value = attributes_dict.get('type5', None)
         type6value = attributes_dict.get('type6', None)
 
-        st.selectbox(f"1.Shape1(Q){suffix}", Type1Shape1Q.get_all_types(),
+        st.selectbox("1.Shape1(Q)", Type1Shape1Q.get_all_types(),
+                     key=f"1.Shape1(Q){key}",
                      index=Type1Shape1Q.get_index(type1value) if type1value else 0)
-        st.selectbox(f"2.Single/Double(W){suffix}", Type2SingleDoubleW.get_all_types(),
+        st.selectbox("2.Single/Double(W)", Type2SingleDoubleW.get_all_types(),
+                     key=f"2.Single/Double(W){key}",
                      index=Type2SingleDoubleW.get_index(type2value) if type2value else 0)
-        st.selectbox(f"3.Position(E){suffix}", Type3PositionE.get_all_types(),
+        st.selectbox("3.Position(E)", Type3PositionE.get_all_types(),
+                     key=f"3.Position(E){key}",
                      index=Type3PositionE.get_index(type3value) if type3value else 0)
-        st.selectbox(f"4.Unusual Case(R){suffix}", Type4UnusualCaseR.get_all_types(),
+        st.selectbox("4.Unusual Case(R)", Type4UnusualCaseR.get_all_types(),
+                     key=f"4.Unusual Case(R){key}",
                      index=Type4UnusualCaseR.get_index(type4value) if type4value else 0)
-        st.selectbox(f"5.Color(S){suffix}", Type5ColorS.get_all_types(),
+        st.selectbox("5.Color(S)", Type5ColorS.get_all_types(),
+                     key=f"5.Color(S){key}",
                      index=Type5ColorS.get_index(type5value) if type5value else 0)
-        st.selectbox(f"6.Bicycle(S){suffix}", Type6BicycleD.get_all_types(),
+        st.selectbox("6.Bicycle(S)", Type6BicycleD.get_all_types(),
+                     key=f"6.Bicycle(S){key}",
                      index=Type6BicycleD.get_index(type6value) if type6value else 0)
     elif shape_type == "boundary":
         type3value = attributes_dict.get('type3', None)
         boundary4value = attributes_dict.get('boundary', None)
 
-        st.selectbox(f"3.Position(E){suffix}", Type3PositionE.get_all_types(),
+        st.selectbox("3.Position(E)", Type3PositionE.get_all_types(),
+                     key=f"3.Position(E){key}",
                      index=Type3PositionE.get_index(type3value) if type3value else 0)
-        st.selectbox(f"2.Boundary type(R){suffix}", BoundaryType2R.get_all_types(),
+        st.selectbox("2.Boundary type(R)", BoundaryType2R.get_all_types(),
+                     key=f"2.Boundary type(R){key}",
                      index=BoundaryType2R.get_index(boundary4value) if boundary4value else 0)
 
     elif shape_type == "polygon":
         type_value = attributes_dict.get('type', None)
-        st.selectbox(f"1.Road marker type(Q){suffix}", TypeRoadMarkerQ.get_all_types(),
+        st.selectbox("1.Road marker type(Q)", TypeRoadMarkerQ.get_all_types(),
+                     key=f"1.Road marker type(Q){key}",
                      index=TypeRoadMarkerQ.get_index(type_value) if type_value else 0)
 
 
@@ -138,12 +151,12 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
     def call_frontend(im: ImageManager, image_index: int) -> dict:
         resized_img = im.resizing_img()
         resized_shapes = im.get_downscaled_shapes()
-        shape_color = _pick_color(resized_shapes[0].get('label'), 'green')
-        st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
+        shape_color = _pick_color(resized_shapes[0].get('label'), 'black')
+        st.markdown("#### {}: {}".format(selected_task.name, st.session_state['img_files'][image_index]))
 
         # Display the selected shape
         return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
-                            key="2" if is_second_viewer else "1")
+                            key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
 
     def process_selected_shape(selected_shape: dict):
         scaled_shape = im.upscale_shape(selected_shape)
@@ -191,6 +204,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         scaled_shape = process_selected_shape(selected_shape)
         # present 3 columns for the selected shape
         selected_shape_id = selected_shape['shape_id']
+        key = f"{selected_shape_id}_{is_second_viewer}"
         col1, col2, col3 = st.columns(3)
 
         # thumbnail image
@@ -205,7 +219,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         # attributes
         with col2:
-            _display_type_attributes(selected_shape, suffix=" 2" if is_second_viewer else "")
+            _display_type_attributes(selected_shape, key=key)
 
         # verification result
         with col3:
@@ -218,24 +232,25 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
             comment = ""
             select_label = col3.selectbox("Error",
                                           error_codes,
-                                          key=f"error_{selected_shape_id}",
+                                          key=f"error_{selected_shape_id}_{key}",
                                           index=default_index)
             if select_label:
                 if not verification_result:
                     verification_result = dict()
                 default_comment = verification_result.get('comment', "")
-                comment = col3.text_input("Comment", default_comment)
+                comment = col3.text_input("Comment", default_comment, key={key})
 
             # save the verification result
             im.set_review(selected_shape_id, select_label, comment)
 
             if verification_result and verification_result['error_code'] == 'untagged':
-                delete_shape = st.button("Delete")
+                delete_shape = st.button("Delete", key=key)
                 if delete_shape:
                     im.remove_shape(selected_shape)
-                    print(f"Deleted {selected_shape}")
+                    logger.info(f"Deleted {selected_shape}")
 
             save(image_index, im)
+
 
 #
 # if __name__ == "__main__":

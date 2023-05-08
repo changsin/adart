@@ -450,7 +450,6 @@ def delete_task():
             task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
                                                  str(selected_project.id),
                                                  str(selected_task.id))
-            print("Deleting folder {}".format(task_folder_to_delete))
             if os.path.exists(task_folder_to_delete):
                 shutil.rmtree(task_folder_to_delete)
             tasks_info.save()

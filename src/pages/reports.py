@@ -13,7 +13,9 @@ from src.common.constants import (
     ADQ_WORKING_FOLDER
 )
 from src.models.data_labels import DataLabels
-from src.models.tasks_info import TasksInfo
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
@@ -154,7 +156,6 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     class_labels[label] = 1
 
                 if object_cur.verification_result:
-                    print(object_cur.verification_result)
                     error_code = object_cur.verification_result['error_code']
                     if errors.get(error_code):
                         errors[error_code] += 1
@@ -162,7 +163,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         errors[error_code] = 1
 
                 if not object_cur.points:
-                    print("empty points in {}".format(object_cur.label))
+                    logger.warn("empty points in {}".format(object_cur.label))
                     continue
 
                 xtl1, ytl1, xbr1, ybr1 = get_bounding_rectangle(object_cur)
@@ -177,7 +178,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
 
                 for ob_id2 in range(ob_id1 + 1, count):
                     if not image.objects[ob_id2].points:
-                        print("empty points in {}".format(image.objects[ob_id2].label))
+                        logger.warn("empty points in {}".format(image.objects[ob_id2].label))
                         continue
 
                     xtl2, ytl2, xbr2, ybr2 = get_bounding_rectangle(image.objects[ob_id2])

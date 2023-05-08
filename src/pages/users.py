@@ -34,7 +34,6 @@ def select_user(is_sidebar=True):
 
         if selected_user_id_name:
             user_id, email, = selected_user_id_name.split('-', maxsplit=1)
-            print(users_info)
             return users_info.get_user_by_id(int(user_id))
 
 

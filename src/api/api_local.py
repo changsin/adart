@@ -60,7 +60,7 @@ class ApiLocal(ApiBase):
 
     def list_tasks(self, limit=100) -> dict:
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
-        return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"projects\":[]}")
+        return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
 
     def list_annotation_errors(self, limit=100) -> list:
         return [
