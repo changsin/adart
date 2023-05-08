@@ -96,8 +96,8 @@ def get_token(url, username: str, password: str):
 
 def login():
     selected_url = st.selectbox("Select server", [
-        "http://192.168.12.79",
-        LOCALHOST
+        LOCALHOST,
+        "http://192.168.12.54",
     ])
 
     col1, col2 = st.columns(2)
