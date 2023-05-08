@@ -12,17 +12,18 @@ from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
 class Project(ABC):
     id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
-    # new attributes
-    data_files = attr.ib(validator=attr.validators.instance_of(dict))
-    label_files = attr.ib(validator=attr.validators.instance_of(dict))
 
     annotation_type_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
     file_format_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
 
-    created_at = attr.ib(default=None, validator=attr.validators.instance_of(str))
+    created_at = attr.ib(default=None)
     updated_at = attr.ib(default=None)
 
     description = attr.ib(default=None)
+
+    # new attributes
+    data_files = attr.ib(default=None)
+    label_files = attr.ib(default=None)
 
     progress = attr.ib(default=1, validator=attr.validators.instance_of(int))
     task_total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))

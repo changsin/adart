@@ -106,12 +106,12 @@ def get_token(url, username: str, password: str):
 
 def login():
     selected_url = st.selectbox("Select server", [
-        "http://192.168.45.172",
+        "http://192.168.12.79",
         LOCALHOST
     ])
 
     col1, col2 = st.columns(2)
-    col1.title("ADaRT App")
+    col1.title("ADaRT Service")
     col1.write('Brought to you by TW')
     username = col2.text_input('User', key='user', value="")
     password = col2.text_input('Password', type="password", value="")

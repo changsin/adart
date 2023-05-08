@@ -13,13 +13,14 @@ import src.viewer.app as app
 from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
-    SUPPORTED_IMAGE_FILE_EXTENSIONS,
-    SUPPORTED_LABEL_FORMATS,
     CVAT_XML,
-    STRADVISION_XML,
     GPR_JSON,
-    YOLO_V5_TXT,
-    ModelTaskType)
+    ModelTaskType,
+    STRADVISION_XML,
+    SUPPORTED_IMAGE_FILE_EXTENSIONS,
+    SUPPORTED_LABEL_FILE_EXTENSIONS,
+    SUPPORTED_LABEL_FORMATS,
+    YOLO_V5_TXT)
 from src.common.convert_lib import (
     from_gpr_json,
     from_yolo_txt)
@@ -39,7 +40,6 @@ from .home import (
     select_task)
 
 DATE_FORMAT = "%Y %B %d %A"
-LABEL_FILE_EXTENSIONS = ['json', 'xml', 'txt']
 
 
 def calculate_sample_count(count, percent):
@@ -225,7 +225,7 @@ def add_data_task(selected_project: Project):
                                                accept_multiple_files=True)
 
         uploaded_label_files = st.file_uploader("Upload label files",
-                                                LABEL_FILE_EXTENSIONS,
+                                                SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
 
         tasks_info = get_tasks_info()

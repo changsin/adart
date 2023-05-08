@@ -9,7 +9,7 @@ from src.common.constants import (
     USERS,
 )
 from src.models.users_info import User, UsersInfo
-from src.models.projects_info import ProjectsInfo
+from src.models.projects_info import ProjectsInfo, Project
 from src.models.tasks_info import TasksInfo
 from .api_base import ApiBase
 
@@ -51,6 +51,13 @@ class ApiLocal(ApiBase):
         projects_info_filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
         return utils.from_file(projects_info_filename, "{\"num_count\":0,\"projects\":[]}")
 
+    def create_project(self, new_project_dict: dict) -> dict:
+        projects_info = ProjectsInfo.from_json(self.list_projects())
+        new_project = Project.from_json(new_project_dict)
+        projects_info.add(new_project)
+        projects_info.save()
+        return new_project_dict
+
     def list_tasks(self, limit=100) -> dict:
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
         return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"projects\":[]}")
@@ -82,8 +89,3 @@ class ApiLocal(ApiBase):
             {"name": "Cuboid", "id": 6},
             {"name": "Spline", "id": 7},
         ]
-
-
-
-
-

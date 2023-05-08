@@ -29,6 +29,9 @@ class ApiBase(ABC):
     def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
         raise "ERROR: The parent method should not be called directly"
 
+    def create_project(self, new_project: dict) -> list:
+        raise "ERROR: The parent method should not be called directly"
+
     def list_tasks(self, limit=100) -> dict:
         raise "ERROR: The parent method should not be called directly"
 

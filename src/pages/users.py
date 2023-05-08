@@ -1,13 +1,16 @@
 import pandas as pd
 import streamlit as st
 
+from src.common.constants import (
+    USER_TYPES,
+    USERS
+)
+from src.models.users_info import User, UsersInfo
 from .home import (
     is_authenticated,
     api_target,
     login,
     logout)
-from src.common.constants import USER_TYPES, USERS
-from src.models.users_info import User, UsersInfo
 
 
 def select_user(is_sidebar=True):
@@ -71,7 +74,6 @@ def create_user():
                 description=description)
             new_user_dict = new_user.to_json()
             new_user_dict['password'] = password
-            del new_user_dict['id']
             response = api_target().create_user(new_user_dict)
             if response:
                 st.markdown(f"### User ({new_user}) ({email}) added with {response}")

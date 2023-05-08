@@ -5,6 +5,7 @@ import shutil
 import streamlit as st
 
 from .home import (
+    api_target,
     get_projects_info,
     get_tasks_info,
     is_authenticated,
@@ -13,21 +14,13 @@ from .home import (
     select_project)
 from src.common import utils
 from src.common.constants import (
-    SUPPORTED_AUDIO_FILE_EXTENSIONS,
-    SUPPORTED_IMAGE_FILE_EXTENSIONS,
-    SUPPORTED_VIDEO_FILE_EXTENSIONS,
-    SUPPORTED_LABEL_FORMATS,
-
     ADQ_WORKING_FOLDER,
-    PASCAL_VOC_XML,
-    CVAT_XML,
-    ADQ_JSON,
-
-    DomainCode
+    DomainCode,
+    SUPPORTED_LABEL_FILE_EXTENSIONS,
+    SUPPORTED_IMAGE_FILE_EXTENSIONS,
+    SUPPORTED_LABEL_FORMATS,
 )
-from src.common.convert_lib import convert_CVAT_to_Form, convert_PASCAL_to_Form
 from src.models.projects_info import Project, ModelProject
-from src.models.tasks_info import TasksInfo
 
 MULTI_SELECT_SEP = ';'
 
@@ -49,78 +42,64 @@ def create_data_project():
     with st.form("Create a Data Project"):
         name = st.text_input("**Name:**")
         description = st.text_area("Description")
-        images_folder = st.text_input("**Images folder:**")
-        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS,
-                   SUPPORTED_VIDEO_FILE_EXTENSIONS,
-                   SUPPORTED_AUDIO_FILE_EXTENSIONS,
-                   "*", ""]
+        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
         selected_file_types = st.selectbox("**Image file types**",
                                            options,
                                            index=len(options) - 1)
+        uploaded_data_files = st.file_uploader("Upload data files",
+                                               selected_file_types,
+                                               accept_multiple_files=True)
 
-        labels_folder = st.text_input("**Labels folder:**")
+        uploaded_label_files = st.file_uploader("Upload label files",
+                                                SUPPORTED_LABEL_FILE_EXTENSIONS,
+                                                accept_multiple_files=True)
+
+        projects_info = get_projects_info()
+        project_id = projects_info.get_next_project_id()
+        # TODO: the project id might not be sequential. Change the name after it has been created.
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+        if not os.path.exists(save_folder):
+            os.mkdir(save_folder)
+
+        data_files = dict()
+        if uploaded_data_files:
+            # Save the uploaded files
+            saved_data_filenames = []
+            for file in uploaded_data_files:
+                with open(os.path.join(save_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                saved_data_filenames.append(file.name)
+            data_files[save_folder] = saved_data_filenames
+            saved_data_filenames.sort()
+
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
-        submitted = st.form_submit_button("Create project")
+        if uploaded_label_files:
+            # Save the uploaded files in origin folder
+            ori_folder = os.path.join(save_folder, "origin")
+            if not os.path.exists(ori_folder):
+                os.mkdir(ori_folder)
 
+            saved_anno_filenames = []
+            for file in uploaded_label_files:
+                with open(os.path.join(ori_folder, file.name), "wb") as f:
+                    f.write(file.getbuffer())
+                saved_anno_filenames.append(os.path.join(ori_folder, file.name))
+
+            saved_anno_filenames.sort()
+
+        submitted = st.form_submit_button("Create project")
         if submitted:
             st.markdown(f"**Name:** {name}")
-            st.markdown(f"**Images folder:** {images_folder}")
-            data_files = utils.generate_file_tree(images_folder, selected_file_types.split())
+            st.markdown(f"**Data folder:** {save_folder}")
 
-            st.markdown(f"**Labels folder:** {labels_folder}")
-            patterns = ["*.xml"]
-            if labels_format_type.endswith("JSON"):
-                patterns = ["*.json"]
-
-            label_files = utils.generate_file_tree(labels_folder, patterns)
-
-            projects_info = get_projects_info()
-            project_id = projects_info.get_next_project_id()
-
-            target_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
-            if not os.path.exists(target_folder):
-                os.mkdir(target_folder)
-
-            target_filenames = []
-            if labels_format_type == PASCAL_VOC_XML:
-                for folder, files in label_files.items():
-                    anno_files = [os.path.join(folder, file) for file in files]
-                    target_filename = convert_PASCAL_to_Form("11", anno_files, target_folder)
-                    target_filenames.append(os.path.basename(target_filename))
-            else:
-                for folder, files in label_files.items():
-                    for file in files:
-                        anno_file = os.path.join(folder, file)
-                        if labels_format_type == CVAT_XML:
-                            target_filename = convert_CVAT_to_Form("NN", anno_file,
-                                                                   target_folder)
-                            target_filenames.append(os.path.basename(target_filename))
-                        elif labels_format_type == ADQ_JSON:
-                            ori_folder = os.path.join(target_folder, "origin")
-                            if not os.path.exists(ori_folder):
-                                os.mkdir(ori_folder)
-
-                            json_data = utils.from_file(os.path.join(folder, file))
-                            if not json_data:
-                                st.write("Skipping {} - empty file".format(file))
-                                continue
-
-                            if not json_data.get("twconverted"):
-                                st.write("Skipping {} - not a valid adq label file".format(file))
-                                continue
-
-                            target_filename = os.path.join(ori_folder, os.path.basename(anno_file))
-                            shutil.copy(anno_file, target_filename)
-
-                            target_filenames.append(os.path.basename(target_filename))
-
-            label_files_dict = dict()
-            if len(target_filenames) > 0:
-                label_files_dict = {target_folder: target_filenames}
-            new_project = Project(project_id, name, data_files, label_files_dict,
-                                  1, 1, str(datetime.datetime.now()), description=description)
-            projects_info.add(new_project)
-            projects_info.save()
+            new_project_dict = Project(project_id,
+                                       name,
+                                       annotation_type_id=1,
+                                       file_format_id=1,
+                                       created_at=str(datetime.datetime.now()),
+                                       description=description).to_json()
+            response = api_target().create_project(new_project_dict)
+            st.dataframe(response)
             st.write("Project {} {} created".format(project_id, name))
 
 

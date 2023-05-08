@@ -4,7 +4,6 @@ import urllib.request
 import requests
 
 from src.common.logger import get_logger
-from src.models.users_info import UsersInfo
 from .api_base import ApiBase
 
 logger = get_logger(__name__)
@@ -73,6 +72,7 @@ class ApiRemote(ApiBase):
 
     def create_user(self, new_user_dict: dict) -> dict:
         url = f"{self.url_base}/api/v1/users/"
+        del new_user_dict['id']
         return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_user_dict)
 
     def delete_user(self, user_id: int) -> dict:
@@ -99,6 +99,16 @@ class ApiRemote(ApiBase):
         url = f"{self.url_base}/api/v1/project/?skip=0&{limit}&is_dir_null=false&{date_start}&{date_end}"
         response_text = ApiRemote.send_api_request("GET", url, self.token)
         return json.loads(response_text)
+
+    def create_project(self, new_project_dict: dict) -> dict:
+        url = f"{self.url_base}/api/v1/project"
+        del new_project_dict['id']
+        del new_project_dict['data_files']
+        del new_project_dict['label_files']
+        del new_project_dict['extended_properties']
+
+        # TODO: WIP, needs to fix a few issues
+        return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_project_dict)
 
     def list_tasks(self, limit=100) -> dict:
         limit = f"limit={limit}"

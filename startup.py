@@ -1,5 +1,7 @@
+import os
 import streamlit as st
 
+from src.common.constants import ADQ_WORKING_FOLDER
 from src.pages import (
     home,
     dashboard,
@@ -35,6 +37,8 @@ def main():
 
 if __name__ == '__main__':
     st.set_page_config(page_title="Adart", layout="wide")
+    if not os.path.exists(ADQ_WORKING_FOLDER):
+        os.mkdir(ADQ_WORKING_FOLDER)
 
     if not is_authenticated():
         login()

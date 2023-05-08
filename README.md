@@ -6,6 +6,8 @@ This tool will provide an easy way to parse the dataset (and the labels), and la
 The tool is written in Python (Streamlit) and React JS.
 All source code is under src package.
 Here are what each package does:
+- **api**: api interfaces between the frontend and the backend.
+- **backend**: SQLAlchemy is the ORM and Postgres the DB. They are in docker containers. See backend README for more details.
 - **common:** common utility modules, constants, label conversion functions
 - **models:** abstract interfaces of data labels, projects, tasks, and users
 - **notebooks:** playground for POCs

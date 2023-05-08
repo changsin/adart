@@ -1,16 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Any, Union
+
 from jose import jwt
 from passlib.context import CryptContext
-import importlib.util
-
-spec = importlib.util.find_spec("src")
-if spec is None:
-    import sys
-    from pathlib import Path
-
-    path_root = Path(__file__).parents[2]
-    sys.path.append(str(path_root))
 
 from src.api.token_schema import TokenPayload
 
