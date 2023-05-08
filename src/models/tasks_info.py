@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 
 
 class TaskState(Enum):
-    DVS_NEW = (1, "Created")        # "생성"
+    DVS_NEW = (1, "New")        # "생성"
     DVS_WORKING = (2, "Working")    # "작업중"
     DVS_DONE = (3, "Done")          # "작업완료"
     DVS_CLOSED = (4, "Closed")      # "종료"

@@ -94,8 +94,8 @@ def dashboard():
         df_projects["# of images"] = df_projects["total_count"]
 
         # Select only the relevant columns and display the results in a table
-        results_df = df_projects[["name", "# of images", "% Done"]]
-        results_df.columns = ["Name", "# of images", "% Done"]
+        results_df = df_projects[["id", "name", "# of images", "% Done"]]
+        results_df.columns = ["id", "Name", "# of images", "% Done"]
         # st.table(results_df)
 
         # Use the custom table formatter for the "% Done" column
@@ -107,7 +107,7 @@ def dashboard():
         results_df_html = results_df.to_html(escape=False, index=False)
 
         # Render the HTML table with the formatted "% Done" column
-        st.write(results_df_html, height=600, unsafe_allow_html=True)
+        st.write(results_df_html, unsafe_allow_html=True)
         # AgGrid(df_projects)
 
     st.subheader("**Tasks**")
@@ -116,7 +116,31 @@ def dashboard():
         df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
         df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
 
-        AgGrid(df_tasks)
+        logger.info(df_tasks)
+        # Render the DataFrame with status color as colored square using HTML and CSS
+        st.write(
+            df_tasks[["project_id", "id", "reviewer_fullname", "state_name"]]
+            .rename(columns={
+                "project_id": "Project id",
+                "id": "Task id",
+                "reviewer_fullname": "Assigned to",
+                "state_name": "Status"
+            })
+            .to_html(
+                escape=False,
+                index=False,
+                justify="center",
+                classes="table-hover",
+                col_space="2px",
+                formatters={
+                    "Status": lambda
+                        x: f'<div style="background-color:{"red" if x == "New" else "orange" if x == "Working" else "green"}; color:white; border-radius:4px; padding:4px;">{x}<div style="background-color:{"red" if x == "New" else "yellow" if x == "Working" else "green"}; height:12px; width:12px; border-radius:50%; display:inline-block; margin-left:4px;"></div></div>',
+                }
+            ),
+            unsafe_allow_html=True
+        )
+    else:
+        st.write("No tasks to show")
 
 
 def main():

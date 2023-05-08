@@ -190,10 +190,13 @@ def assign_tasks():
             st.subheader(f"Assign tasks to users for project {selected_project.name}")
             tasks_info = get_tasks_info()
             tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-            for task in tasks:
-                if st.checkbox(task.name):
-                    # Do something when the checkbox is selected
-                    st.write(f"Task {task.name} is checked")
+            if tasks and len(tasks) > 0:
+                for task in tasks:
+                    if st.checkbox(task.name):
+                        # Do something when the checkbox is selected
+                        st.write(f"Task {task.name} is checked")
+            else:
+                st.write("No task is created")
 
             selected_user = select_user(is_sidebar=False)
             if selected_user:
@@ -202,7 +205,13 @@ def assign_tasks():
             assigned = st.form_submit_button("Assign tasks")
             if assigned:
                 st.write(f"Assigned {tasks} to {selected_user}")
-
+                # TODO: update the status in tasks and projects
+                for task in tasks:
+                    task.reviewer_fullname = selected_user.full_name
+                    task.reviewer_id = selected_user.id
+                    task.state_name = TaskState.DVS_WORKING.description
+                    task.state_id = TaskState.DVS_WORKING._value_
+                tasks_info.save()
 
 def add_task():
     selected_project = select_project()
@@ -393,6 +402,8 @@ def review_task():
             if selected_project.extended_properties:
                 review_model_task(selected_task)
             else:
+                # # Navigate to a new page with the task details
+                # st.experimental_set_query_params(task_id=selected_task.id)
                 app.main(selected_task)
 
 
