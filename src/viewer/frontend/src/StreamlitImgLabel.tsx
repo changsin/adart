@@ -143,22 +143,25 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     return
                 }
             })
+ 
+            // Set labels
+            setLabels(shapes.map((shape) => shape.label))
+
+            Streamlit.setFrameHeight()
+
+            canvas.renderAll()
         }
-
-        // Set labels
-        setLabels(shapes.map((shape) => shape.label))
-
-        Streamlit.setFrameHeight()
-
-        canvas.renderAll()
 
     }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
 
     const onSelectShapeHandler = ((shape: ShapeProps, fabricShape: fabric.Object) => {
         console.log(`onSelectedShape ${JSON.stringify(shape)}`)
-        canvas.remove(fabricShape);
         sendSelectedShape(shape);
-        canvas.renderAll();
+
+        if (canvas) {
+            canvas.remove(fabricShape);
+            canvas.renderAll();
+        }
     })
           
     // Create a default bounding box
