@@ -142,7 +142,8 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         st.markdown("#### {}".format(st.session_state['img_files'][image_index]))
 
         # Display the selected shape
-        return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes)
+        return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
+                            key="2" if is_second_viewer else "1")
 
     def process_selected_shape(selected_shape: dict):
         scaled_shape = im.upscale_shape(selected_shape)
