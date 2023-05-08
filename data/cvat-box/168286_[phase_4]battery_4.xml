@@ -1,0 +1,876 @@
+<?xml version="1.0" encoding="utf-8"?>
+<annotations>
+  <version>1.1</version>
+  <meta>
+    <task>
+      <id>168286</id>
+      <project>2022DV_everysolution</project>
+      <name>[phase_4]battery_4</name>
+      <size>50</size>
+      <mode>annotation</mode>
+      <overlap>0</overlap>
+      <bugtracker></bugtracker>
+      <flipped>False</flipped>
+      <created>2022-09-15 16:48:24.598069+09:00</created>
+      <updated>2022-10-06 19:05:08.886161+09:00</updated>
+      <start_frame>0</start_frame>
+      <stop_frame>0</stop_frame>
+      <frame_filter>step=1</frame_filter>
+      <labels>
+        <label>
+          <name>Others</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>FC-1</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>D</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>CR123A</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>C</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>AAA</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>AA</name>
+          <attributes>
+          </attributes>
+        </label>
+        <label>
+          <name>4FM</name>
+          <attributes>
+          </attributes>
+        </label>
+      </labels>
+      <segments>
+        <segment>
+          <id>158241</id>
+          <start>0</start>
+          <stop>49</stop>
+          <url>http://10.0.2.11:8080/?id=157584</url>
+        </segment>
+      </segments>
+      <owner>
+        <username>aw0052</username>
+        <email>help@testworks.co.kr</email>
+      </owner>
+    </task>
+    <dumped>2023-03-27 17:04:36.439347+09:00</dumped>
+  </meta>
+  <image id="0" name="WIN_20220913_16_47_56_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="2523.22656250" ytl="1088.30000000" xbr="2970.07778931" ybr="1614.50000000" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="2315.50000000" ytl="648.79980469" xbr="3067.29998779" ybr="1452.09837646" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="2102.66015625" ytl="390.70019531" xbr="2736.13751221" ybr="976.70000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="386.90039062" ytl="166.74414062" xbr="1558.55507812" ybr="1854.30000000" z_order="7">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1711.50000000" ytl="258.80000000" xbr="2071.11770630" ybr="858.04974365" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2053.80078125" ytl="1228.70000000" xbr="2256.70077820" ybr="1647.10000610" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="1729.40820312" ytl="839.64843750" xbr="2189.90000000" ybr="1449.46893311" z_order="3">
+    </box>
+  </image>
+  <image id="1" name="WIN_20220913_16_48_05_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="1264.20000000" ytl="1044.67578125" xbr="2023.80566406" ybr="1526.60000000" z_order="5">
+    </box>
+    <box label="AA" occluded="0" xtl="1114.33203125" ytl="399.40039062" xbr="1698.30000000" ybr="676.68108521" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="956.61914062" ytl="639.88085938" xbr="1591.80000000" ybr="1102.50332642" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="1994.00000000" ytl="183.50000000" xbr="3182.99035645" ybr="1887.59997559" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="599.13867188" ytl="898.40039062" xbr="1198.44500732" ybr="1506.70000000" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="692.80000000" ytl="177.50000000" xbr="1206.32952881" ybr="802.10095215" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="899.20000000" ytl="1226.90039062" xbr="1285.18554688" ybr="1606.30000000" z_order="1">
+    </box>
+  </image>
+  <image id="2" name="WIN_20220913_16_48_12_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="2694.08203125" ytl="1092.80078125" xbr="2906.70000000" ybr="1509.90000000" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="2545.00000000" ytl="308.68554688" xbr="3036.39999390" ybr="1108.10000000" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1829.30078125" ytl="1008.90039062" xbr="2323.45863647" ybr="1621.30000000" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="1699.90039062" ytl="553.13867188" xbr="2211.90000000" ybr="1032.10000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2098.69921875" ytl="514.50000000" xbr="2574.19843750" ybr="1127.10000000" z_order="3">
+    </box>
+    <box label="C" occluded="0" xtl="2381.28515625" ytl="1069.90039062" xbr="2751.90881348" ybr="1682.10000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="562.30078125" ytl="76.50000000" xbr="1682.10075684" ybr="1753.50000000" z_order="8">
+    </box>
+  </image>
+  <image id="3" name="WIN_20220913_16_48_17_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="630.30000000" ytl="947.41992188" xbr="1186.40002441" ybr="1565.12603760" z_order="6">
+    </box>
+    <box label="4FM" occluded="0" xtl="1291.30000000" ytl="198.69921875" xbr="2338.09997559" ybr="1882.30000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2675.68164062" ytl="1126.16015625" xbr="2890.00000000" ybr="1536.90000000" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="2355.00000000" ytl="1068.33203125" xbr="2715.70000000" ybr="1680.40000000" z_order="4">
+    </box>
+    <box label="D" occluded="0" xtl="2524.19921875" ytl="329.71289062" xbr="3072.59113770" ybr="1127.60000000" z_order="5">
+    </box>
+    <box label="AA" occluded="0" xtl="710.40039062" ytl="408.20019531" xbr="1220.40000000" ybr="919.40097656" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="843.59179688" ytl="725.70000000" xbr="1345.64230347" ybr="1339.06988525" z_order="3">
+    </box>
+  </image>
+  <image id="4" name="WIN_20220913_16_48_23_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="812.04882812" ytl="644.20019531" xbr="1311.47079468" ybr="1257.80000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="1958.09179688" ytl="216.68554688" xbr="3083.10546875" ybr="1913.50000000" z_order="7">
+    </box>
+    <box label="D" occluded="0" xtl="1065.10000000" ytl="334.79980469" xbr="1837.17932129" ybr="1100.29902344" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1487.40039062" ytl="1272.50000000" xbr="1905.60000000" ybr="1626.80000000" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="630.90039062" ytl="976.70000000" xbr="1136.30037842" ybr="1591.40997314" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="662.90000000" ytl="388.00000000" xbr="1162.79998779" ybr="826.89999390" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1106.40039062" ytl="1017.79980469" xbr="1635.30037842" ybr="1637.40000000" z_order="3">
+    </box>
+  </image>
+  <image id="5" name="WIN_20220913_16_48_35_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="2404.94335938" ytl="858.90000000" xbr="3020.02093506" ybr="1457.35552979" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="1213.59960938" ytl="189.00000000" xbr="2299.80087891" ybr="1876.69995117" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="980.27539062" ytl="333.09960938" xbr="1461.70000000" ybr="666.20000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1003.93457031" ytl="1025.90000000" xbr="1261.53115845" ybr="1618.10113525" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2703.00000000" ytl="545.10000000" xbr="3005.80000000" ybr="968.60000610" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2203.00000000" ytl="1332.59960938" xbr="2705.10000000" ybr="1666.60000000" z_order="6">
+    </box>
+    <box label="D" occluded="0" xtl="571.50000000" ytl="566.28125000" xbr="1038.10302734" ybr="1333.81396484" z_order="5">
+    </box>
+  </image>
+  <image id="6" name="WIN_20220913_16_48_44_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="567.59570312" ytl="569.30000000" xbr="1037.40000000" ybr="1331.89959717" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1541.30078125" ytl="785.29980469" xbr="2152.60447998" ybr="1248.90000000" z_order="3">
+    </box>
+    <box label="C" occluded="0" xtl="1023.20019531" ytl="841.59960938" xbr="1342.70020752" ybr="1429.20000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="2131.57421875" ytl="219.70000000" xbr="3330.18688965" ybr="1927.86389160" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="1036.90039062" ytl="235.50000000" xbr="1217.00000000" ybr="837.29998779" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1463.60000000" ytl="1315.41406250" xbr="2029.06274414" ybr="1640.50000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1334.80078125" ytl="718.00000000" xbr="1756.40077515" ybr="1011.80000000" z_order="1">
+    </box>
+  </image>
+  <image id="7" name="WIN_20220913_16_48_52_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="2474.50000000" ytl="672.29980469" xbr="3034.80000000" ybr="1290.59978027" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="1850.32226562" ytl="675.50000000" xbr="2273.40000000" ybr="1215.50000000" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="2008.03320312" ytl="1257.58593750" xbr="2822.87957764" ybr="1692.90000000" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2184.00000000" ytl="286.50000000" xbr="2486.42782593" ybr="724.50000000" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2404.00000000" ytl="176.20000000" xbr="3041.04840088" ybr="784.20001221" z_order="8">
+    </box>
+    <box label="4FM" occluded="0" xtl="481.00000000" ytl="153.60156250" xbr="1696.49902344" ybr="1849.40000000" z_order="7">
+    </box>
+    <box label="4FM" occluded="0" xtl="475.33398438" ytl="148.34375000" xbr="488.73952103" ybr="153.60082340" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="2071.11914062" ytl="662.00000000" xbr="2654.10000000" ybr="1265.47198486" z_order="3">
+    </box>
+  </image>
+  <image id="8" name="WIN_20220913_16_49_01_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="597.40039062" ytl="957.60000000" xbr="1102.40038452" ybr="1575.40039062" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="662.22265625" ytl="441.30000000" xbr="854.10583496" ybr="1031.79998779" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="1415.00000000" ytl="1146.80078125" xbr="2175.90000000" ybr="1650.40077515" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1499.50000000" ytl="393.10000000" xbr="1920.60000610" ybr="690.80056763" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="2027.50000000" ytl="126.29980469" xbr="3318.09997559" ybr="1843.49980469" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1011.40000000" ytl="877.79980469" xbr="1605.59899902" ybr="1465.00000000" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1006.56054688" ytl="420.50000000" xbr="1634.70000000" ybr="897.70001221" z_order="7">
+    </box>
+  </image>
+  <image id="9" name="WIN_20220913_16_49_11_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="643.00000000" ytl="829.13476562" xbr="1145.87435913" ybr="1448.40000000" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1390.09960938" ytl="1182.00000000" xbr="1535.20000000" ybr="1605.10000610" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="2454.88476562" ytl="639.88085938" xbr="3058.40000000" ybr="1441.90000000" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="810.40039062" ytl="439.30000000" xbr="1437.64217529" ybr="839.64852905" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="663.20000000" ytl="423.80078125" xbr="854.10546875" ybr="1016.60075684" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1035.47460938" ytl="758.16406250" xbr="1561.18194580" ybr="1357.47039795" z_order="3">
+    </box>
+    <box label="4FM" occluded="0" xtl="1511.24023438" ytl="134.70000000" xbr="2555.80000000" ybr="1811.19921875" z_order="6">
+    </box>
+  </image>
+  <image id="10" name="WIN_20220913_16_49_24_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="2232.59960938" ytl="1173.40039062" xbr="2813.50000000" ybr="1656.60000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="1213.50000000" ytl="173.90039062" xbr="2268.25927734" ybr="1853.80000000" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="660.40000000" ytl="245.30078125" xbr="851.47813416" ybr="846.30076904" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="654.33789062" ytl="644.40039062" xbr="1266.78692627" ybr="1168.90000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2444.30078125" ytl="954.00000000" xbr="2909.62248535" ybr="1196.19999695" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="2205.17382812" ytl="429.80078125" xbr="2726.30000000" ybr="1038.30000000" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="535.20000000" ytl="1012.50000000" xbr="1287.81420898" ybr="1626.90000000" z_order="5">
+    </box>
+  </image>
+  <image id="11" name="WIN_20220913_16_49_37_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="1634.78125000" ytl="1149.81640625" xbr="2234.70000000" ybr="1633.00000000" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="1933.40000000" ytl="605.70898438" xbr="2420.71328735" ybr="1110.38803101" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="2191.40000000" ytl="903.40039062" xbr="2807.79998779" ybr="1701.20137939" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2097.09960938" ytl="394.60000000" xbr="2528.48319092" ybr="603.08175659" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="2380.30078125" ytl="524.19921875" xbr="3048.40000000" ybr="1070.40000000" z_order="3">
+    </box>
+    <box label="4FM" occluded="0" xtl="360.50000000" ytl="156.50000000" xbr="1514.70000000" ybr="1833.80004883" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1528.50000000" ytl="510.80078125" xbr="1966.29998779" ybr="1119.40000000" z_order="4">
+    </box>
+  </image>
+  <image id="12" name="WIN_20220913_16_49_59_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="1566.43945312" ytl="671.70000000" xbr="2115.10000000" ybr="1082.70001221" z_order="2">
+    </box>
+    <box label="4FM" occluded="0" xtl="249.50000000" ytl="169.37304688" xbr="1442.89819336" ybr="1849.00793457" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2022.90000000" ytl="379.65625000" xbr="2444.37051392" ybr="621.48162842" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="1745.17968750" ytl="932.70000000" xbr="2323.90000000" ybr="1514.70001221" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="2108.59960938" ytl="374.79980469" xbr="2935.50000000" ybr="1093.20000000" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="2098.40039062" ytl="1347.00000000" xbr="2726.40000000" ybr="1672.10000610" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2630.99609375" ytl="914.20019531" xbr="2989.60000000" ybr="1490.80000000" z_order="7">
+    </box>
+  </image>
+  <image id="13" name="WIN_20220913_16_50_06_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="919.40000000" ytl="524.22460938" xbr="1599.20001221" ybr="1312.78558350" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1582.21093750" ytl="1292.69921875" xbr="2180.20000000" ybr="1608.79920654" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1467.20898438" ytl="590.66210938" xbr="2066.51531982" ybr="1028.35312500" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="630.50000000" ytl="1145.50000000" xbr="1234.00000000" ybr="1317.19999695" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="948.73437500" ytl="1318.04296875" xbr="1579.58319092" ybr="1633.90000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="654.20000000" ytl="413.50000000" xbr="904.19999695" ybr="838.60000610" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="2089.51757812" ytl="184.90000000" xbr="3330.80000000" ybr="1890.80004883" z_order="6">
+    </box>
+  </image>
+  <image id="14" name="WIN_20220913_16_50_17_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="707.09960938" ytl="578.30000000" xbr="1089.00000000" ybr="1177.30096436" z_order="7">
+    </box>
+    <box label="4FM" occluded="0" xtl="1056.19921875" ytl="191.10000000" xbr="2097.40339355" ybr="1871.59997559" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="646.59960938" ytl="200.00000000" xbr="889.00000000" ybr="630.20040894" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="2021.17578125" ytl="1321.19921875" xbr="2563.70000000" ybr="1587.70000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2542.19921875" ytl="742.39257812" xbr="2926.40000000" ybr="1346.40000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="575.59960938" ytl="1273.40039062" xbr="1067.10000000" ybr="1598.90000000" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="2050.08984375" ytl="366.50000000" xbr="2752.90000000" ybr="1161.90002441" z_order="5">
+    </box>
+  </image>
+  <image id="15" name="WIN_20220913_16_50_25_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="1468.20000000" ytl="681.93750000" xbr="2002.77691650" ybr="1139.30288696" z_order="2">
+    </box>
+    <box label="CR123A" occluded="0" xtl="646.70019531" ytl="208.79980469" xbr="885.64941101" ybr="641.70000000" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="948.73437500" ytl="1002.61914062" xbr="1566.44049072" ybr="1491.10000000" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="1227.35742188" ytl="749.59960938" xbr="1834.10000000" ybr="1309.40000000" z_order="4">
+    </box>
+    <box label="D" occluded="0" xtl="809.40039062" ytl="211.42968750" xbr="1534.89901123" ybr="1021.00000000" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1489.80078125" ytl="1235.20000000" xbr="2091.30076904" ybr="1634.00000000" z_order="3">
+    </box>
+    <box label="4FM" occluded="0" xtl="2003.80078125" ytl="184.30000000" xbr="3196.13334961" ybr="1888.43554688" z_order="6">
+    </box>
+  </image>
+  <image id="16" name="WIN_20220913_16_50_29_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="659.59960938" ytl="433.50000000" xbr="878.40000000" ybr="844.90570068" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="693.70000000" ytl="398.05468750" xbr="1453.80017090" ybr="1181.35858154" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="2006.70000000" ytl="185.20019531" xbr="3194.59997559" ybr="1883.17817383" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="949.59960938" ytl="1299.64257812" xbr="1534.10000000" ybr="1626.40000000" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="1119.20000000" ytl="1021.70019531" xbr="1719.29998779" ybr="1335.40000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="1653.18164062" ytl="696.00000000" xbr="2047.90000000" ybr="1291.70001221" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="1251.09960938" ytl="563.65332031" xbr="1763.57950439" ybr="1030.40000000" z_order="2">
+    </box>
+  </image>
+  <image id="17" name="WIN_20220913_16_50_38_Pro.jpg" width="3840" height="2160">
+    <box label="4FM" occluded="0" xtl="1259.30000000" ytl="148.34375000" xbr="2465.39990234" ybr="1847.80000000" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="658.29980469" ytl="408.10000000" xbr="852.69980164" ybr="823.20001221" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="1079.00000000" ytl="675.90039062" xbr="1471.20000000" ybr="1311.00039062" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2227.20000000" ytl="593.50000000" xbr="2872.82232666" ybr="994.80000000" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="730.79980469" ytl="326.60000000" xbr="1279.93059082" ybr="1114.70001221" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="917.59960938" ytl="1305.19921875" xbr="1538.30000000" ybr="1619.20000000" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2375.69921875" ytl="963.19042969" xbr="2875.44938354" ybr="1576.30000000" z_order="7">
+    </box>
+  </image>
+  <image id="18" name="WIN_20220913_16_50_50_Pro.jpg" width="3840" height="2160">
+    <box label="4FM" occluded="0" xtl="1019.50000000" ytl="162.40000000" xbr="2104.90002441" ybr="1846.50000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="612.09960938" ytl="990.90000000" xbr="1130.10184326" ybr="1594.90002441" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2628.69921875" ytl="725.80078125" xbr="3013.50000000" ybr="1306.30000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="658.40039062" ytl="421.30000000" xbr="903.60039673" ybr="843.89999390" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="2377.00000000" ytl="1347.00000000" xbr="3046.09997559" ybr="1665.29998779" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="2288.50000000" ytl="799.70000000" xbr="2670.00000000" ybr="1359.20001221" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="2051.90000000" ytl="308.68554688" xbr="2863.70001221" ybr="982.80000000" z_order="5">
+    </box>
+  </image>
+  <image id="19" name="WIN_20220913_16_51_16_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="1023.90039062" ytl="502.80000000" xbr="1467.80000000" ybr="1104.70001221" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="1576.95312500" ytl="1145.21289062" xbr="2173.40000000" ybr="1466.75429688" z_order="3">
+    </box>
+    <box label="C" occluded="0" xtl="1025.90000000" ytl="1028.00000000" xbr="1598.89923096" ybr="1631.50000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="2083.30078125" ytl="109.70000000" xbr="3343.80000000" ybr="1810.89904785" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="626.50000000" ytl="1229.69921875" xbr="1094.79998779" ybr="1485.90000000" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="570.59960938" ytl="511.08203125" xbr="1031.10000000" ybr="1280.30000000" z_order="5">
+    </box>
+    <box label="AA" occluded="0" xtl="1384.00000000" ytl="810.50000000" xbr="1959.00000000" ybr="1049.89999390" z_order="2">
+    </box>
+  </image>
+  <image id="20" name="WIN_20220913_16_51_27_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="1541.19921875" ytl="852.79101562" xbr="1947.10000000" ybr="1452.70000000" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="2220.59960938" ytl="569.40000000" xbr="2885.20000000" ybr="1078.89999390" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1727.40039062" ytl="491.30078125" xbr="2149.10119019" ybr="808.10000000" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="1854.40000000" ytl="1257.00000000" xbr="2626.09997559" ybr="1682.60000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="355.90039062" ytl="154.30000000" xbr="1503.35463867" ybr="1828.40002441" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="1978.69921875" ytl="449.59960938" xbr="2436.00000000" ybr="988.40000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2519.59960938" ytl="944.20000000" xbr="2919.10000000" ybr="1558.59997559" z_order="3">
+    </box>
+  </image>
+  <image id="21" name="WIN_20220913_16_51_36_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="734.79980469" ytl="1209.69921875" xbr="1543.60000000" ybr="1629.69923096" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1521.75390625" ytl="1000.00000000" xbr="2126.31732178" ybr="1482.10000610" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="1969.59960938" ytl="11.66015625" xbr="3337.20000000" ybr="1765.70000000" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="628.00000000" ytl="921.13476562" xbr="1249.70159912" ybr="1232.20000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1093.59960938" ytl="627.19921875" xbr="1525.39960327" ybr="921.50000000" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="1468.19921875" ytl="409.20000000" xbr="1986.70000000" ybr="1023.20001221" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="868.30078125" ytl="451.90039062" xbr="1448.70000000" ybr="814.50000000" z_order="2">
+    </box>
+  </image>
+  <image id="22" name="WIN_20220913_16_51_45_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="1573.00000000" ytl="513.71093750" xbr="2099.40039062" ybr="970.00000000" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1785.00000000" ytl="1018.19921875" xbr="2283.60000000" ybr="1626.59919434" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="2351.69921875" ytl="380.00000000" xbr="2900.19923096" ybr="1008.09997559" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1532.26953125" ytl="937.19921875" xbr="1873.50000000" ybr="1358.19923096" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="2218.40000000" ytl="1021.01757812" xbr="3071.10076904" ybr="1662.40000000" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1931.69921875" ytl="682.59960938" xbr="2555.49921875" ybr="1141.20000000" z_order="3">
+    </box>
+    <box label="4FM" occluded="0" xtl="260.50000000" ytl="30.10000000" xbr="1444.69995117" ybr="1712.99963379" z_order="6">
+    </box>
+  </image>
+  <image id="23" name="WIN_20220913_16_51_59_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="644.20019531" ytl="972.90000000" xbr="865.60097656" ybr="1378.29998779" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="734.29980469" ytl="433.79980469" xbr="1357.90000000" ybr="634.62405701" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2011.80000000" ytl="382.79980469" xbr="2810.99963379" ybr="1034.89982910" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="2249.85937500" ytl="996.50000000" xbr="3068.20000000" ybr="1686.00000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="1257.40000000" ytl="129.19921875" xbr="2274.20001221" ybr="1798.49921875" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="815.60000000" ytl="1020.00000000" xbr="1172.00000000" ybr="1602.90002441" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="644.90000000" ytl="615.00000000" xbr="1277.30041504" ybr="1066.00000000" z_order="4">
+    </box>
+  </image>
+  <image id="24" name="WIN_20220913_16_52_17_Pro.jpg" width="3840" height="2160">
+    <box label="4FM" occluded="0" xtl="506.90039062" ytl="162.90000000" xbr="1616.38234863" ybr="1839.19897461" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1911.00000000" ytl="486.00000000" xbr="2530.09997559" ybr="855.80000000" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="1678.50000000" ytl="835.09960938" xbr="2255.30000000" ybr="1032.00000000" z_order="2">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2512.71289062" ytl="482.40039062" xbr="2959.70000000" ybr="749.70000000" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="2243.80078125" ytl="1218.80000000" xbr="3093.40080566" ybr="1665.00000000" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1759.80078125" ytl="1007.69921875" xbr="2199.00000000" ybr="1622.09919434" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2262.80078125" ytl="702.96582031" xbr="2907.50000000" ybr="1228.67315674" z_order="7">
+    </box>
+  </image>
+  <image id="25" name="WIN_20220913_16_52_25_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="1344.20000000" ytl="884.33398438" xbr="2130.90002441" ybr="1535.50000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="2057.97656250" ytl="177.25781250" xbr="3275.00000000" ybr="1879.10000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="652.40000000" ytl="1004.69921875" xbr="1228.09997559" ybr="1621.80000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="963.80000000" ytl="378.30078125" xbr="1600.60980225" ybr="832.00000000" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="656.96679688" ytl="703.19921875" xbr="896.30000000" ybr="1286.20000000" z_order="2">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1591.00000000" ytl="533.20019531" xbr="1971.10000000" ybr="941.40018921" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="848.59960938" ytl="668.40039062" xbr="1479.30000000" ybr="1143.10000000" z_order="7">
+    </box>
+  </image>
+  <image id="26" name="WIN_20220913_16_52_33_Pro.jpg" width="3840" height="2160">
+    <box label="4FM" occluded="0" xtl="2172.80000000" ytl="206.17187500" xbr="3343.32946777" ybr="1898.94946289" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1657.09960938" ytl="1040.19921875" xbr="2131.20041504" ybr="1654.30000000" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="659.90039062" ytl="713.80000000" xbr="842.70000000" ybr="1292.59973145" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="781.80078125" ytl="622.00000000" xbr="1117.60000000" ybr="1223.70001221" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1064.00000000" ytl="430.50000000" xbr="1503.35507202" ybr="722.79998779" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="1074.80078125" ytl="618.20000000" xbr="1829.70079346" ybr="1377.29998779" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="830.80000000" ytl="1150.59960938" xbr="1450.78350830" ybr="1584.90000000" z_order="7">
+    </box>
+  </image>
+  <image id="27" name="WIN_20220913_16_52_42_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="2352.37304688" ytl="985.70000000" xbr="2988.60000000" ybr="1546.40002441" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="2213.80078125" ytl="380.50000000" xbr="2878.40000000" ybr="817.60000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1708.38085938" ytl="567.10000000" xbr="2124.40000000" ybr="936.29998779" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="467.50000000" ytl="124.68750000" xbr="1582.21093750" ybr="1788.80000000" z_order="5">
+    </box>
+    <box label="D" occluded="0" xtl="1888.20000000" ytl="759.00000000" xbr="2686.40002441" ybr="1240.70000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="1764.60000000" ytl="1199.75781250" xbr="2377.59997559" ybr="1660.50000000" z_order="2">
+    </box>
+  </image>
+  <image id="28" name="WIN_20220913_16_52_57_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="651.70898438" ytl="1000.40039062" xbr="845.50000000" ybr="1575.00039062" z_order="2">
+    </box>
+    <box label="4FM" occluded="0" xtl="2170.90000000" ytl="213.09960938" xbr="3413.19995117" ybr="1922.89963379" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="753.40039062" ytl="1107.60000000" xbr="1408.70040283" ybr="1559.86770630" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="659.80000000" ytl="740.80078125" xbr="1098.39999390" ybr="1131.00078125" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="957.40039062" ytl="631.99414062" xbr="1590.50000000" ybr="952.67559814" z_order="4">
+    </box>
+    <box label="D" occluded="0" xtl="1353.52734375" ytl="668.79492188" xbr="2121.06005859" ybr="1407.00000000" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1469.59960938" ytl="312.10000000" xbr="2064.60000000" ybr="710.39999390" z_order="7">
+    </box>
+  </image>
+  <image id="29" name="WIN_20220913_16_53_16_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="2148.90039062" ytl="296.30000000" xbr="2741.10036621" ybr="912.80096436" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1775.40039062" ytl="1144.10000000" xbr="2368.90000000" ybr="1471.60000610" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1671.40039062" ytl="1428.70000000" xbr="2072.40000000" ybr="1632.50039673" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="2358.52539062" ytl="1123.99023438" xbr="3023.30000000" ybr="1670.70000000" z_order="7">
+    </box>
+    <box label="D" occluded="0" xtl="2239.34570312" ytl="592.56640625" xbr="3074.30000000" ybr="1331.00000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="466.00000000" ytl="164.10000000" xbr="1579.58239746" ybr="1840.69995117" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1624.90000000" ytl="447.99804688" xbr="2171.29998779" ybr="1060.50000000" z_order="2">
+    </box>
+  </image>
+  <image id="30" name="WIN_20220913_16_53_28_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="1179.20000000" ytl="568.91015625" xbr="1688.39999390" ybr="1337.30000000" z_order="5">
+    </box>
+    <box label="AA" occluded="0" xtl="1367.30000000" ytl="436.09960938" xbr="1942.09997559" ybr="722.99960937" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1657.59960938" ytl="822.69921875" xbr="1971.69962158" ybr="1415.00000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1278.50000000" ytl="1363.09960938" xbr="1693.70001221" ybr="1614.09961548" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="1968.60546875" ytl="57.90000000" xbr="3201.38916016" ybr="1764.49963379" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="874.29980469" ytl="639.40000000" xbr="1215.19902344" ybr="1207.49981689" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="630.50000000" ytl="1261.00000000" xbr="1296.40002441" ybr="1582.89999390" z_order="4">
+    </box>
+  </image>
+  <image id="31" name="WIN_20220913_16_53_39_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="2004.50000000" ytl="609.80078125" xbr="2395.20001221" ybr="1363.90000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="397.50000000" ytl="558.90039062" xbr="2032.50000000" ybr="1599.50000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="2516.70000000" ytl="882.50000000" xbr="2850.50000000" ybr="1475.00000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2537.90000000" ytl="1461.40039062" xbr="2963.50000000" ybr="1659.40038452" z_order="1">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2473.70000000" ytl="263.59960938" xbr="3018.00000000" ybr="883.89963379" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="1955.30000000" ytl="1356.40039062" xbr="2562.70001221" ybr="1666.60039673" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="1953.30078125" ytl="473.90000000" xbr="2543.30076904" ybr="688.09902954" z_order="2">
+    </box>
+  </image>
+  <image id="32" name="WIN_20220913_16_53_49_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="1162.80078125" ytl="731.87792969" xbr="1503.40000000" ybr="1303.89902344" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="945.00000000" ytl="1291.60000000" xbr="1574.32385254" ybr="1625.09960938" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="1027.20000000" ytl="485.09960938" xbr="1211.60000610" ybr="1067.89963379" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="573.09960938" ytl="583.80078125" xbr="1035.30000000" ybr="1342.50078125" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="2196.70000000" ytl="124.30078125" xbr="3372.69958496" ybr="1804.90000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1469.18359375" ytl="702.79980469" xbr="1972.00000000" ybr="1310.50000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1761.59960938" ytl="1289.40039062" xbr="2182.50000000" ybr="1635.50000000" z_order="1">
+    </box>
+  </image>
+  <image id="33" name="WIN_20220913_16_53_58_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="2227.40000000" ytl="316.09960938" xbr="2894.29998779" ybr="782.99960937" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2770.20000000" ytl="602.40039062" xbr="2996.00000000" ybr="1012.10039673" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="677.00000000" ytl="443.80000000" xbr="1343.90000000" ybr="679.49902344" z_order="2">
+    </box>
+    <box label="4FM" occluded="0" xtl="1202.00000000" ytl="187.77148438" xbr="2215.70001221" ybr="1864.20000000" z_order="6">
+    </box>
+    <box label="D" occluded="0" xtl="598.60000000" ytl="657.80078125" xbr="1074.29998779" ybr="1420.55601807" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2207.80078125" ytl="923.20000000" xbr="2812.80000000" ybr="1258.69921875" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="2313.59960938" ytl="1234.70000000" xbr="2980.69962158" ybr="1664.39999390" z_order="4">
+    </box>
+  </image>
+  <image id="34" name="WIN_20220913_16_54_08_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="1524.70000000" ytl="1250.80078125" xbr="2122.20001221" ybr="1633.30076904" z_order="3">
+    </box>
+    <box label="C" occluded="0" xtl="1010.79980469" ytl="599.70000000" xbr="1640.09978027" ybr="933.79998779" z_order="4">
+    </box>
+    <box label="AA" occluded="0" xtl="674.50000000" ytl="462.59960938" xbr="1287.50000000" ybr="705.00000000" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1037.50000000" ytl="901.90039062" xbr="1622.50000000" ybr="1235.90000000" z_order="7">
+    </box>
+    <box label="D" occluded="0" xtl="587.80078125" ytl="662.50000000" xbr="1044.50078125" ybr="1421.50000000" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1622.40000000" ytl="593.19921875" xbr="1912.70001221" ybr="1013.59922485" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="2165.60000000" ytl="210.30078125" xbr="3377.50231934" ybr="1909.70073242" z_order="6">
+    </box>
+  </image>
+  <image id="35" name="WIN_20220913_16_54_17_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="1585.90039062" ytl="1309.40039062" xbr="2180.10000000" ybr="1617.50000000" z_order="3">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1290.59960938" ytl="699.90039062" xbr="1711.00919189" ybr="1060.60000000" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="2187.19921875" ytl="220.90039062" xbr="3393.90000000" ybr="1922.80000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="767.19921875" ytl="362.90039062" xbr="1375.99921875" ybr="971.10000000" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1425.40000000" ytl="875.80078125" xbr="2019.40002441" ybr="1317.60078735" z_order="7">
+    </box>
+    <box label="D" occluded="0" xtl="610.00000000" ytl="905.36230469" xbr="1426.00000000" ybr="1642.20000000" z_order="5">
+    </box>
+    <box label="AA" occluded="0" xtl="666.90039062" ytl="276.30000000" xbr="1123.70040283" ybr="810.70001221" z_order="2">
+    </box>
+  </image>
+  <image id="36" name="WIN_20220913_16_54_27_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="2390.69921875" ytl="1321.90039062" xbr="3027.70000000" ybr="1673.40038452" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="396.09960938" ytl="155.60000000" xbr="1600.60971680" ybr="1849.80004883" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="1821.20000000" ytl="414.30078125" xbr="2410.20007324" ybr="628.20000000" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="1657.00000000" ytl="1214.30078125" xbr="2429.79998779" ybr="1642.70079346" z_order="5">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2332.19921875" ytl="578.40000000" xbr="2970.70000000" ybr="1142.59997559" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2291.00000000" ytl="432.20000000" xbr="2706.80000000" ybr="843.89999390" z_order="1">
+    </box>
+    <box label="C" occluded="0" xtl="1875.59960938" ytl="588.90039062" xbr="2194.90000000" ybr="1192.90000000" z_order="3">
+    </box>
+  </image>
+  <image id="37" name="WIN_20220913_16_54_37_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="821.90039062" ytl="609.40000000" xbr="1389.40000000" ybr="1206.29980469" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="660.50000000" ytl="681.90039062" xbr="904.00000000" ybr="1093.00039062" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="1335.12890625" ytl="183.19921875" xbr="2361.80000000" ybr="1860.50000000" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2355.40000000" ytl="606.59960938" xbr="2983.22186279" ybr="1189.80000000" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="2363.50000000" ytl="1325.09960938" xbr="3030.50000000" ybr="1674.30039062" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="670.90039062" ytl="426.09960938" xbr="1280.30000000" ybr="702.10000000" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="657.00000000" ytl="1218.15820312" xbr="1377.18511963" ybr="1626.40000000" z_order="5">
+    </box>
+  </image>
+  <image id="38" name="WIN_20220913_16_54_47_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="645.50000000" ytl="951.19921875" xbr="861.00000000" ybr="1357.09882812" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="1337.75781250" ytl="197.19921875" xbr="2382.00000000" ybr="1878.80000000" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1028.30078125" ytl="443.30000000" xbr="1373.70079346" ybr="1050.70001221" z_order="7">
+    </box>
+    <box label="D" occluded="0" xtl="2277.60000000" ytl="1063.50000000" xbr="3078.29998779" ybr="1678.60000000" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="2304.50000000" ytl="567.09960938" xbr="2951.09997559" ybr="1128.30000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="766.59960938" ytl="1275.70000000" xbr="1356.19962158" ybr="1610.70001221" z_order="3">
+    </box>
+    <box label="AA" occluded="0" xtl="858.80078125" ytl="519.80078125" xbr="1050.50000000" ybr="1102.80076904" z_order="2">
+    </box>
+  </image>
+  <image id="39" name="WIN_20220913_16_54_56_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="2296.80078125" ytl="209.00000000" xbr="3104.50000000" ybr="1004.40002441" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1532.69921875" ytl="816.29980469" xbr="2036.09922485" ybr="1420.00000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="2477.80078125" ytl="957.59960938" xbr="2978.00078125" ybr="1577.80000000" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2025.19921875" ytl="725.60000000" xbr="2582.59919434" ybr="1323.70001221" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="1749.50000000" ytl="1193.50000000" xbr="2296.70001221" ybr="1600.00000000" z_order="2">
+    </box>
+    <box label="4FM" occluded="0" xtl="412.51171875" ytl="150.97265625" xbr="1569.06787109" ybr="1833.20000000" z_order="6">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2082.90039062" ytl="1439.30078125" xbr="2507.20000000" ybr="1649.50000000" z_order="1">
+    </box>
+  </image>
+  <image id="40" name="WIN_20220913_16_55_08_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="531.80078125" ytl="606.40039062" xbr="1281.50000000" ybr="1005.24694214" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="1229.98632812" ytl="192.30078125" xbr="2312.94348145" ybr="1880.40000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="744.40039062" ytl="1011.80000000" xbr="1227.40078125" ybr="1628.59954834" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="2744.60000000" ytl="1226.69921875" xbr="2969.30000305" ybr="1656.09922485" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="2388.59960938" ytl="994.19921875" xbr="2952.00000000" ybr="1436.50000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2234.09960938" ytl="399.90000000" xbr="2817.62320557" ybr="978.96014404" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2333.97265625" ytl="669.09960938" xbr="2978.70000000" ybr="1216.90000000" z_order="7">
+    </box>
+  </image>
+  <image id="41" name="WIN_20220913_16_55_19_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="2775.59960938" ytl="479.53906250" xbr="3011.10000000" ybr="904.30000000" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="1692.60937500" ytl="322.19921875" xbr="2152.60330200" ybr="1102.00000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="606.40039062" ytl="144.10000000" xbr="1671.58205566" ybr="1820.50000000" z_order="6">
+    </box>
+    <box label="AA" occluded="0" xtl="2432.00000000" ytl="681.90039062" xbr="2793.96658325" ybr="1253.80000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2015.09960938" ytl="1059.50000000" xbr="2348.29959717" ybr="1677.29998779" z_order="3">
+    </box>
+    <box label="C" occluded="0" xtl="2360.25781250" ytl="1119.69921875" xbr="3024.20000000" ybr="1659.10000000" z_order="4">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2121.59960938" ytl="363.09960938" xbr="2744.00000000" ybr="883.19962158" z_order="7">
+    </box>
+  </image>
+  <image id="42" name="WIN_20220913_16_55_33_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="2350.90000000" ytl="912.19921875" xbr="2985.70001221" ybr="1336.44160156" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1873.97851562" ytl="370.69921875" xbr="2278.30000000" ybr="778.29920654" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="2374.80078125" ytl="729.19921875" xbr="2993.30000000" ybr="987.60000000" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2170.30078125" ytl="398.05468750" xbr="2826.10000000" ybr="868.60000000" z_order="4">
+    </box>
+    <box label="4FM" occluded="0" xtl="544.80078125" ytl="163.40039062" xbr="1636.20000000" ybr="1839.40000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="2373.40039062" ytl="1330.69921875" xbr="3042.40000000" ybr="1640.60000000" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="1817.00000000" ytl="780.09960938" xbr="2447.00006104" ybr="1574.60000000" z_order="5">
+    </box>
+  </image>
+  <image id="43" name="WIN_20220913_16_56_52_Pro.jpg" width="3840" height="2160">
+    <box label="AA" occluded="0" xtl="1655.81054688" ytl="658.60000000" xbr="1971.23495483" ybr="1222.10034180" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1024.19921875" ytl="1065.09960938" xbr="1617.79920654" ybr="1465.50000000" z_order="7">
+    </box>
+    <box label="CR123A" occluded="0" xtl="893.09960938" ytl="450.40039062" xbr="1310.30000000" ybr="853.60039673" z_order="1">
+    </box>
+    <box label="D" occluded="0" xtl="562.33789062" ytl="826.50585938" xbr="1027.70000000" ybr="1582.50000000" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="1950.20507812" ytl="85.20000000" xbr="3354.50000000" ybr="1856.40002441" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1548.50000000" ytl="1094.59960938" xbr="2153.00000000" ybr="1639.80000000" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="1134.00000000" ytl="676.59960938" xbr="1749.40002441" ybr="981.40000000" z_order="3">
+    </box>
+  </image>
+  <image id="44" name="WIN_20220913_16_57_08_Pro.jpg" width="3840" height="2160">
+    <box label="FC-1" occluded="0" xtl="2349.60000000" ytl="945.09960938" xbr="2964.79998779" ybr="1248.80078735" z_order="7">
+    </box>
+    <box label="4FM" occluded="0" xtl="386.22656250" ytl="165.00000000" xbr="1529.64001465" ybr="1845.30004883" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="2434.19921875" ytl="307.20000000" xbr="3004.24915771" ybr="943.09997559" z_order="4">
+    </box>
+    <box label="D" occluded="0" xtl="1793.00000000" ytl="1168.69921875" xbr="2570.54138184" ybr="1677.30000000" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1906.19921875" ytl="378.80000000" xbr="2327.59922485" ybr="654.50000000" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="2141.90039062" ytl="523.40039062" xbr="2523.80000000" ybr="1082.60036621" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1661.06640625" ytl="551.50000000" xbr="2165.74545288" ybr="1172.40002441" z_order="3">
+    </box>
+  </image>
+  <image id="45" name="WIN_20220913_16_57_14_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="655.00000000" ytl="1206.19921875" xbr="1488.59997559" ybr="1618.39841919" z_order="6">
+    </box>
+    <box label="4FM" occluded="0" xtl="1581.40000000" ytl="188.90039062" xbr="2602.70031738" ybr="1867.30043945" z_order="7">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2466.20000000" ytl="944.79980469" xbr="2994.60000610" ybr="1252.40059204" z_order="8">
+    </box>
+    <box label="AA" occluded="0" xtl="1421.10000000" ytl="815.69921875" xbr="1609.50000000" ybr="1390.79920654" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="2432.80000000" ytl="306.90039062" xbr="3004.20001221" ybr="943.00313721" z_order="4">
+    </box>
+    <box label="C" occluded="0" xtl="614.09960938" ytl="445.40000000" xbr="1093.30231323" ybr="1073.58886719" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1063.20000000" ytl="402.90039062" xbr="1474.44003296" ybr="816.10039673" z_order="1">
+    </box>
+  </image>
+  <image id="46" name="WIN_20220913_16_57_28_Pro.jpg" width="3840" height="2160">
+    <box label="D" occluded="0" xtl="2429.30078125" ytl="651.30000000" xbr="3044.50000000" ybr="1438.09997559" z_order="5">
+    </box>
+    <box label="4FM" occluded="0" xtl="273.09960938" ytl="138.69921875" xbr="1490.59958496" ybr="1817.70000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1717.50000000" ytl="331.30078125" xbr="2326.90002441" ybr="862.50000000" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2103.70000000" ytl="484.09960938" xbr="2644.50000000" ybr="1098.99960937" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="1585.50000000" ytl="847.10000000" xbr="1941.90000000" ybr="1403.90002441" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="1981.74804688" ytl="1038.40000000" xbr="2528.10000000" ybr="1654.79998779" z_order="4">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1756.90039062" ytl="1398.30078125" xbr="2160.90038452" ybr="1636.90000000" z_order="1">
+    </box>
+  </image>
+  <image id="47" name="WIN_20220913_16_57_38_Pro.jpg" width="3840" height="2160">
+    <box label="C" occluded="0" xtl="1741.00000000" ytl="710.85156250" xbr="2084.40000000" ybr="1308.40000000" z_order="3">
+    </box>
+    <box label="D" occluded="0" xtl="990.40000000" ytl="809.30078125" xbr="1773.70001221" ybr="1535.40159912" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1508.61132812" ytl="1425.81250000" xbr="1915.90000000" ybr="1627.60000000" z_order="1">
+    </box>
+    <box label="4FM" occluded="0" xtl="1976.49218750" ytl="6.40000000" xbr="3355.40000000" ybr="1762.59924316" z_order="6">
+    </box>
+    <box label="FC-1" occluded="0" xtl="1158.59960938" ytl="439.69921875" xbr="1774.79959717" ybr="928.10000000" z_order="7">
+    </box>
+    <box label="AA" occluded="0" xtl="630.70000000" ytl="1419.19921875" xbr="1237.87164307" ybr="1607.49921875" z_order="2">
+    </box>
+    <box label="C" occluded="0" xtl="695.20000000" ytl="344.30078125" xbr="1242.40002441" ybr="970.70079346" z_order="4">
+    </box>
+  </image>
+  <image id="48" name="WIN_20220913_16_58_01_Pro.jpg" width="3840" height="2160">
+    <box label="CR123A" occluded="0" xtl="2594.40039062" ytl="1233.40000000" xbr="2964.00039062" ybr="1664.20001221" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="2113.17578125" ytl="1161.80000000" xbr="2648.60000000" ybr="1607.50000000" z_order="2">
+    </box>
+    <box label="D" occluded="0" xtl="2241.97265625" ytl="558.80000000" xbr="3081.50000000" ybr="1267.09997559" z_order="5">
+    </box>
+    <box label="C" occluded="0" xtl="1632.15234375" ytl="358.80078125" xbr="2171.80000000" ybr="978.96275635" z_order="3">
+    </box>
+    <box label="FC-1" occluded="0" xtl="2052.71875000" ytl="302.09960938" xbr="2649.60000000" ybr="908.60000000" z_order="7">
+    </box>
+    <box label="4FM" occluded="0" xtl="423.19921875" ytl="161.80078125" xbr="1548.40000000" ybr="1835.70000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1894.40039062" ytl="856.09960938" xbr="2247.23174438" ybr="1461.20000000" z_order="4">
+    </box>
+  </image>
+  <image id="49" name="WIN_20220913_16_58_12_Pro.jpg" width="3840" height="2160">
+    <box label="4FM" occluded="0" xtl="2115.30078125" ytl="178.30078125" xbr="3334.40000000" ybr="1878.80000000" z_order="6">
+    </box>
+    <box label="C" occluded="0" xtl="1009.20000000" ytl="1310.15820312" xbr="1628.70001221" ybr="1637.80000000" z_order="4">
+    </box>
+    <box label="D" occluded="0" xtl="1361.41406250" ytl="927.90039062" xbr="2128.50000000" ybr="1421.00039062" z_order="5">
+    </box>
+    <box label="CR123A" occluded="0" xtl="1687.35156250" ytl="742.09960938" xbr="2098.10000000" ybr="980.00000000" z_order="1">
+    </box>
+    <box label="AA" occluded="0" xtl="1622.50000000" ytl="1377.59960938" xbr="2192.50000000" ybr="1624.69960632" z_order="2">
+    </box>
+    <box label="FC-1" occluded="0" xtl="796.27929688" ytl="817.70019531" xbr="1410.00000000" ybr="1357.47150879" z_order="7">
+    </box>
+    <box label="C" occluded="0" xtl="600.19921875" ytl="532.40039062" xbr="1270.70000000" ybr="1042.90041504" z_order="3">
+    </box>
+  </image>
+</annotations>
