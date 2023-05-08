@@ -22,7 +22,7 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 def get_data_files(selected_project):
     data_files = dict()
-    if len(selected_project.data_files) > 0:
+    if selected_project.data_files and len(selected_project.data_files) > 0:
         st.markdown("# Files Info")
         data_files = selected_project.data_files
     else:
@@ -65,6 +65,7 @@ def get_label_files(selected_project):
 def show_file_metrics():
     selected_project = select_project()
     if selected_project:
+        logger.info(selected_project)
         data_files = get_data_files(selected_project)
         if data_files:
             chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
