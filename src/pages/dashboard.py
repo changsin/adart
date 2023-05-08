@@ -1,7 +1,10 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid
 
+from src.common import constants
+from src.common.logger import get_logger
 from .home import (
     api_target,
     get_projects_info,
@@ -10,7 +13,8 @@ from .home import (
     login,
     logout,
     select_project)
-from src.common import constants
+
+logger = get_logger(__name__)
 
 
 def view_project():
@@ -57,18 +61,54 @@ def view_project():
 #         for model_task in model_tasks:
 #             model_task.
 
+# Define a custom table formatter to display the horizontal bar graph in the table
+
+
+def bar_chart_formatter(val):
+    # Create a horizontal bar graph showing the percentage done for the current project
+    fig, ax = plt.subplots(figsize=(2, 0.5))
+    ax.barh(0, val, color="#1f77b4")
+    ax.barh(0, 100 - val, left=val, color="#d3d3d3")
+    ax.set_xlim(0, 100)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    plt.close()
+
+    # Return the HTML code to display the bar graph in the table
+    return f"<div style='display:flex;align-items:center;'><div>{val:.1f}%</div><div style='margin-left:10px;width:100px;height:10px;background-color:#d3d3d3;border-radius:5px;'><div style='width:{val}%;height:100%;background-color:#1f77b4;border-radius:5px;'></div></div></div>"
+
 
 def dashboard():
     st.subheader("**Projects**")
-    df_projects = pd.DataFrame(columns=constants.PROJECT_COLUMNS)
+    # df_projects = pd.DataFrame(columns=constants.PROJECT_COLUMNS)
 
     projects_info = get_projects_info()
     if projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
         df_projects = df_projects[constants.PROJECT_COLUMNS]
+        # logger.info(df_projects.apply())
+        # Calculate percentage of tasks done using a vectorized operation
+        df_projects["% Done"] = df_projects["task_done_count"] / df_projects["task_total_count"] * 100 \
+            if df_projects["task_total_count"].any() != 0 else 0
+        df_projects["# of images"] = df_projects["total_count"]
 
-    AgGrid(df_projects)
+        # Select only the relevant columns and display the results in a table
+        results_df = df_projects[["name", "# of images", "% Done"]]
+        results_df.columns = ["Name", "# of images", "% Done"]
+        # st.table(results_df)
+
+        # Use the custom table formatter for the "% Done" column
+        results_df["% Done"] = results_df["% Done"].apply(bar_chart_formatter)
+        # # Apply the bar chart formatter to the "% Done" column and return it as HTML
+        # results_df["% Done"] = results_df["% Done"].apply(lambda x: bar_chart_formatter(x, width=150, height=10))
+
+        # Assign the resulting DataFrame to a variable and render it as HTML
+        results_df_html = results_df.to_html(escape=False, index=False)
+
+        # Render the HTML table with the formatted "% Done" column
+        st.write(results_df_html, height=600, unsafe_allow_html=True)
+        # AgGrid(df_projects)
 
     st.subheader("**Tasks**")
     tasks_info = get_tasks_info()
