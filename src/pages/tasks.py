@@ -29,7 +29,7 @@ from src.converters.stvision_reader import StVisionReader
 from src.models.adq_labels import AdqLabels
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
-from src.models.tasks_info import Task, TasksInfo, TaskState
+from src.models.tasks_info import Task, TaskState
 from src.pages.users import select_user
 from .home import (
     is_authenticated,
@@ -328,7 +328,7 @@ def add_model_task(selected_project: Project):
 
 
 def update_model_task(selected_project):
-    selected_task, selected_index = select_task(selected_project.id)
+    selected_task = select_task(selected_project.id)
     if not selected_task:
         return
 
@@ -388,15 +388,31 @@ def update_task():
 def review_task():
     selected_project = select_project(is_sidebar=True)
     if selected_project:
-        if selected_project.extended_properties:
-            review_model_task(selected_project)
-        else:
-            app.main(selected_project)
+        selected_task = select_task(selected_project.id)
+        if selected_task:
+            if selected_project.extended_properties:
+                review_model_task(selected_task)
+            else:
+                app.main(selected_task)
 
 
-def review_model_task(selected_project):
-    selected_task, selected_index = select_task(selected_project.id)
-    if selected_task and selected_task.data_files and len(selected_task.data_files) > 0:
+def compare_tasks():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        task1 = select_task(selected_project.id, label="Select task1")
+        task2 = select_task(selected_project.id, label="Select task2")
+
+        if task1 and task2:
+            col1, col2 = st.columns(2)
+
+            with col1:
+                app.main(task1)
+            with col2:
+                app.main(task2, is_second_viewer=True)
+
+
+def review_model_task(selected_task):
+    if selected_task.data_files and len(selected_task.data_files) > 0:
         for folder, files in selected_task.data_files.items():
             for file in files:
                 st.write("📄{}".format(file))
@@ -423,7 +439,7 @@ def delete_task():
     if not selected_project:
         return
 
-    selected_task, selected_index = select_task(selected_project.id)
+    selected_task = select_task(selected_project.id)
     if selected_task:
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the task ({}) of project ({}-{})?"
                                              .format(selected_task.id, selected_project.id, selected_project.name))
@@ -453,6 +469,7 @@ def main():
         "Update Task": lambda: update_task(),
         "Review Task": lambda: review_task(),
         "Delete Task": lambda: delete_task(),
+        "Compare Tasks": lambda: compare_tasks(),
     }
 
     # Create a sidebar with menu options

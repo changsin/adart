@@ -13,7 +13,7 @@ from src.common.constants import (
     PROJECTS,
 )
 from src.models.projects_info import ProjectsInfo
-from src.models.tasks_info import TasksInfo
+from src.models.tasks_info import Task, TasksInfo
 from src.common.logger import get_logger
 
 LOCALHOST = "http://localhost"
@@ -39,7 +39,6 @@ def get_tasks_info():
     if not tasks_dict:
         tasks_dict = json.loads("{\"num_count\":0,\"tasks\":[]}")
 
-    logger.info(tasks_dict)
     return TasksInfo.from_json(tasks_dict)
 
 
@@ -68,7 +67,7 @@ def select_project(is_sidebar=True):
         st.markdown("**No project is created!**")
 
 
-def select_task(project_id: int) -> (list, int):
+def select_task(project_id: int, label="Select task") -> Task:
     tasks_info = get_tasks_info()
     tasks = tasks_info.get_tasks_by_project_id(project_id)
     if tasks and len(tasks) > 0:
@@ -80,19 +79,14 @@ def select_task(project_id: int) -> (list, int):
                    df_filtered[["id", "name", "project_id"]].values.tolist()]
         # set an empty string as the default selection - no action
         options.append("")
-        selected_task = st.sidebar.selectbox("Select task",
+        selected_task = st.sidebar.selectbox(label,
                                              options=options,
                                              index=len(options) - 1)
         if selected_task:
-            # Get the index of the selected option
-            # Use it to get the corresponding images folder
-            selected_index = options.index(selected_task)
             task_id, _ = selected_task.split('-', maxsplit=1)
-            return tasks_info.get_task_by_id(int(task_id)), selected_index
+            return tasks_info.get_task_by_id(int(task_id))
     else:
         st.markdown("**No task is created!**")
-
-    return [], 0
 
 
 def get_token(url, username: str, password: str):
