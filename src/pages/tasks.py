@@ -1,12 +1,13 @@
+import copy
 import datetime as dt
+import json
 import os.path
+import random
 import shutil
-from base64 import b64encode
 
 import pandas as pd
 import streamlit as st
 
-import src.viewer.app as app
 from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
@@ -38,25 +39,6 @@ from .home import (
     select_task)
 
 DATE_FORMAT = "%Y %B %d %A"
-
-
-def calculate_sample_count(count, percent):
-    return int((count * percent) / 100)
-
-
-def calculate_sample_distribution(df_total_count: pd.DataFrame,
-                                  sample_percent: int) -> pd.DataFrame:
-    df_sample_count = df_total_count.copy()
-
-    for index, row in df_total_count.iterrows():
-        sample_count = calculate_sample_count(row['count'], sample_percent)
-        if sample_count < 1.0:
-            st.warning("Please set a higher percentage to pick at least one file per folder")
-            return None
-        else:
-            df_sample_count.iloc[index] = (row['filename'], sample_count)
-
-    return df_sample_count
 
 
 def _show_full_size_image(full_path, size, date):
@@ -98,6 +80,110 @@ def show_images(files_dict: dict):
                     _show_full_size_image(full_path,
                                           utils.humanize_bytes(file_stat.st_size),
                                           dt_datetime.date())
+
+
+def _calculate_sample_count(count, percent):
+    return int((count * percent) / 100)
+
+
+def _calculate_sample_distribution(df_total_count: pd.DataFrame,
+                                   sample_percent: int) -> pd.DataFrame:
+    df_sample_count = df_total_count.copy()
+
+    for index, row in df_total_count.iterrows():
+        sample_count = _calculate_sample_count(row['count'], sample_percent)
+        if sample_count < 1.0:
+            st.warning("Please set a higher percentage to pick at least one file per folder")
+            return None
+        else:
+            df_sample_count.iloc[index] = (row['filename'], sample_count)
+
+    return df_sample_count
+
+
+def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
+    sampled = {}
+    for index, row in df_sample_count.iterrows():
+        label_filename = row['filename']
+        sample_count = row['count']
+
+        dart_labels = dart_labels_dict[label_filename]
+        sampled_dart_labels = copy.deepcopy(dart_labels)
+        random.shuffle(sampled_dart_labels.images)
+
+        sampled_dart_labels.images = sampled_dart_labels.images[:sample_count]
+        sampled[label_filename] = sampled_dart_labels
+
+        # save the sample label file
+        task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
+        if not os.path.exists(task_folder):
+            os.mkdir(task_folder)
+        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
+                      os.path.join(task_folder, label_filename))
+
+        tasks_info = get_tasks_info()
+        task_id = tasks_info.get_next_task_id()
+        task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
+        new_task = Task(task_id,
+                        task_name,
+                        selected_project.id,
+                        str(TaskState.DVS_NEW.description),
+                        label_filename)
+
+        tasks_info.add(new_task)
+        tasks_info.save()
+
+    return sampled
+
+
+def create_data_tasks():
+    selected_project = select_project()
+    if selected_project:
+        if not selected_project.label_files:
+            st.write("No data to sample. Please add data or add tasks instead")
+        else:
+            data_labels = DataLabels.load(selected_project.label_files)
+            images_per_label_file_dict = dict()
+            if data_labels:
+                for labels_file, dart_labels in data_labels.images():
+                    images_per_label_file_dict[labels_file] = len(dart_labels.images)
+
+            df_total_count = pd.DataFrame(images_per_label_file_dict.items(), columns=['filename', 'count'])
+            df_total_count['filename'] = df_total_count['filename'].apply(lambda file: os.path.basename(file))
+            st.dataframe(df_total_count)
+
+            with st.form("Create Tasks"):
+                sample_percent = st.number_input("% of samples", step=utils.step_size(0.0), format="%.2f")
+                is_keep_folders = st.checkbox("Keep folder structures", value=True)
+
+                submitted = st.form_submit_button("Create tasks")
+                if submitted:
+                    if sample_percent <= 0:
+                        st.warning("Please enter a valid percent value")
+                        return
+                    else:
+                        st.write("Sampling ")
+                        total_count = df_total_count['count'].sum()
+                        total_sample_count = _calculate_sample_count(total_count, sample_percent)
+
+                        if is_keep_folders:
+                            df_sample_count = _calculate_sample_distribution(df_total_count, sample_percent)
+                            if df_sample_count is None:
+                                return
+
+                            total_sample_count = df_sample_count['count'].sum()
+
+                        if total_sample_count > total_count:
+                            st.warning("Please enter a valid percent value.")
+                            st.warning("Sample count ({}) is greater than the total image count ({})"
+                                       .format(total_sample_count, total_count))
+                            st.dataframe(df_sample_count)
+                            return
+
+                        st.write("Here is how the image files are sampled")
+                        st.dataframe(df_sample_count)
+
+                        sample_data(selected_project, data_labels.to_json(), df_sample_count)
 
 
 def assign_tasks():
@@ -317,57 +403,6 @@ def update_task():
             st.sidebar.write("Update data task is coming soon")
 
 
-def review_task():
-    selected_project = select_project(is_sidebar=True)
-    if selected_project:
-        selected_task = select_task(selected_project.id)
-        if selected_task:
-            if selected_project.extended_properties:
-                review_model_task(selected_task)
-            else:
-                # # Navigate to a new page with the task details
-                # st.experimental_set_query_params(task_id=selected_task.id)
-                app.main(selected_task)
-
-
-def compare_tasks():
-    selected_project = select_project(is_sidebar=True)
-    if selected_project:
-        task1 = select_task(selected_project.id, label="Select task1")
-        task2 = select_task(selected_project.id, label="Select task2")
-
-        if task1 and task2:
-            col1, col2 = st.columns(2)
-
-            with col1:
-                app.main(task1)
-            with col2:
-                app.main(task2, is_second_viewer=True)
-
-
-def review_model_task(selected_task):
-    if selected_task.data_files and len(selected_task.data_files) > 0:
-        for folder, files in selected_task.data_files.items():
-            for file in files:
-                st.write("📄{}".format(file))
-                basename, extension = os.path.splitext(file)
-                if extension.lower() == ".pdf":
-                    pdf_file = open(os.path.join(folder, file), "rb").read()
-                    # Embed the PDF file in an iframe
-                    pdf_url = "data:application/pdf;base64," + b64encode(pdf_file).decode("utf-8")
-                    st.write(f'<iframe src="{pdf_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
-                elif extension.lower() in SUPPORTED_IMAGE_FILE_EXTENSIONS:
-                    st.image(os.path.join(folder, file))
-                elif extension.lower() in [".docx", ".doc"]:
-                    word_file = open(os.path.join(folder, file), "rb").read()
-                    # Embed the Word document in an iframe using HTML tags
-                    word_url = "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + b64encode(
-                        word_file).decode("utf-8")
-                    st.markdown(f'<iframe https://view.officeapps.live.com/op/embed.aspx?src="{word_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
-    else:
-        st.write("No uploaded files to review")
-
-
 def delete_task():
     selected_project = select_project(is_sidebar=True)
     if not selected_project:
@@ -397,12 +432,11 @@ def main():
     st.empty()
 
     menu = {
+        "Sample Tasks": lambda: create_data_tasks(),
         "Add Task": lambda: add_task(),
         "Assign Tasks": lambda: assign_tasks(),
         "Update Task": lambda: update_task(),
-        "Review Task": lambda: review_task(),
         "Delete Task": lambda: delete_task(),
-        "Compare Tasks": lambda: compare_tasks(),
     }
 
     # Create a sidebar with menu options

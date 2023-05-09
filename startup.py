@@ -7,6 +7,7 @@ from src.pages import (
     dashboard,
     projects,
     reports,
+    reviews,
     tasks,
     users,
 )
@@ -23,6 +24,7 @@ def main():
         "Dashboard": dashboard.main,
         "Projects": projects.main,
         "Tasks": tasks.main,
+        "Reviews": reviews.main,
         "Reports": reports.main,
         "Users": users.main,
     }

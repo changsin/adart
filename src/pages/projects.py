@@ -1,11 +1,7 @@
-import copy
 import datetime
-import json
 import os
-import random
 import shutil
 
-import pandas as pd
 import streamlit as st
 
 from src.common import utils
@@ -16,9 +12,7 @@ from src.common.constants import (
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
     SUPPORTED_LABEL_FORMATS,
 )
-from src.models.data_labels import DataLabels
 from src.models.projects_info import Project, ModelProject
-from src.models.tasks_info import Task, TaskState
 from .home import (
     api_target,
     get_projects_info,
@@ -290,107 +284,6 @@ def delete_project():
             projects_info.save()
 
 
-def _calculate_sample_count(count, percent):
-    return int((count * percent) / 100)
-
-
-def _calculate_sample_distribution(df_total_count: pd.DataFrame,
-                                   sample_percent: int) -> pd.DataFrame:
-    df_sample_count = df_total_count.copy()
-
-    for index, row in df_total_count.iterrows():
-        sample_count = _calculate_sample_count(row['count'], sample_percent)
-        if sample_count < 1.0:
-            st.warning("Please set a higher percentage to pick at least one file per folder")
-            return None
-        else:
-            df_sample_count.iloc[index] = (row['filename'], sample_count)
-
-    return df_sample_count
-
-
-def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
-    sampled = {}
-    for index, row in df_sample_count.iterrows():
-        label_filename = row['filename']
-        sample_count = row['count']
-
-        dart_labels = dart_labels_dict[label_filename]
-        sampled_dart_labels = copy.deepcopy(dart_labels)
-        random.shuffle(sampled_dart_labels.images)
-
-        sampled_dart_labels.images = sampled_dart_labels.images[:sample_count]
-        sampled[label_filename] = sampled_dart_labels
-
-        # save the sample label file
-        task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
-        if not os.path.exists(task_folder):
-            os.mkdir(task_folder)
-        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
-                      os.path.join(task_folder, label_filename))
-
-        tasks_info = get_tasks_info()
-        task_id = tasks_info.get_next_task_id()
-        task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
-        new_task = Task(task_id,
-                        task_name,
-                        selected_project.id,
-                        str(TaskState.DVS_NEW.description),
-                        label_filename)
-
-        tasks_info.add(new_task)
-        tasks_info.save()
-
-    return sampled
-
-
-def create_data_tasks():
-    selected_project = select_project()
-    if selected_project and len(selected_project.label_files) > 0:
-        data_labels = DataLabels.load(selected_project.label_files)
-        images_per_label_file_dict = dict()
-        if data_labels:
-            for labels_file, dart_labels in data_labels.images():
-                images_per_label_file_dict[labels_file] = len(dart_labels.images)
-
-        df_total_count = pd.DataFrame(images_per_label_file_dict.items(), columns=['filename', 'count'])
-        df_total_count['filename'] = df_total_count['filename'].apply(lambda file: os.path.basename(file))
-        st.dataframe(df_total_count)
-
-        with st.form("Create Tasks"):
-            sample_percent = st.number_input("% of samples", step=utils.step_size(0.0), format="%.2f")
-            is_keep_folders = st.checkbox("Keep folder structures", value=True)
-
-            submitted = st.form_submit_button("Create tasks")
-            if submitted:
-                if sample_percent <= 0:
-                    st.warning("Please enter a valid percent value")
-                    return
-                else:
-                    st.write("Sampling ")
-                    total_count = df_total_count['count'].sum()
-                    total_sample_count = _calculate_sample_count(total_count, sample_percent)
-
-                    if is_keep_folders:
-                        df_sample_count = _calculate_sample_distribution(df_total_count, sample_percent)
-                        if df_sample_count is None:
-                            return
-
-                        total_sample_count = df_sample_count['count'].sum()
-
-                    if total_sample_count > total_count:
-                        st.warning("Please enter a valid percent value.")
-                        st.warning("Sample count ({}) is greater than the total image count ({})"
-                                   .format(total_sample_count, total_count))
-                        st.dataframe(df_sample_count)
-                        return
-
-                    st.write("Here is how the image files are sampled")
-                    st.dataframe(df_sample_count)
-
-                    sample_data(selected_project, data_labels.to_json(), df_sample_count)
-
-
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -401,8 +294,6 @@ def main():
         "Create Project": lambda: create_project(),
         "Update Project": lambda: update_project(),
         "Delete Project": lambda: delete_project(),
-        # st.sidebar.markdown("---"),
-        # "Create Tasks": lambda: create_data_tasks(),
     }
 
     # Create a sidebar with menu options
