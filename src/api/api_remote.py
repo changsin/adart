@@ -110,6 +110,16 @@ class ApiRemote(ApiBase):
         # TODO: WIP, needs to fix a few issues
         return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_project_dict)
 
+    def update_project(self, project_dict: dict) -> dict:
+        url = f"{self.url_base}/api/v1/project/{project_dict['id']}"
+        del project_dict['id']
+        del project_dict['data_files']
+        del project_dict['label_files']
+        del project_dict['extended_properties']
+
+        # TODO: WIP, needs to fix a few issues
+        return ApiRemote.send_api_request_with_json_body("PUT", url, self.token, project_dict)
+
     def list_tasks(self, limit=100) -> dict:
         limit = f"limit={limit}"
         url = f"{self.url_base}/api/v1/task/?skip=0&{limit}"

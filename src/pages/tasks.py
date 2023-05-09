@@ -32,10 +32,11 @@ from src.models.projects_info import Project
 from src.models.tasks_info import Task, TaskState
 from src.pages.users import select_user
 from .home import (
+    api_target,
+    get_tasks_info,
     is_authenticated,
     login,
     logout,
-    get_tasks_info,
     select_project,
     select_task)
 
@@ -213,6 +214,7 @@ def assign_tasks():
                     task.state_id = TaskState.DVS_WORKING._value_
                 tasks_info.save()
 
+
 def add_task():
     selected_project = select_project()
     if selected_project:
@@ -289,11 +291,16 @@ def add_data_task(selected_project: Project):
         # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Task")
         if submitted:
+            data_count = len(saved_data_filenames)
             new_task = Task(new_task_id, task_name, selected_project.id, "Created",
                             date=str(dt.datetime.now()),
+                            count=data_count,
                             anno_file_name=converted_filename)
             tasks_info.add(new_task)
             tasks_info.save()
+
+            selected_project.task_total_count += data_count
+            api_target().update_project(selected_project.to_json())
 
             st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 

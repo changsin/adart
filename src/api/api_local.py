@@ -58,6 +58,13 @@ class ApiLocal(ApiBase):
         projects_info.save()
         return new_project_dict
 
+    def update_project(self, project_dict: dict) -> dict:
+        projects_info = ProjectsInfo.from_json(self.list_projects())
+        project_to_update = Project.from_json(project_dict)
+        projects_info.update_project(project_to_update)
+        projects_info.save()
+        return project_dict
+
     def list_tasks(self, limit=100) -> dict:
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
         return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")

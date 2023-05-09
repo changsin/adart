@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import streamlit as st
-from st_aggrid import AgGrid
 
 from src.common import constants
 from src.common.logger import get_logger
@@ -89,8 +89,10 @@ def dashboard():
         df_projects = df_projects[constants.PROJECT_COLUMNS]
         # logger.info(df_projects.apply())
         # Calculate percentage of tasks done using a vectorized operation
-        df_projects["% Done"] = df_projects["task_done_count"] / df_projects["task_total_count"] * 100 \
-            if df_projects["task_total_count"].any() != 0 else 0
+        # df_projects["% Done"] = df_projects["task_done_count"] / df_projects["task_total_count"] * 100 \
+        #     if df_projects["task_total_count"].any() != 0 else 0
+        df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
+                                         df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
         df_projects["# of images"] = df_projects["total_count"]
 
         # Select only the relevant columns and display the results in a table

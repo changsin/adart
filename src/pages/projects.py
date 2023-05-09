@@ -97,7 +97,9 @@ def create_data_project():
                                        annotation_type_id=1,
                                        file_format_id=1,
                                        created_at=str(datetime.datetime.now()),
-                                       description=description).to_json()
+                                       description=description,
+                                       total_count=len(saved_data_filenames)
+                                       ).to_json()
             response = api_target().create_project(new_project_dict)
             st.dataframe(response)
             st.write("Project {} {} created".format(project_id, name))
