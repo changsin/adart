@@ -116,13 +116,18 @@ def dashboard():
         df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
         df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
 
+        # Sort the DataFrame by project_id
+        df_tasks = df_tasks.sort_values(by="project_id")
+
         logger.info(df_tasks)
         # Render the DataFrame with status color as colored square using HTML and CSS
         st.write(
-            df_tasks[["project_id", "id", "reviewer_fullname", "state_name"]]
+            df_tasks[["project_id", "id", "name", "annotator_fullname", "reviewer_fullname", "state_name"]]
             .rename(columns={
                 "project_id": "Project id",
                 "id": "Task id",
+                "name": "Name",
+                "annotator_fullname": "Annotated by",
                 "reviewer_fullname": "Assigned to",
                 "state_name": "Status"
             })
@@ -151,16 +156,16 @@ def main():
 
     st.markdown("# Dashboard")
     dashboard()
-
-    menu = {
-        "View Project": lambda: view_project(),
-    }
-
-    # Create a sidebar with menu options
-    selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
-    if selected_action:
-        # Call the selected method based on the user's selection
-        menu[selected_action]()
+    #
+    # menu = {
+    #     "View Project": lambda: view_project(),
+    # }
+    #
+    # # Create a sidebar with menu options
+    # selected_action = st.sidebar.radio("Choose action", list(menu.keys()))
+    # if selected_action:
+    #     # Call the selected method based on the user's selection
+    #     menu[selected_action]()
 
 
 if __name__ == '__main__':
