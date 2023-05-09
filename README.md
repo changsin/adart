@@ -15,6 +15,7 @@ Here are what each package does:
 - **viewer:** image viewer (frontend)
 
 ## 1.1. To build the frontend
+**NB:** Make sure that your node version is **v16.20.0.** **v18** and later versions were found to have incompatibility problems.
 
 ```commandline
 >cd src/viewer/frontend
