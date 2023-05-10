@@ -1,3 +1,4 @@
+import datetime
 import json
 import os.path
 from abc import ABC
@@ -10,43 +11,25 @@ from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
 
 @attr.s(slots=True, frozen=False)
 class Project(ABC):
-    id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
+    id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
 
-    annotation_type_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
-    file_format_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
-
-    created_at = attr.ib(default=None)
-    updated_at = attr.ib(default=None)
+    dir_name = attr.ib(default=None)
 
     description = attr.ib(default=None)
 
-    # new attributes
-    data_files = attr.ib(default=None)
-    label_files = attr.ib(default=None)
+    created_at = attr.ib(default=str(datetime.datetime.now()), validator=attr.validators.instance_of(str))
+    updated_at = attr.ib(default=str(datetime.datetime.now()), validator=attr.validators.instance_of(str))
 
-    progress = attr.ib(default=1, validator=attr.validators.instance_of(int))
     task_total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
     task_done_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    sample_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    per_task_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
-    # TODO: for backward-compatibility
-    dir_name = attr.ib(default=None)
+    data_total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    data_sample_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
-    annotation_classes = attr.ib(default=None)
-    annotation_errors = attr.ib(default=None)
-    dataset_name = attr.ib(default=None)
     domain_id = attr.ib(default=None)
 
-    customer_company = attr.ib(default=None)
-    customer_url = attr.ib(default=None)
-    customer_name = attr.ib(default=None)
-    customer_phone = attr.ib(default=None)
-    customer_email = attr.ib(default=None)
-    customer_address = attr.ib(default=None)
-
+    company_info = attr.ib(default=None)
     extended_properties = attr.ib(default=None)
 
     def __iter__(self):
@@ -54,39 +37,22 @@ class Project(ABC):
             "id": self.id,
             "name": self.name,
 
-            "data_files": self.data_files,
-            "label_files": self.label_files,
-
-            "annotation_type_id": self.annotation_type_id,
-            "file_format_id": self.file_format_id,
+            "dir_name": self.dir_name,
 
             "created_at": self.created_at,
             "updated_at": self.updated_at,
 
             "description": self.description,
 
-            "progress": self.progress,
             "task_total_count": self.task_total_count,
             "task_done_count": self.task_done_count,
-            "total_count": self.total_count,
-            "sample_count": self.sample_count,
 
-            # TODO: for backward-compatibility
-            "per_task_count": self.per_task_count,
-            "dir_name": self.per_task_count,
+            "data_total_count": self.data_total_count,
+            "data_sample_count": self.data_sample_count,
 
-            "annotation_classes": self.annotation_classes,
-            "annotation_errors": self.annotation_errors,
-            "dataset_name": self.dataset_name,
             "domain_id": self.domain_id,
 
-            "customer_company": self.customer_company,
-            "customer_name": self.customer_name,
-            "customer_url": self.customer_url,
-            "customer_phone": self.customer_phone,
-            "customer_email": self.customer_email,
-            "customer_address": self.customer_address,
-
+            "company_info": self.company_info,
             "extended_properties": self.extended_properties
         }.items()
 
@@ -95,82 +61,48 @@ class Project(ABC):
             "id": self.id,
             "name": self.name,
 
-            "data_files": self.data_files,
-            "label_files": self.label_files,
-
-            "annotation_type_id": self.annotation_type_id,
-            "file_format_id": self.file_format_id,
+            "dir_name": self.dir_name,
 
             "created_at": self.created_at,
             "updated_at": self.updated_at,
 
             "description": self.description,
 
-            "progress": self.progress,
             "task_total_count": self.task_total_count,
             "task_done_count": self.task_done_count,
-            "total_count": self.total_count,
-            "sample_count": self.sample_count,
 
-            # TODO: for backward-compatibility
-            "per_task_count": self.per_task_count,
-            "dir_name": self.per_task_count,
+            "data_total_count": self.data_total_count,
+            "data_sample_count": self.data_sample_count,
 
-            "annotation_classes": self.annotation_classes,
-            "annotation_errors": self.annotation_errors,
-            "dataset_name": self.dataset_name,
             "domain_id": self.domain_id,
 
-            "customer_company": self.customer_company,
-            "customer_name": self.customer_name,
-            "customer_url": self.customer_url,
-            "customer_phone": self.customer_phone,
-            "customer_email": self.customer_email,
-            "customer_address": self.customer_address,
-
+            "company_info": self.company_info,
             "extended_properties": self.extended_properties
         }
 
     @staticmethod
     def from_json(json_dict: dict):
         return Project(
-            id=json_dict["id"],
+            id=json_dict.get("id", -1),
             name=json_dict["name"],
 
-            data_files=json_dict["data_files"],
-            label_files=json_dict["label_files"],
-
-            annotation_type_id=json_dict["annotation_type_id"],
-            file_format_id=json_dict["file_format_id"],
+            dir_name=json_dict["dir_name"],
 
             created_at=json_dict["created_at"],
             updated_at=json_dict["updated_at"],
 
             description=json_dict["description"],
 
-            progress=json_dict["progress"],
-            task_total_count=json_dict["task_total_count"],
-            task_done_count=json_dict["task_done_count"],
-            total_count=json_dict["total_count"],
-            sample_count=json_dict["sample_count"],
+            task_total_count=json_dict.get("task_total_count", 0),
+            task_done_count=json_dict.get("task_done_count", 0),
 
-            # TODO: for backward-compatibility
-            per_task_count=json_dict["per_task_count"],
-            dir_name=json_dict["dir_name"],
+            data_total_count=json_dict.get("data_total_count", None),
+            data_sample_count=json_dict.get("data_sample_count", None),
+
             domain_id=json_dict["domain_id"],
 
-            annotation_classes=json_dict["annotation_classes"],
-            annotation_errors=json_dict["annotation_errors"],
-            dataset_name=json_dict["dataset_name"],
-
-            customer_company=json_dict["customer_company"],
-            customer_name=json_dict["customer_name"],
-            customer_url=json_dict["customer_url"] if json_dict.get("customer_url") else "",
-            customer_phone=json_dict["customer_phone"],
-            customer_email=json_dict["customer_email"],
-            customer_address=json_dict["customer_address"] if json_dict.get("customer_address") else "",
-
-            extended_properties=json_dict["extended_properties"] if json_dict.get("extended_properties") else None
+            company_info=json_dict.get("company_info", None),
+            extended_properties=json_dict.get("extended_properties", None)
         )
 
 

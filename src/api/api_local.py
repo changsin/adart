@@ -10,7 +10,7 @@ from src.common.constants import (
 )
 from src.models.users_info import User, UsersInfo
 from src.models.projects_info import ProjectsInfo, Project
-from src.models.tasks_info import TasksInfo
+from src.models.tasks_info import TasksInfo, Task
 from .api_base import ApiBase
 
 
@@ -54,6 +54,7 @@ class ApiLocal(ApiBase):
     def create_project(self, new_project_dict: dict) -> dict:
         projects_info = ProjectsInfo.from_json(self.list_projects())
         new_project = Project.from_json(new_project_dict)
+        new_project.id = projects_info.get_next_project_id()
         projects_info.add(new_project)
         projects_info.save()
         return new_project_dict
@@ -68,6 +69,15 @@ class ApiLocal(ApiBase):
     def list_tasks(self, limit=100) -> dict:
         tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
         return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
+
+    def create_task(self, new_task_dict: dict) -> dict:
+        tasks_info = TasksInfo.from_json(self.list_tasks())
+        task_id = tasks_info.get_next_task_id()
+        new_task = Task.from_json(new_task_dict)
+        new_task.id = task_id
+        tasks_info.add(new_task)
+        tasks_info.save()
+        return new_task.to_json()
 
     def list_annotation_errors(self, limit=100) -> list:
         return [

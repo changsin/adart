@@ -37,6 +37,9 @@ from .home import (
     logout,
     select_project,
     select_task)
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 DATE_FORMAT = "%Y %B %d %A"
 
@@ -101,37 +104,48 @@ def _calculate_sample_distribution(df_total_count: pd.DataFrame,
     return df_sample_count
 
 
-def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_count: pd.DataFrame):
+def sample_data(selected_project: Project, data_labels_dict: dict, df_sample_count: pd.DataFrame):
+    data_total_count, data_sample_count = 0, 0
+
     sampled = {}
     for index, row in df_sample_count.iterrows():
         label_filename = row['filename']
         sample_count = row['count']
 
-        dart_labels = dart_labels_dict[label_filename]
-        sampled_dart_labels = copy.deepcopy(dart_labels)
-        random.shuffle(sampled_dart_labels.images)
+        dart_labels = data_labels_dict[label_filename]
+        sampled_data_labels = copy.deepcopy(dart_labels)
+        random.shuffle(sampled_data_labels.images)
 
-        sampled_dart_labels.images = sampled_dart_labels.images[:sample_count]
-        sampled[label_filename] = sampled_dart_labels
+        sampled_data_labels.images = sampled_data_labels.images[:sample_count]
+        sampled[label_filename] = sampled_data_labels
 
         # save the sample label file
         task_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(index))
         if not os.path.exists(task_folder):
             os.mkdir(task_folder)
-        utils.to_file(json.dumps(sampled_dart_labels, default=utils.default, indent=2),
+        utils.to_file(json.dumps(sampled_data_labels, default=utils.default, indent=2),
                       os.path.join(task_folder, label_filename))
 
         tasks_info = get_tasks_info()
-        task_id = tasks_info.get_next_task_id()
-        task_name = "{}-{}-{}".format(selected_project.id, task_id, label_filename)
-        new_task = Task(task_id,
-                        task_name,
-                        selected_project.id,
-                        str(TaskState.DVS_NEW.description),
-                        label_filename)
-
+        task_name = "{}-{}".format(selected_project.id, label_filename)
+        object_count = sum(image.objects for image in sampled_data_labels.images)
+        new_task = Task(task_name,
+                        project_id=selected_project.id,
+                        state_id=TaskState.DVS_NEW.value,
+                        state_name=str(TaskState.DVS_NEW.description),
+                        anno_file_name=label_filename,
+                        data_count=len(sampled_data_labels.images),
+                        object_count=object_count
+                        )
         tasks_info.add(new_task)
         tasks_info.save()
+
+        data_total_count += len(dart_labels.images)
+        data_sample_count += len(sampled_data_labels.images)
+
+    selected_project.data_total_count = data_total_count
+    selected_project.data_sample_count = data_sample_count
+    api_target().update_project(selected_project.to_json())
 
     return sampled
 
@@ -139,51 +153,85 @@ def sample_data(selected_project: Project, dart_labels_dict: dict, df_sample_cou
 def create_data_tasks():
     selected_project = select_project()
     if selected_project:
-        if not selected_project.label_files:
-            st.write("No data to sample. Please add data or add tasks instead")
-        else:
-            data_labels = DataLabels.load(selected_project.label_files)
-            images_per_label_file_dict = dict()
-            if data_labels:
-                for labels_file, dart_labels in data_labels.images():
-                    images_per_label_file_dict[labels_file] = len(dart_labels.images)
+        with st.form("Create Tasks"):
+            options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
+            selected_file_types = st.selectbox("**Image file types**",
+                                               options,
+                                               index=len(options) - 1)
+            uploaded_data_files = st.file_uploader("Upload data files",
+                                                   selected_file_types,
+                                                   accept_multiple_files=True)
 
-            df_total_count = pd.DataFrame(images_per_label_file_dict.items(), columns=['filename', 'count'])
-            df_total_count['filename'] = df_total_count['filename'].apply(lambda file: os.path.basename(file))
-            st.dataframe(df_total_count)
+            uploaded_label_files = st.file_uploader("Upload label files",
+                                                    SUPPORTED_LABEL_FILE_EXTENSIONS,
+                                                    accept_multiple_files=True)
+            labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
 
-            with st.form("Create Tasks"):
-                sample_percent = st.number_input("% of samples", step=utils.step_size(0.0), format="%.2f")
-                is_keep_folders = st.checkbox("Keep folder structures", value=True)
+            project_dir_name = selected_project.dir_name
+            save_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_dir_name))
+            if not os.path.exists(save_folder):
+                os.mkdir(save_folder)
 
-                submitted = st.form_submit_button("Create tasks")
-                if submitted:
-                    if sample_percent <= 0:
-                        st.warning("Please enter a valid percent value")
-                        return
-                    else:
-                        st.write("Sampling ")
-                        total_count = df_total_count['count'].sum()
-                        total_sample_count = _calculate_sample_count(total_count, sample_percent)
+            data_files = dict()
+            # Save the uploaded files
+            saved_data_filenames = []
+            if uploaded_data_files:
+                for file in uploaded_data_files:
+                    with open(os.path.join(save_folder, file.name), "wb") as f:
+                        f.write(file.getbuffer())
+                    saved_data_filenames.append(file.name)
+                data_files[save_folder] = saved_data_filenames
+                saved_data_filenames.sort()
 
-                        if is_keep_folders:
-                            df_sample_count = _calculate_sample_distribution(df_total_count, sample_percent)
-                            if df_sample_count is None:
-                                return
+            labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
+            if uploaded_label_files:
+                # Save the uploaded files in origin folder
+                ori_folder = os.path.join(save_folder, "origin")
+                if not os.path.exists(ori_folder):
+                    os.mkdir(ori_folder)
 
-                            total_sample_count = df_sample_count['count'].sum()
+                saved_anno_filenames = []
+                for file in uploaded_label_files:
+                    with open(os.path.join(ori_folder, file.name), "wb") as f:
+                        f.write(file.getbuffer())
+                    saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
-                        if total_sample_count > total_count:
-                            st.warning("Please enter a valid percent value.")
-                            st.warning("Sample count ({}) is greater than the total image count ({})"
-                                       .format(total_sample_count, total_count))
-                            st.dataframe(df_sample_count)
-                            return
+                saved_anno_filenames.sort()
 
-                        st.write("Here is how the image files are sampled")
-                        st.dataframe(df_sample_count)
+            task_count = st.number_input("Enter the desired number of tasks to create", step=utils.step_size(1))
 
-                        sample_data(selected_project, data_labels.to_json(), df_sample_count)
+            submitted = st.form_submit_button("Create tasks")
+            if submitted:
+                converted_filenames = []
+                for idx, anno_filename in enumerate(saved_anno_filenames):
+                    if labels_format_type == CVAT_XML:
+                        converted_filename = _convert_anno_files(labels_format_type,
+                                                                 save_folder,
+                                                                 saved_data_filenames,
+                                                                 [anno_filename])
+                        converted_filenames.append(converted_filename)
+
+                # sample_data(selected_project, data_labels.to_json(), df_sample_count)
+
+
+def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, saved_anno_filenames):
+    converted_filename = os.path.join(save_folder, "converted.json")
+    if labels_format_type == STRADVISION_XML:
+        reader = StVisionReader()
+        parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
+        data_labels = DataLabels.from_json(parsed_dict)
+        data_labels.save(converted_filename)
+    elif labels_format_type == CVAT_XML:
+        reader = CVATReader()
+        parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
+        data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
+        data_labels.save(converted_filename)
+    elif labels_format_type == GPR_JSON:
+        converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
+    elif labels_format_type == YOLO_V5_TXT:
+        converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
+
+    return converted_filename
 
 
 def assign_tasks():
@@ -217,16 +265,16 @@ def assign_tasks():
                 tasks_info.save()
 
 
-def add_task():
+def add_tasks():
     selected_project = select_project()
     if selected_project:
         if selected_project.extended_properties:
             add_model_task(selected_project)
         else:
-            add_data_task(selected_project)
+            add_data_tasks(selected_project)
 
 
-def add_data_task(selected_project: Project):
+def add_data_tasks(selected_project: Project):
     with st.form("Add Data Task"):
         task_name = st.text_input("**Task Name:**")
         options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
@@ -273,35 +321,41 @@ def add_data_task(selected_project: Project):
                 saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
             saved_anno_filenames.sort()
-            converted_filename = os.path.join(save_folder, "converted.json")
 
-            if labels_format_type == STRADVISION_XML:
-                reader = StVisionReader()
-                parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
-                data_labels = DataLabels.from_json(parsed_dict)
-                data_labels.save(converted_filename)
-            elif labels_format_type == CVAT_XML:
-                reader = CVATReader()
-                parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
-                data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
-                data_labels.save(converted_filename)
-            elif labels_format_type == GPR_JSON:
-                converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
-            elif labels_format_type == YOLO_V5_TXT:
-                converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
+            converted_filenames = []
+            for idx, anno_filename in enumerate(saved_anno_filenames):
+                if labels_format_type == CVAT_XML:
+                    converted_filename = _convert_anno_files(labels_format_type,
+                                                             save_folder,
+                                                             saved_data_filenames,
+                                                             [anno_filename])
+                    converted_filenames.append(converted_filename)
 
         # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Task")
         if submitted:
-            data_count = len(saved_data_filenames)
-            new_task = Task(new_task_id, task_name, selected_project.id, "New",
-                            date=str(dt.datetime.now()),
-                            count=data_count,
-                            anno_file_name=converted_filename)
-            tasks_info.add(new_task)
-            tasks_info.save()
+            data_total_count = 0
+            for idx, converted_filename in enumerate(converted_filenames):
+                data_labels = DataLabels.load(converted_filename)
+                data_count = len(data_labels.images)
+                object_count = sum(len(image.objects) for image in data_labels.images)
+                new_task = Task(name=f"{task_name}-{idx}",
+                                project_id=selected_project.id,
+                                dir_name=save_folder,
+                                anno_file_name=converted_filename,
+                                state_id=TaskState.DVS_NEW.value,
+                                state_name=TaskState.DVS_NEW.description,
+                                data_count=data_count,
+                                object_count=object_count)
+                # tasks_info.add(new_task)
+                # tasks_info.save()
+                data_total_count += data_count
+                response = api_target().create_task(new_task.to_json())
+                logger.info(response)
+                st.write(f"Task {response['id']} {response['name']} created")
 
-            selected_project.task_total_count += data_count
+            selected_project.task_total_count += len(converted_filenames)
+            selected_project.data_total_count += data_total_count
             api_target().update_project(selected_project.to_json())
 
             st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
@@ -432,8 +486,8 @@ def main():
     st.empty()
 
     menu = {
-        "Sample Tasks": lambda: create_data_tasks(),
-        "Add Task": lambda: add_task(),
+        # "Sample Tasks": lambda: create_data_tasks(),
+        "Add Tasks": lambda: add_tasks(),
         "Assign Tasks": lambda: assign_tasks(),
         "Update Task": lambda: update_task(),
         "Delete Task": lambda: delete_task(),

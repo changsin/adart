@@ -93,11 +93,12 @@ def dashboard():
         #     if df_projects["task_total_count"].any() != 0 else 0
         df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
                                          df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
-        df_projects["# of images"] = df_projects["total_count"]
+        logger.info(f"projects: {df_projects}")
+        df_projects["# of images"] = df_projects["data_total_count"]
 
         # Select only the relevant columns and display the results in a table
-        results_df = df_projects[["id", "name", "# of images", "% Done"]]
-        results_df.columns = ["id", "Name", "# of images", "% Done"]
+        results_df = df_projects[["id", "name", "# of images", "task_total_count", "% Done"]]
+        results_df.columns = ["Id", "Name", "Image count", "Task count", "% Done"]
         # st.table(results_df)
 
         # Use the custom table formatter for the "% Done" column

@@ -102,10 +102,6 @@ class ApiRemote(ApiBase):
 
     def create_project(self, new_project_dict: dict) -> dict:
         url = f"{self.url_base}/api/v1/project"
-        del new_project_dict['id']
-        del new_project_dict['data_files']
-        del new_project_dict['label_files']
-        del new_project_dict['extended_properties']
 
         # TODO: WIP, needs to fix a few issues
         return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_project_dict)
@@ -125,6 +121,12 @@ class ApiRemote(ApiBase):
         url = f"{self.url_base}/api/v1/task/?skip=0&{limit}"
         response_text = ApiRemote.send_api_request("GET", url, self.token)
         return json.loads(response_text)
+
+    def create_task(self, new_task_dict: dict) -> dict:
+        url = f"{self.url_base}/api/v1/task"
+
+        # TODO: WIP, needs to fix a few issues
+        return ApiRemote.send_api_request_with_json_body("POST", url, self.token, new_task_dict)
 
     def list_annotation_errors(self, limit=100) -> list:
         limit = f"limit={limit}"

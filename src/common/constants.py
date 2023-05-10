@@ -21,8 +21,7 @@ SUPPORTED_IMAGE_FILE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'bmp', 'tiff', 'gif']
 SUPPORTED_VIDEO_FILE_EXTENSIONS = "*.mp4 *.avi *.mov"
 SUPPORTED_AUDIO_FILE_EXTENSIONS = "*.mp3 *.wav"
 
-PROJECT_COLUMNS = ['id', 'name', 'file_format_id',
-                   'total_count', 'task_total_count', 'task_done_count']
+PROJECT_COLUMNS = ['id', 'name', 'task_total_count', 'task_done_count', 'data_total_count', 'data_sample_count']
 
 TASK_COLUMNS = ['id', 'name', "project_id"]
 

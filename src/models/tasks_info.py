@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from enum import Enum
@@ -27,21 +28,28 @@ class TaskState(Enum):
 
 @attr.s(slots=True, frozen=False)
 class Task:
-    id = attr.ib(validator=attr.validators.instance_of(int))
     name = attr.ib(validator=attr.validators.instance_of(str))
     project_id = attr.ib(validator=attr.validators.instance_of(int))
-    state_name = attr.ib(validator=attr.validators.instance_of(str))
+    id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
+
+    dir_name = attr.ib(default=name, validator=attr.validators.instance_of(str))
     anno_file_name = attr.ib(default=None)
-    count = attr.ib(default=0, validator=attr.validators.instance_of(int))
-    state_id = attr.ib(default=1, validator=attr.validators.instance_of(int))
+
+    created_at = attr.ib(default=str(datetime.datetime.now()), validator=attr.validators.instance_of(str))
+    updated_at = attr.ib(default=str(datetime.datetime.now()), validator=attr.validators.instance_of(str))
+
+    state_id = attr.ib(default=TaskState.DVS_NEW.value, validator=attr.validators.instance_of(int))
+    state_name = attr.ib(default=TaskState.DVS_NEW.description, validator=attr.validators.instance_of(str))
+
     annotator_id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
     annotator_fullname = attr.ib(default=None)
+
     reviewer_id = attr.ib(default=-1, validator=attr.validators.instance_of(int))
     reviewer_fullname = attr.ib(default=None)
 
-    # new - mainly for model validations
-    date = attr.ib(default=None)
-    data_files = attr.ib(default=None)
+    data_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    object_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    error_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
     description = attr.ib(default=None)
 
@@ -49,12 +57,16 @@ class Task:
         yield from {
             "id": self.id,
             "name": self.name,
-
             "project_id": self.project_id,
+
+            "dir_name": self.dir_name,
+            "anno_file_name": self.anno_file_name,
+
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+
             "state_id": self.state_id,
             "state_name": self.state_name,
-            "count": self.count,
-            "anno_file_name": self.anno_file_name,
 
             "annotator_id": self.annotator_id,
             "annotator_fullname": self.annotator_fullname,
@@ -62,8 +74,9 @@ class Task:
             "reviewer_id": self.reviewer_id,
             "reviewer_fullname": self.reviewer_fullname,
 
-            "date": self.date,
-            "data_files": self.data_files,
+            "data_count": self.data_count,
+            "object_count": self.object_count,
+            "error_count": self.error_count,
 
             "description": self.description
         }.items()
@@ -72,12 +85,16 @@ class Task:
         return {
             "id": self.id,
             "name": self.name,
-
             "project_id": self.project_id,
+
+            "dir_name": self.dir_name,
+            "anno_file_name": self.anno_file_name,
+
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+
             "state_id": self.state_id,
             "state_name": self.state_name,
-            "count": self.count,
-            "anno_file_name": self.anno_file_name,
 
             "annotator_id": self.annotator_id,
             "annotator_fullname": self.annotator_fullname,
@@ -85,8 +102,9 @@ class Task:
             "reviewer_id": self.reviewer_id,
             "reviewer_fullname": self.reviewer_fullname,
 
-            "date": self.date,
-            "data_files": self.data_files,
+            "data_count": self.data_count,
+            "object_count": self.object_count,
+            "error_count": self.error_count,
 
             "description": self.description
         }
@@ -94,27 +112,30 @@ class Task:
     @staticmethod
     def from_json(json_dict: dict):
         return Task(
-            id=json_dict["id"],
-            name=json_dict["name"],
-
+            id=json_dict.get("id", -1),
+            name=json_dict.get("name", None),
             project_id=json_dict["project_id"],
-            state_id=json_dict["state_id"],
 
-            state_name=json_dict["state_name"],
-            count=json_dict["count"],
-
+            dir_name=json_dict["dir_name"],
             anno_file_name=json_dict["anno_file_name"],
-            annotator_id=json_dict["annotator_id"],
 
+            created_at=json_dict["created_at"],
+            updated_at=json_dict["updated_at"],
+
+            state_id=json_dict["state_id"],
+            state_name=json_dict["state_name"],
+
+            annotator_id=json_dict["annotator_id"],
             annotator_fullname=json_dict["annotator_fullname"],
 
             reviewer_id=json_dict["reviewer_id"],
             reviewer_fullname=json_dict["reviewer_fullname"],
 
-            date=json_dict["date"] if json_dict.get("date") else None,
-            data_files=json_dict["data_files"] if json_dict.get("data_files") else None,
+            data_count=json_dict.get("data_count", 0),
+            object_count=json_dict.get("object_count", 0),
+            error_count=json_dict.get("error_count", 0),
 
-            description=json_dict["description"] if json_dict.get("description") else None
+            description=json_dict.get("description", None)
         )
 
 

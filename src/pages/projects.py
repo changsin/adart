@@ -55,9 +55,8 @@ def create_data_project():
                                                 accept_multiple_files=True)
 
         projects_info = get_projects_info()
-        project_id = projects_info.get_next_project_id()
-        # TODO: the project id might not be sequential. Change the name after it has been created.
-        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+        dir_name = projects_info.get_next_project_id()
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(dir_name))
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
@@ -92,17 +91,13 @@ def create_data_project():
             st.markdown(f"**Name:** {name}")
             st.markdown(f"**Data folder:** {save_folder}")
 
-            new_project_dict = Project(project_id,
-                                       name,
-                                       annotation_type_id=1,
-                                       file_format_id=1,
-                                       created_at=str(datetime.datetime.now()),
-                                       description=description,
-                                       total_count=len(saved_data_filenames) if saved_data_filenames else 0
+            new_project_dict = Project(name,
+                                       dir_name=save_folder,
+                                       description=description
                                        ).to_json()
             response = api_target().create_project(new_project_dict)
             st.dataframe(response)
-            st.write("Project {} {} created".format(project_id, name))
+            st.write("Project {} created".format(name))
 
 
 def create_model_project():

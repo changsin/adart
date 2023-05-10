@@ -23,6 +23,8 @@ from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
+DEFAULT_SHAPE_COLOR = "yellow"
+
 
 def _display_type_attributes(selected_shape: dict, key="1"):
     shape_type = selected_shape["shapeType"]
@@ -151,7 +153,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
     def call_frontend(im: ImageManager, image_index: int) -> dict:
         resized_img = im.resizing_img()
         resized_shapes = im.get_downscaled_shapes()
-        shape_color = _pick_color(resized_shapes[0].get('label'), 'black')
+        shape_color = _pick_color(resized_shapes[0].get('label'), DEFAULT_SHAPE_COLOR)
         st.markdown("#### {}: {}".format(selected_task.name, st.session_state['img_files'][image_index]))
 
         # Display the selected shape

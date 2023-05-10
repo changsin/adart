@@ -178,7 +178,7 @@ class ImageManager:
 
         return [min_x, min_y, max_x, max_y]
 
-    def resizing_img(self, min_width=700, min_height=700, max_height=1000, max_width=1000):
+    def resizing_img(self, min_width=700, min_height=700, max_height=800, max_width=800):
         """resizing the image by max_height and max_width.
 
         Args:
@@ -190,12 +190,12 @@ class ImageManager:
             resized_img(PIL.Image): the resized image.
         """
         resized_img = self._image.copy()
-        if resized_img.height > max_height or resized_img.width > max_width:
+        if resized_img.width > max_width:
             ratio = min(max_height / resized_img.height, max_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))
             )
-        if resized_img.height < min_height or resized_img.width < min_width:
+        if resized_img.width < min_width:
             ratio = max(min_height / resized_img.height, min_width / resized_img.width)
             resized_img = resized_img.resize(
                 (int(resized_img.width * ratio), int(resized_img.height * ratio))

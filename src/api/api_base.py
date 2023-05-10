@@ -38,6 +38,9 @@ class ApiBase(ABC):
     def list_tasks(self, limit=100) -> dict:
         raise "ERROR: The parent method should not be called directly"
 
+    def create_task(self, new_task_dict: dict) -> dict:
+        raise "ERROR: The parent method should not be called directly"
+
     def list_annotation_errors(self, limit=100) -> list:
         raise "ERROR: The parent method should not be called directly"
 
