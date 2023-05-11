@@ -1,13 +1,12 @@
 from fastapi import APIRouter
 
-from app.api.api_v1.endpoints import items, login, users, group, utils, project, project1, annotation_class, annotation_error, annotation_type, file_format, task, state, statistics, domain, dashboard
+from app.api.api_v1.endpoints import items, login, users, group, utils, project, annotation_class, annotation_error, annotation_type, file_format, task, state, statistics, domain, dashboard
 
 api_router = APIRouter()
 api_router.include_router(login.router, tags=["login"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(group.router, prefix="/group", tags=["group"])
 api_router.include_router(project.router, prefix="/project", tags=["project"])
-api_router.include_router(project1.router, prefix="/project1", tags=["project1"])
 api_router.include_router(task.router, prefix="/task", tags=["task"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 api_router.include_router(annotation_error.router, prefix="/annoerror", tags=["annotation_error"])
