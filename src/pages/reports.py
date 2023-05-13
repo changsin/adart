@@ -22,24 +22,27 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 def get_data_files(selected_project):
     data_files = dict()
-    if selected_project.data_files and len(selected_project.data_files) > 0:
-        st.markdown("# Files Info")
-        data_files = selected_project.data_files
+    matched = utils.glob_files(selected_project.dir_name)
+    if matched:
+        data_files["."] = matched
     else:
         tasks_info = get_tasks_info()
         tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
         if tasks and len(tasks) > 0:
+            found_data_files = []
             for task in tasks:
-                if task.data_files:
-                    for folder, files in task.data_files.items():
-                        data_files[folder] = files
-                elif task.anno_file_name:
+                if task.anno_file_name:
                     task_folder = os.path.join(ADQ_WORKING_FOLDER,
                                                str(selected_project.id),
                                                str(task.id))
                     dart_labels = DataLabels.load(task.anno_file_name)
                     image_filenames = [image.name for image in dart_labels.images]
                     data_files[task_folder] = image_filenames
+                else:
+                    matched = utils.glob_files(task.dir_name)
+                    if matched:
+                        found_data_files.append(matched)
+            data_files["."] = matched
 
     return data_files
 

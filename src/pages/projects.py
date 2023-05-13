@@ -42,49 +42,11 @@ def create_data_project():
     with st.form("Create a Data Project"):
         name = st.text_input("**Name:**")
         description = st.text_area("Description")
-        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
-        selected_file_types = st.selectbox("**Image file types**",
-                                           options,
-                                           index=len(options) - 1)
-        uploaded_data_files = st.file_uploader("Upload data files",
-                                               selected_file_types,
-                                               accept_multiple_files=True)
-
-        uploaded_label_files = st.file_uploader("Upload label files",
-                                                SUPPORTED_LABEL_FILE_EXTENSIONS,
-                                                accept_multiple_files=True)
-
         projects_info = get_projects_info()
         dir_name = projects_info.get_next_project_id()
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(dir_name))
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
-
-        data_files = dict()
-        # Save the uploaded files
-        saved_data_filenames = []
-        if uploaded_data_files:
-            for file in uploaded_data_files:
-                with open(os.path.join(save_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
-                saved_data_filenames.append(file.name)
-            data_files[save_folder] = saved_data_filenames
-            saved_data_filenames.sort()
-
-        labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
-        if uploaded_label_files:
-            # Save the uploaded files in origin folder
-            ori_folder = os.path.join(save_folder, "origin")
-            if not os.path.exists(ori_folder):
-                os.mkdir(ori_folder)
-
-            saved_anno_filenames = []
-            for file in uploaded_label_files:
-                with open(os.path.join(ori_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
-                saved_anno_filenames.append(os.path.join(ori_folder, file.name))
-
-            saved_anno_filenames.sort()
 
         submitted = st.form_submit_button("Create project")
         if submitted:

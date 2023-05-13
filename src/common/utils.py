@@ -4,7 +4,7 @@ import os
 from PIL import Image
 from pathlib import Path
 
-
+from .constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
 import streamlit as st
 
 # Convert bytes to a more human-readable format
@@ -39,6 +39,16 @@ def to_file(data, filename):
     """
     with open(filename, 'w', encoding="utf-8") as json_file:
         json_file.write(data)
+
+
+def glob_files(folder_path, patterns=SUPPORTED_IMAGE_FILE_EXTENSIONS):
+    matched = []
+    for pattern in patterns:
+        globbed = glob.glob(os.path.join(folder_path, '*.' + pattern))
+        if globbed:
+            matched.extend(globbed)
+
+    return matched
 
 
 def generate_file_tree(folder_path, patterns):

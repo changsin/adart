@@ -150,88 +150,33 @@ def sample_data(selected_project: Project, data_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def create_data_tasks():
-    selected_project = select_project()
-    if selected_project:
-        with st.form("Create Tasks"):
-            options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
-            selected_file_types = st.selectbox("**Image file types**",
-                                               options,
-                                               index=len(options) - 1)
-            uploaded_data_files = st.file_uploader("Upload data files",
-                                                   selected_file_types,
-                                                   accept_multiple_files=True)
-
-            uploaded_label_files = st.file_uploader("Upload label files",
-                                                    SUPPORTED_LABEL_FILE_EXTENSIONS,
-                                                    accept_multiple_files=True)
-            labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
-
-            project_dir_name = selected_project.dir_name
-            save_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_dir_name))
-            if not os.path.exists(save_folder):
-                os.mkdir(save_folder)
-
-            data_files = dict()
-            # Save the uploaded files
-            saved_data_filenames = []
-            if uploaded_data_files:
-                for file in uploaded_data_files:
-                    with open(os.path.join(save_folder, file.name), "wb") as f:
-                        f.write(file.getbuffer())
-                    saved_data_filenames.append(file.name)
-                data_files[save_folder] = saved_data_filenames
-                saved_data_filenames.sort()
-
-            labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
-            if uploaded_label_files:
-                # Save the uploaded files in origin folder
-                ori_folder = os.path.join(save_folder, "origin")
-                if not os.path.exists(ori_folder):
-                    os.mkdir(ori_folder)
-
-                saved_anno_filenames = []
-                for file in uploaded_label_files:
-                    with open(os.path.join(ori_folder, file.name), "wb") as f:
-                        f.write(file.getbuffer())
-                    saved_anno_filenames.append(os.path.join(ori_folder, file.name))
-
-                saved_anno_filenames.sort()
-
-            task_count = st.number_input("Enter the desired number of tasks to create", step=utils.step_size(1))
-
-            submitted = st.form_submit_button("Create tasks")
-            if submitted:
-                converted_filenames = []
-                for idx, anno_filename in enumerate(saved_anno_filenames):
-                    if labels_format_type == CVAT_XML:
-                        converted_filename = _convert_anno_files(labels_format_type,
-                                                                 save_folder,
-                                                                 saved_data_filenames,
-                                                                 [anno_filename])
-                        converted_filenames.append(converted_filename)
-
-                # sample_data(selected_project, data_labels.to_json(), df_sample_count)
-
-
 def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, saved_anno_filenames):
-    converted_filename = os.path.join(save_folder, "converted.json")
-    if labels_format_type == STRADVISION_XML:
-        reader = StVisionReader()
-        parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
-        data_labels = DataLabels.from_json(parsed_dict)
-        data_labels.save(converted_filename)
-    elif labels_format_type == CVAT_XML:
-        reader = CVATReader()
-        parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
-        data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
-        data_labels.save(converted_filename)
-    elif labels_format_type == GPR_JSON:
-        converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
-    elif labels_format_type == YOLO_V5_TXT:
-        converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
+    converted_anno_files = []
+    if labels_format_type == CVAT_XML:
+        for idx, anno_file in enumerate(saved_anno_filenames):
+            converted_filename = os.path.join(save_folder, f"converted-{idx}.json")
 
-    return converted_filename
+            reader = CVATReader()
+            logger.info(f"parsing {anno_file}")
+            parsed_dict = reader.parse([anno_file], saved_data_filenames)
+            data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
+            data_labels.save(converted_filename)
+            converted_anno_files.append(converted_filename)
+    else:
+        converted_filename = os.path.join(save_folder, f"converted-{0}.json")
+        if labels_format_type == STRADVISION_XML:
+            reader = StVisionReader()
+            parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
+            data_labels = DataLabels.from_json(parsed_dict)
+            data_labels.save(converted_filename)
+        elif labels_format_type == GPR_JSON:
+            converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
+        elif labels_format_type == YOLO_V5_TXT:
+            converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
+
+        converted_anno_files.append(converted_filename)
+
+    return converted_anno_files
 
 
 def assign_tasks():
@@ -289,10 +234,7 @@ def add_data_tasks(selected_project: Project):
                                                 SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
 
-        tasks_info = get_tasks_info()
-        new_task_id = tasks_info.get_next_task_id()
-
-        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id), str(new_task_id))
+        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)
 
@@ -318,31 +260,45 @@ def add_data_tasks(selected_project: Project):
             for file in uploaded_label_files:
                 with open(os.path.join(ori_folder, file.name), "wb") as f:
                     f.write(file.getbuffer())
+                logger.info(f"ori file {file.name} {os.path.join(ori_folder, file.name)}")
                 saved_anno_filenames.append(os.path.join(ori_folder, file.name))
 
             saved_anno_filenames.sort()
 
-            converted_filenames = []
-            for idx, anno_filename in enumerate(saved_anno_filenames):
-                if labels_format_type == CVAT_XML:
-                    converted_filename = _convert_anno_files(labels_format_type,
-                                                             save_folder,
-                                                             saved_data_filenames,
-                                                             [anno_filename])
-                    converted_filenames.append(converted_filename)
+            converted_filenames = _convert_anno_files(labels_format_type,
+                                                      save_folder,
+                                                      saved_data_filenames,
+                                                      saved_anno_filenames)
 
         # label_files[save_folder] = [converted_filename]
-        submitted = st.form_submit_button("Add Data Task")
+        submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
             data_total_count = 0
+            tasks_info = get_tasks_info()
+
+            new_task_id = tasks_info.get_next_task_id()
             for idx, converted_filename in enumerate(converted_filenames):
                 data_labels = DataLabels.load(converted_filename)
                 data_count = len(data_labels.images)
                 object_count = sum(len(image.objects) for image in data_labels.images)
+
+                # TODO: the task_save_folder needs to be determined better later
+                #   the logic on this right now is too simple
+                task_save_folder = os.path.join(save_folder, str(new_task_id + idx))
+                if not os.path.exists(task_save_folder):
+                    os.mkdir(task_save_folder)
+
+                for image in data_labels.images:
+                    shutil.move(os.path.join(save_folder, image.name),
+                                os.path.join(task_save_folder, image.name))
+
+                moved_converted_filename = os.path.join(task_save_folder, os.path.basename(converted_filename))
+                shutil.move(converted_filename, moved_converted_filename)
+
                 new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,
-                                dir_name=save_folder,
-                                anno_file_name=converted_filename,
+                                dir_name=task_save_folder,
+                                anno_file_name=moved_converted_filename,
                                 state_id=TaskState.DVS_NEW.value,
                                 state_name=TaskState.DVS_NEW.description,
                                 data_count=data_count,
