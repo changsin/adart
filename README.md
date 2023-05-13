@@ -26,9 +26,8 @@ Here are what each package does:
 ## 1.2. To run the app
 Run the following
 ```markdown
->cd src
 >pip install -r requirements.txt
->streamlit run home.py
+>streamlit run startup.py
 ```
 
 ## 1.3. To launch as a service
