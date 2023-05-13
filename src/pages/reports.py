@@ -1,5 +1,5 @@
 from collections import namedtuple
-
+from PIL import Image
 import shapely
 
 from .home import (
@@ -20,29 +20,42 @@ logger = get_logger(__name__)
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
-def get_data_files(selected_project):
+def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
+    os.makedirs(output_folder, exist_ok=True)
+
+    thumbnail_filenames = []
+
+    for filename in os.listdir(folder_path):
+        if any(filename.endswith(ext) for ext in constants.SUPPORTED_IMAGE_FILE_EXTENSIONS):
+            image_path = os.path.join(folder_path, filename)
+            output_path = os.path.join(output_folder, filename)
+
+            try:
+                with Image.open(image_path) as image:
+                    image.thumbnail(thumbnail_size)
+                    image.save(output_path)
+                    logger.info(f"Thumbnail generated for: {filename}")
+                    thumbnail_filenames.append(output_path)
+            except Exception as e:
+                logger.error(f"Error processing {filename}: {str(e)}")
+
+    return thumbnail_filenames
+
+
+def get_data_files(selected_project, is_thumbnails=False):
     data_files = dict()
-    matched = utils.glob_files(selected_project.dir_name)
-    if matched:
-        data_files["."] = matched
-    else:
-        tasks_info = get_tasks_info()
-        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-        if tasks and len(tasks) > 0:
-            found_data_files = []
-            for task in tasks:
-                if task.anno_file_name:
-                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                               str(selected_project.id),
-                                               str(task.id))
-                    dart_labels = DataLabels.load(task.anno_file_name)
-                    image_filenames = [image.name for image in dart_labels.images]
-                    data_files[task_folder] = image_filenames
-                else:
-                    matched = utils.glob_files(task.dir_name)
-                    if matched:
-                        found_data_files.append(matched)
-            data_files["."] = matched
+    data_folder = os.path.join(selected_project.dir_name, "data")
+    thumbnails_folder = os.path.join(selected_project.dir_name, "thumbnails")
+
+    if is_thumbnails:
+        if not os.path.exists(thumbnails_folder):
+            generate_thumbnails(data_folder, output_folder=thumbnails_folder)
+
+        data_folder = thumbnails_folder
+
+    data_filenames = utils.glob_files(data_folder,
+                                      constants.SUPPORTED_IMAGE_FILE_EXTENSIONS)
+    data_files["."] = data_filenames
 
     return data_files
 
@@ -98,7 +111,7 @@ def show_file_metrics():
 def show_image_metrics():
     selected_project = select_project()
     if selected_project:
-        data_files = get_data_files(selected_project)
+        data_files = get_data_files(selected_project, is_thumbnails=True)
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               data_files)
         col1, col2 = st.columns(2)

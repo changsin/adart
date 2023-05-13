@@ -188,7 +188,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         return
 
     # set session states
-    image_filenames = [image.name for image in data_labels.images]
+    image_filenames = [os.path.join("data", image.name) for image in data_labels.images]
     if not st.session_state.get('image_index'):
         st.session_state["img_files"] = image_filenames
         st.session_state["image_index"] = 0

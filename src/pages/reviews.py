@@ -1,7 +1,7 @@
 import datetime as dt
 import os.path
 from base64 import b64encode
-
+from PIL import Image
 import streamlit as st
 
 import src.viewer.app as app
@@ -13,47 +13,40 @@ from .home import (
     logout,
     select_project,
     select_task)
+from src.common.logger import get_logger
 
-
-def _show_full_size_image(full_path, size, date):
-    st.image(full_path,
-             # use_column_width=True,
-             caption="{} {} {}".format(os.path.basename(full_path),
-                                       size,
-                                       date))
+logger = get_logger(__name__)
 
 
 @st.cache_resource
-def show_images(files_dict: dict):
+def load_thumbnail(file_path):
+    with Image.open(file_path) as image:
+        return image.copy()
+
+
+def show_images(project_folder):
+    thumbnail_folder = os.path.join(project_folder, "thumbnails")
+    thumbnail_filenames = utils.glob_files(thumbnail_folder)
+    thumbnail_filenames.sort()
+
     # Define the number of columns
     num_columns = 5
 
-    for folder, files in files_dict.items():
-        # # Calculate the number of rows needed based on the number of images and columns
-        # num_rows = int(len(files) / num_columns) + (1 if len(files) % num_columns > 0 else 0)
+    columns = st.columns(num_columns)
+    for i, file in enumerate(thumbnail_filenames):
+        with columns[i % num_columns]:
+            thumbnail_image = load_thumbnail(file)
+            st.image(thumbnail_image, width=100)
+            if st.button(os.path.basename(file)):
+                full_size_filename = os.path.join(project_folder, "data", os.path.basename(file))
+                full_size_image = Image.open(full_size_filename)
+                st.image(full_size_image, caption="Full-size Image")
 
-        # Create a layout with the specified number of columns
-        columns = st.columns(num_columns)
-        for i, file in enumerate(files):
-            with columns[i % num_columns]:
-                full_path = os.path.join(folder, file)
-                file_stat = os.stat(full_path)
-                dt_datetime = dt.datetime.fromtimestamp(file_stat.st_ctime)
-                st.image(full_path,
-                         # use_column_width=True,
-                         # title="{} {} {}".format(file,
-                         #                           utils.humanize_bytes(file_stat.st_size),
-                         #                           dt_datetime.date()),
-                         width=100)
-                # button_clicked = st.button("click to expand {}".format(file))
-                # Call the event handler if the button is clicked
-                # Create the expander panel
-                with st.expander("{}".format(file)):
-                    # # Call the event handler if the button is clicked
-                    # if button_clicked:
-                    _show_full_size_image(full_path,
-                                          utils.humanize_bytes(file_stat.st_size),
-                                          dt_datetime.date())
+
+def review_images():
+    selected_project = select_project(is_sidebar=True)
+    if selected_project:
+        show_images(selected_project.dir_name)
 
 
 def review_task():
@@ -114,6 +107,7 @@ def main():
     st.empty()
 
     menu = {
+        "Review Images": lambda: review_images(),
         "Review Task": lambda: review_task(),
         "Compare Tasks": lambda: compare_tasks(),
     }

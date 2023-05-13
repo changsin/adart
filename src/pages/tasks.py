@@ -219,7 +219,27 @@ def add_tasks():
             add_data_tasks(selected_project)
 
 
+def _save_uploaded_files(uploaded_files, project_id, sub_folder):
+    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+    if not os.path.exists(project_folder):
+        os.mkdir(project_folder)
+
+    to_save_folder = os.path.join(project_folder, sub_folder)
+    if not os.path.exists(to_save_folder):
+        os.mkdir(to_save_folder)
+
+    saved_filenames = []
+    for file in uploaded_files:
+        with open(os.path.join(to_save_folder, file.name), "wb") as f:
+            f.write(file.getbuffer())
+        saved_filenames.append(os.path.join(to_save_folder, file.name))
+    saved_filenames.sort()
+
+    return saved_filenames
+
+
 def add_data_tasks(selected_project: Project):
+
     with st.form("Add Data Task"):
         task_name = st.text_input("**Task Name:**")
         options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
@@ -234,70 +254,36 @@ def add_data_tasks(selected_project: Project):
                                                 SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
 
-        save_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-        if not os.path.exists(save_folder):
-            os.mkdir(save_folder)
-
-        data_files = dict()
         if uploaded_data_files:
-            # Save the uploaded files
-            saved_data_filenames = []
-            for file in uploaded_data_files:
-                with open(os.path.join(save_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
-                saved_data_filenames.append(file.name)
-            data_files[save_folder] = saved_data_filenames
-            saved_data_filenames.sort()
+            saved_data_filenames = _save_uploaded_files(uploaded_data_files, selected_project.id, "data")
 
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
         if uploaded_label_files:
-            # Save the uploaded files in origin folder
-            ori_folder = os.path.join(save_folder, "origin")
-            if not os.path.exists(ori_folder):
-                os.mkdir(ori_folder)
+            saved_anno_filenames = _save_uploaded_files(uploaded_label_files, selected_project.id, "labels")
 
-            saved_anno_filenames = []
-            for file in uploaded_label_files:
-                with open(os.path.join(ori_folder, file.name), "wb") as f:
-                    f.write(file.getbuffer())
-                logger.info(f"ori file {file.name} {os.path.join(ori_folder, file.name)}")
-                saved_anno_filenames.append(os.path.join(ori_folder, file.name))
+            project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+            converted_anno_filenames = _convert_anno_files(labels_format_type,
+                                                           project_folder,
+                                                           saved_data_filenames,
+                                                           saved_anno_filenames)
 
-            saved_anno_filenames.sort()
-
-            converted_filenames = _convert_anno_files(labels_format_type,
-                                                      save_folder,
-                                                      saved_data_filenames,
-                                                      saved_anno_filenames)
-
-        # label_files[save_folder] = [converted_filename]
         submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
             data_total_count = 0
             tasks_info = get_tasks_info()
 
             new_task_id = tasks_info.get_next_task_id()
-            for idx, converted_filename in enumerate(converted_filenames):
+            for idx, converted_filename in enumerate(converted_anno_filenames):
                 data_labels = DataLabels.load(converted_filename)
                 data_count = len(data_labels.images)
                 object_count = sum(len(image.objects) for image in data_labels.images)
 
-                # TODO: the task_save_folder needs to be determined better later
-                #   the logic on this right now is too simple
-                task_save_folder = os.path.join(save_folder, str(new_task_id + idx))
-                if not os.path.exists(task_save_folder):
-                    os.mkdir(task_save_folder)
-
-                for image in data_labels.images:
-                    shutil.move(os.path.join(save_folder, image.name),
-                                os.path.join(task_save_folder, image.name))
-
-                moved_converted_filename = os.path.join(task_save_folder, os.path.basename(converted_filename))
+                moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
                 shutil.move(converted_filename, moved_converted_filename)
 
                 new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,
-                                dir_name=task_save_folder,
+                                dir_name=project_folder,
                                 anno_file_name=moved_converted_filename,
                                 state_id=TaskState.DVS_NEW.value,
                                 state_name=TaskState.DVS_NEW.description,
@@ -310,7 +296,7 @@ def add_data_tasks(selected_project: Project):
                 logger.info(response)
                 st.write(f"Task {response['id']} {response['name']} created")
 
-            selected_project.task_total_count += len(converted_filenames)
+            selected_project.task_total_count += len(converted_anno_filenames)
             selected_project.data_total_count += data_total_count
             api_target().update_project(selected_project.to_json())
 

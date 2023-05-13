@@ -164,20 +164,14 @@ class ImageManager:
 
     @staticmethod
     def get_bounding_rectangle(shape) -> list:
-        resized_points = shape['points']
-        min_x = max_x = int(resized_points[0]['x'])
-        min_y = max_y = int(resized_points[0]['y'])
+        points = shape['points']
+        x_values = [int(pt['x']) for pt in points]
+        y_values = [int(pt['y']) for pt in points]
 
-        # Iterate over the remaining control points and update the minimum and maximum x and y values
-        for pt in resized_points[1:]:
-            if pt['x'] < min_x:
-                min_x = int(pt['x'])
-            elif pt['x'] > max_x:
-                max_x = int(pt['x'])
-            if pt['y'] < min_y:
-                min_y = int(pt['y'])
-            elif pt['y'] > max_y:
-                max_y = int(pt['y'])
+        min_x = min(x_values)
+        min_y = min(y_values)
+        max_x = max(x_values)
+        max_y = max(y_values)
 
         return [min_x, min_y, max_x, max_y]
 
