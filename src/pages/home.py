@@ -1,6 +1,5 @@
-import json
 import os.path
-
+from PIL import Image
 import pandas as pd
 import streamlit as st
 
@@ -10,7 +9,9 @@ from src.api.api_base import ApiBase
 from src.api.api_local import ApiLocal
 from src.api.api_remote import ApiRemote
 from src.common.constants import (
+    ADQ_WORKING_FOLDER,
     PROJECTS,
+    SUPPORTED_IMAGE_FILE_EXTENSIONS
 )
 from src.models.projects_info import ProjectsInfo
 from src.models.tasks_info import Task, TasksInfo
@@ -83,6 +84,70 @@ def select_task(project_id: int, label="Select task") -> Task:
             return tasks_info.get_task_by_id(int(task_id))
     else:
         st.markdown("**No task is created!**")
+
+
+def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
+    os.makedirs(output_folder, exist_ok=True)
+
+    thumbnail_filenames = []
+
+    for filename in os.listdir(folder_path):
+        if any(filename.endswith(ext) for ext in SUPPORTED_IMAGE_FILE_EXTENSIONS):
+            image_path = os.path.join(folder_path, filename)
+            output_path = os.path.join(output_folder, filename)
+
+            try:
+                with Image.open(image_path) as image:
+                    image.thumbnail(thumbnail_size)
+                    image.save(output_path)
+                    thumbnail_filenames.append(output_path)
+            except Exception as e:
+                logger.error(f"Error processing {filename}: {str(e)}")
+
+    return thumbnail_filenames
+
+
+def get_data_files(folder, is_thumbnails=False):
+    """
+    returns a diction of data_filenames or thumbnails
+    :param folder: folder name
+    :param is_thumbnails: returns thumbnails if true
+    :return: data_files by default; returns thumbnails if true
+    """
+    data_files = dict()
+    data_folder = os.path.join(folder, "data")
+    thumbnails_folder = os.path.join(folder, "thumbnails")
+
+    if is_thumbnails:
+        if not os.path.exists(thumbnails_folder):
+            generate_thumbnails(data_folder, output_folder=thumbnails_folder)
+
+        data_folder = thumbnails_folder
+
+    data_filenames = utils.glob_files(data_folder,
+                                      SUPPORTED_IMAGE_FILE_EXTENSIONS)
+    data_filenames.sort()
+    data_files["."] = data_filenames
+
+    return data_files
+
+
+def get_label_files(selected_project):
+    label_files = dict()
+    if len(selected_project.label_files) > 0:
+        return selected_project.label_files
+    else:
+        tasks_info = get_tasks_info()
+        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
+        if tasks and len(tasks) > 0:
+            for task in tasks:
+                if task.anno_file_name:
+                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
+                                               str(selected_project.id),
+                                               str(task.id))
+                    label_files[task_folder] = [os.path.basename(task.anno_file_name)]
+
+    return label_files
 
 
 def get_token(url, username: str, password: str):

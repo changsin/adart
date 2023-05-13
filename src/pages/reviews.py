@@ -1,19 +1,19 @@
-import datetime as dt
 import os.path
 from base64 import b64encode
-from PIL import Image
+
 import streamlit as st
+from PIL import Image
 
 import src.viewer.app as app
-from src.common import utils
 from src.common.constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
+from src.common.logger import get_logger
 from .home import (
+    get_data_files,
     is_authenticated,
     login,
     logout,
     select_project,
     select_task)
-from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -25,19 +25,19 @@ def load_thumbnail(file_path):
 
 
 def show_images(project_folder):
-    thumbnail_folder = os.path.join(project_folder, "thumbnails")
-    thumbnail_filenames = utils.glob_files(thumbnail_folder)
-    thumbnail_filenames.sort()
-
+    thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
+    logger.info(f"{project_folder} {thumbnail_filenames}")
     # Define the number of columns
     num_columns = 5
 
     columns = st.columns(num_columns)
-    for i, file in enumerate(thumbnail_filenames):
+    for i, file in enumerate(thumbnail_filenames["."]):
         with columns[i % num_columns]:
             thumbnail_image = load_thumbnail(file)
             st.image(thumbnail_image, width=100)
-            if st.button(os.path.basename(file)):
+            truncated_name = os.path.basename(file)[:20] + "..." if len(
+                os.path.basename(file)) > 20 else os.path.basename(file)
+            if st.button(truncated_name, key=f'{truncated_name}_{i}'):
                 full_size_filename = os.path.join(project_folder, "data", os.path.basename(file))
                 full_size_image = Image.open(full_size_filename)
                 st.image(full_size_image, caption="Full-size Image")

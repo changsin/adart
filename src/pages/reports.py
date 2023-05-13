@@ -1,88 +1,37 @@
 from collections import namedtuple
-from PIL import Image
-import shapely
 
+import altair as alt
+import pandas as pd
+import shapely
+import streamlit as st
+
+from src.common.charts import (
+    display_chart,
+    plot_aspect_ratios_brightness,
+    plot_chart,
+    plot_file_info,
+    show_download_charts_button
+)
+from src.common.logger import get_logger
+from src.models.data_labels import DataLabels
 from .home import (
     is_authenticated,
+    get_data_files,
     get_tasks_info,
     login,
     logout,
     select_project)
-from src.common.charts import *
-from src.common.constants import (
-    ADQ_WORKING_FOLDER
-)
-from src.models.data_labels import DataLabels
-from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
 Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 
 
-def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
-    os.makedirs(output_folder, exist_ok=True)
-
-    thumbnail_filenames = []
-
-    for filename in os.listdir(folder_path):
-        if any(filename.endswith(ext) for ext in constants.SUPPORTED_IMAGE_FILE_EXTENSIONS):
-            image_path = os.path.join(folder_path, filename)
-            output_path = os.path.join(output_folder, filename)
-
-            try:
-                with Image.open(image_path) as image:
-                    image.thumbnail(thumbnail_size)
-                    image.save(output_path)
-                    logger.info(f"Thumbnail generated for: {filename}")
-                    thumbnail_filenames.append(output_path)
-            except Exception as e:
-                logger.error(f"Error processing {filename}: {str(e)}")
-
-    return thumbnail_filenames
-
-
-def get_data_files(selected_project, is_thumbnails=False):
-    data_files = dict()
-    data_folder = os.path.join(selected_project.dir_name, "data")
-    thumbnails_folder = os.path.join(selected_project.dir_name, "thumbnails")
-
-    if is_thumbnails:
-        if not os.path.exists(thumbnails_folder):
-            generate_thumbnails(data_folder, output_folder=thumbnails_folder)
-
-        data_folder = thumbnails_folder
-
-    data_filenames = utils.glob_files(data_folder,
-                                      constants.SUPPORTED_IMAGE_FILE_EXTENSIONS)
-    data_files["."] = data_filenames
-
-    return data_files
-
-
-def get_label_files(selected_project):
-    label_files = dict()
-    if len(selected_project.label_files) > 0:
-        return selected_project.label_files
-    else:
-        tasks_info = get_tasks_info()
-        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-        if tasks and len(tasks) > 0:
-            for task in tasks:
-                if task.anno_file_name:
-                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                               str(selected_project.id),
-                                               str(task.id))
-                    label_files[task_folder] = [os.path.basename(task.anno_file_name)]
-
-    return label_files
-
-
 def show_file_metrics():
     selected_project = select_project()
     if selected_project:
         logger.info(selected_project)
-        data_files = get_data_files(selected_project)
+        data_files = get_data_files(selected_project.dir_name)
         if data_files:
             chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
             col1, col2 = st.columns(2)
@@ -111,7 +60,7 @@ def show_file_metrics():
 def show_image_metrics():
     selected_project = select_project()
     if selected_project:
-        data_files = get_data_files(selected_project, is_thumbnails=True)
+        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
         chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               data_files)
         col1, col2 = st.columns(2)
