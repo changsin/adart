@@ -23,7 +23,7 @@ from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
-DEFAULT_SHAPE_COLOR = "yellow"
+DEFAULT_SHAPE_COLOR = "magenta"
 
 
 def _display_type_attributes(selected_shape: dict, key="1"):
@@ -129,10 +129,6 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         st.sidebar.write("Total files:", n_files)
         st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
 
-        if data_labels.images[image_index]:
-            class_label_stats = data_labels.images[image_index].get_class_label_stats()
-            _write_class_stats()
-
         if not is_second_viewer:
             st.sidebar.selectbox("Files",
                                  st.session_state["img_files"],
@@ -147,6 +143,10 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
             with col2:
                 st.button(label="Next >", on_click=next_image)
                 st.button(label="Refresh", on_click=refresh)
+
+        if data_labels.images[image_index]:
+            class_label_stats = data_labels.images[image_index].get_class_label_stats()
+            _write_class_stats()
 
         return image_index
 
@@ -245,7 +245,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
             # save the verification result
             im.set_review(selected_shape_id, select_label, comment)
 
-            if verification_result and verification_result['error_code'] == 'untagged':
+            if verification_result and verification_result['error_code'] == 'Untagged':
                 delete_shape = st.button("Delete", key=key)
                 if delete_shape:
                     im.remove_shape(selected_shape)

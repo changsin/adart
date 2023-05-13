@@ -26,6 +26,7 @@ class Project(ABC):
 
     data_total_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
     data_sample_count = attr.ib(default=0, validator=attr.validators.instance_of(int))
+    annotation_errors = attr.ib(default=0, validator=attr.validators.instance_of(int))
 
     domain_id = attr.ib(default=None)
 
@@ -49,6 +50,7 @@ class Project(ABC):
 
             "data_total_count": self.data_total_count,
             "data_sample_count": self.data_sample_count,
+            "annotation_errors": self.annotation_errors,
 
             "domain_id": self.domain_id,
 
@@ -61,18 +63,21 @@ class Project(ABC):
             "id": self.id,
             "name": self.name,
 
+            "description": self.description,
+
             "dir_name": self.dir_name,
 
             "created_at": self.created_at,
             "updated_at": self.updated_at,
 
-            "description": self.description,
 
             "task_total_count": self.task_total_count,
             "task_done_count": self.task_done_count,
 
             "data_total_count": self.data_total_count,
             "data_sample_count": self.data_sample_count,
+            "annotation_errors": self.annotation_errors,
+
 
             "domain_id": self.domain_id,
 
@@ -96,10 +101,11 @@ class Project(ABC):
             task_total_count=json_dict.get("task_total_count", 0),
             task_done_count=json_dict.get("task_done_count", 0),
 
-            data_total_count=json_dict.get("data_total_count", None),
-            data_sample_count=json_dict.get("data_sample_count", None),
+            data_total_count=json_dict.get("data_total_count", 0),
+            data_sample_count=json_dict.get("data_sample_count", 0),
+            annotation_errors=json_dict.get("annotation_errors", 0),
 
-            domain_id=json_dict["domain_id"],
+            domain_id=json_dict.get("domain_id", 1),
 
             company_info=json_dict.get("company_info", None),
             extended_properties=json_dict.get("extended_properties", None)

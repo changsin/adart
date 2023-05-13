@@ -4,6 +4,9 @@ import numpy as np
 from PIL import Image
 
 from src.models.data_labels import DataLabels
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 """
 .. module:: streamlit_img_label
@@ -208,34 +211,31 @@ class ImageManager:
 
     def upscale_shape(self, shape):
         scaled_shape = copy.deepcopy(shape)
+        scaled_points = []
         if scaled_shape['shapeType'] == 'box':
             points = scaled_shape['points'][0]
             points['x'] = points['x'] * self._resized_ratio_w
             points['y'] = points['y'] * self._resized_ratio_h
             points['w'] = points['w'] * self._resized_ratio_w
             points['h'] = points['h'] * self._resized_ratio_h
-            scaled_shape['points'] = [points]
+            scaled_points.append(points)
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
-            scaled_points = []
             for point in shape['points']:
                 scaled_point = dict()
                 scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
                 scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
                 scaled_point['r'] = int(point['r'] * self._resized_ratio_w)
                 scaled_points.append(scaled_point)
-
-            scaled_shape['points'] = scaled_points
-
         elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
             scaled_points = []
             for point in shape['points']:
                 scaled_point = dict()
                 scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
                 scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
-
                 scaled_points.append(scaled_point)
 
-            scaled_shape['points'] = scaled_points
+        scaled_shape['points'] = scaled_points
+        logger.info(f"shape: {shape} -> scaled_shape: {scaled_shape} ratio_w: {self._resized_ratio_w} ratio_h: {self._resized_ratio_h}")
         # TODO: later upscale other shape types as needed
         return scaled_shape
 
@@ -292,8 +292,8 @@ class ImageManager:
         """
         raw_image = np.asarray(self._image).astype("uint8")
         width, height, alpha = raw_image.shape
-        width = width if width > 0 else 1
-        height = height if height > 0 else 1
+        width = max(width, 1)
+        height = max(height, 1)
         prev_img = np.zeros((width, height, alpha), dtype="uint8")
 
         label = ""
@@ -301,27 +301,27 @@ class ImageManager:
             if shape['shapeType'] == 'box':
                 point_dict = shape['points'][0]
                 x, y, w, h = (
-                    int(point_dict['x']),
-                    int(point_dict['y']),
-                    int(point_dict['w']),
-                    int(point_dict['h'])
+                    int(point_dict.get('x', 0)),
+                    int(point_dict.get('y', 0)),
+                    int(point_dict.get('w', 1)),
+                    int(point_dict.get('h', 1))
                 )
-                x = x if x > 0 else 0
-                y = y if y > 0 else 0
-                w = w if w > 0 else 1
-                h = h if h > 0 else 1
+                x = max(x, 0)
+                y = max(y, 0)
+                w = max(w, 1)
+                h = max(h, 1)
 
-                x_end = x + w if x + w <= height else height
-                y_end = y + h if y + h <= width else width
+                x_end = min(x + w, height)
+                y_end = min(y + h, width)
 
                 prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
                 prev_img = prev_img[y:y_end, x:x_end]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
                 min_x, min_y, max_x, max_y = ImageManager.get_bounding_rectangle(shape)
-                min_x = min_x if min_x >= 0 else 0
-                min_y = min_y if min_y >= 0 else 0
-                max_x = max_x if max_x < self._image.width else self._image.width
-                max_y = max_y if max_y < self._image.height else self._image.height
+                min_x = max(min_x, 0)
+                min_y = max(min_y, 0)
+                max_x = min(max_x, self._image.width)
+                max_y = min(max_y, self._image.height)
 
                 prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
                 prev_img = prev_img[min_y:max_y, min_x:max_x]
@@ -329,11 +329,11 @@ class ImageManager:
             elif shape['shapeType'] == 'VP':
                 resized_points = []
                 for point in shape['points']:
-                    resized_point_dict = dict()
-                    resized_point_dict['x'] = point['x'] * self._resized_ratio_w
-                    resized_point_dict['y'] = point['y'] * self._resized_ratio_h
-
-                    resized_points.append(resized_points)
+                    resized_point_dict = {
+                        'x': point.get('x', 0) * self._resized_ratio_w,
+                        'y': point.get('y', 0) * self._resized_ratio_h
+                    }
+                    resized_points.append(resized_point_dict)
 
         return Image.fromarray(prev_img)
 
