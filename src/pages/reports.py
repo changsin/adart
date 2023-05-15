@@ -24,7 +24,7 @@ from src.models.data_labels import DataLabels
 from .home import (
     is_authenticated,
     get_data_files,
-    get_tasks_info,
+    get_label_files,
     login,
     logout,
     select_project)
@@ -111,14 +111,16 @@ def get_bounding_rectangle(label_object) -> list:
 
 
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
+    logger.info(f"label_files_dict {label_files_dict}")
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 
     class_labels = dict()
     overlap_areas = dict()
     dimensions = dict()
     errors = dict()
-    for label_file, dart_labels in label_objects_dict.items():
-        for image in dart_labels.images:
+    for label_file, data_labels in label_objects_dict.items():
+        logger.info(f"get_label_metrics {label_file} {data_labels}")
+        for image in data_labels.images:
             count = len(image.objects)
             for ob_id1 in range(count):
                 object_cur = image.objects[ob_id1]
@@ -228,18 +230,13 @@ def calculate_overlapping_rect(a, b):
 def show_label_metrics():
     selected_project = select_project()
     if selected_project:
-        data_label_files = dict()
-        tasks_info = get_tasks_info()
-        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-        if tasks and len(tasks) > 0:
-            for task in tasks:
-                if task.anno_file_name:
-                    if data_label_files.get('.'):
-                        data_label_files['.'].append(task.anno_file_name)
-                    else:
-                        data_label_files['.'] = [task.anno_file_name]
+        label_files = get_label_files(selected_project)
+        logger.info(label_files)
+        if not label_files:
+            st.warning("No label files")
+            return
 
-        class_labels, overlap_areas, dimensions, errors = get_label_metrics(data_label_files)
+        class_labels, overlap_areas, dimensions, errors = get_label_metrics(label_files)
 
         chart_errors = plot_chart("Error Count", "error", "count", errors)
         if chart_errors:
@@ -310,6 +307,10 @@ def show_image_clusters():
         data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
         # Preprocess and cluster images
         images = load_images(data_files["."])
+        if len(images) < 5:
+            st.warning("Please add more images for clustering purposes")
+            return
+
         labels = cluster_images(images, n_clusters=5)
 
         # Perform dimensionality reduction for plotting

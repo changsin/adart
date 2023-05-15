@@ -8,9 +8,6 @@ from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     DomainCode,
-    SUPPORTED_LABEL_FILE_EXTENSIONS,
-    SUPPORTED_IMAGE_FILE_EXTENSIONS,
-    SUPPORTED_LABEL_FORMATS,
 )
 from src.models.projects_info import Project, ModelProject
 from .home import (

@@ -13,7 +13,7 @@ from src.common.constants import (
     PROJECTS,
     SUPPORTED_IMAGE_FILE_EXTENSIONS
 )
-from src.models.projects_info import ProjectsInfo
+from src.models.projects_info import ProjectsInfo, Project
 from src.models.tasks_info import Task, TasksInfo
 from src.common.logger import get_logger
 
@@ -132,21 +132,18 @@ def get_data_files(folder, is_thumbnails=False):
     return data_files
 
 
-def get_label_files(selected_project):
+def get_label_files(selected_project: Project):
     label_files = dict()
-    if len(selected_project.label_files) > 0:
-        return selected_project.label_files
-    else:
-        tasks_info = get_tasks_info()
-        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-        if tasks and len(tasks) > 0:
-            for task in tasks:
-                if task.anno_file_name:
-                    task_folder = os.path.join(ADQ_WORKING_FOLDER,
-                                               str(selected_project.id),
-                                               str(task.id))
-                    label_files[task_folder] = [os.path.basename(task.anno_file_name)]
+    tasks_info = get_tasks_info()
+    tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
+    if tasks and len(tasks) > 0:
+        anno_files = []
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+        for task in tasks:
+            if task.anno_file_name:
+                anno_files.append(os.path.basename(task.anno_file_name))
 
+        label_files[project_folder] = anno_files
     return label_files
 
 

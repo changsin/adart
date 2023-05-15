@@ -1,9 +1,11 @@
-import attr
 import json
+import os
+
+import attr
 
 import src.common.utils as utils
-from src.models.adq_labels import AdqLabels
 from src.common.logger import get_logger
+from src.models.adq_labels import AdqLabels
 
 logger = get_logger(__name__)
 
@@ -75,7 +77,7 @@ class DataLabels:
         if label_files_dict and len(label_files_dict.items()) > 0:
             for folder, label_files in label_files_dict.items():
                 for label_file in label_files:
-                    objects_dict[label_file] = DataLabels.load(label_file)
+                    objects_dict[label_file] = DataLabels.load(os.path.join(folder, label_file))
 
         return objects_dict
 
