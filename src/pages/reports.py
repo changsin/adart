@@ -1,9 +1,15 @@
+import base64
 from collections import namedtuple
 
 import altair as alt
+import cv2
+import numpy as np
 import pandas as pd
 import shapely
 import streamlit as st
+from altair import Tooltip
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 from src.common.charts import (
     display_chart,
@@ -277,6 +283,76 @@ def show_label_metrics():
         show_download_charts_button(selected_project.id)
 
 
+def load_images(data_files):
+    images = []
+    for filename in data_files:
+        img = cv2.imread(filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, (100, 100))  # Resize the image to desired dimensions
+        images.append(img)
+    return images
+
+
+def cluster_images(images, n_clusters):
+    X = np.array(images)
+    X = X.reshape(X.shape[0], -1)
+
+    kmeans = KMeans(n_clusters=n_clusters)
+    kmeans.fit(X)
+
+    return kmeans.labels_
+
+
+def show_image_clusters():
+    selected_project = select_project()
+    if selected_project:
+        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+        # Preprocess and cluster images
+        images = load_images(data_files["."])
+        labels = cluster_images(images, n_clusters=5)
+
+        # Perform dimensionality reduction for plotting
+        flattened_images = np.array(images).reshape(len(images), -1)
+        pca = PCA(n_components=2)
+        reduced_features = pca.fit_transform(flattened_images)
+
+        # Create a DataFrame with reduced features, cluster labels, and filenames
+        filenames = [data_files["."][i] for i in range(len(data_files["."]))]
+        df = pd.DataFrame({'PC1': reduced_features[:, 0], 'PC2': reduced_features[:, 1], 'Cluster': labels, 'Filename': filenames})
+
+        # Generate thumbnail images and encode them as base64
+        thumbnail_images = [cv2.resize(img, (100, 100)) for img in images]
+        encoded_images = [base64.b64encode(cv2.imencode('.png', img)[1]).decode() for img in thumbnail_images]
+
+        # Add base64 encoded images to the DataFrame
+        df['Thumbnail'] = encoded_images
+
+        # Create Altair scatter plot
+        scatter_plot = alt.Chart(df).mark_circle(size=60).encode(
+            x='PC1',
+            y='PC2',
+            color=alt.Color('Cluster:N', scale=alt.Scale(scheme='category10')),
+            tooltip=[
+                Tooltip('Filename', title='Filename'),
+                Tooltip('Cluster', title='Cluster')
+            ]
+        )
+
+        # make the chart interactive
+        chart_image_clusters = scatter_plot.interactive()
+        chart_image_clusters = chart_image_clusters.properties(
+            width=600,
+            height=400
+        ).add_selection(
+            alt.selection_interval(bind='scales', encodings=['x', 'y'])
+        ).add_selection(
+            alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+        )
+
+        if chart_image_clusters:
+            display_chart(selected_project.id, "clusters", chart_image_clusters)
+
+
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -286,7 +362,8 @@ def main():
     menu = {
         "Show file metrics": lambda: show_file_metrics(),
         "Show image metrics": lambda: show_image_metrics(),
-        "Show label metrics": lambda: show_label_metrics()
+        "Show label metrics": lambda: show_label_metrics(),
+        "Show image clusters": lambda: show_image_clusters()
     }
 
     # Create a sidebar with menu options
