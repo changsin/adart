@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .group import Group
     from .item import Item  # noqa: F401
     from .project import Project
+    from .project1 import Project1
     from .task import Task
 
 
@@ -27,3 +28,4 @@ class User(Base):
 
     items = relationship("Item", back_populates="owner")
     projects = relationship("Project", back_populates="owner")
+    projects1 = relationship("Project1", back_populates="owner")

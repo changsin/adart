@@ -7,6 +7,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .project import Project 
+    from .project1 import Project1
 
 
 class Domain(Base):
@@ -16,3 +17,4 @@ class Domain(Base):
     description = Column(String)
 
     projects = relationship("Project", back_populates="domain")
+    projects1 = relationship("Project1", back_populates="domain")

@@ -8,6 +8,7 @@ from app.db.base_class import Base
 if TYPE_CHECKING:
     from .task import Task
     from .project import Project
+    from .project1 import Project1
 
 
 class State(Base):
@@ -17,3 +18,4 @@ class State(Base):
 
     tasks = relationship("Task", back_populates="state")
     projects = relationship("Project", back_populates="state")
+    projects1 = relationship("Project1", back_populates="state")

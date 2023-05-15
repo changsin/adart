@@ -7,6 +7,7 @@ from app.db.base_class import Base
 
 if TYPE_CHECKING:
     from .project import Project
+    from .project1 import Project1
 
 
 class Statistics(Base):
@@ -17,5 +18,7 @@ class Statistics(Base):
     created_at = Column(DateTime)
 
     project_id = Column(Integer, ForeignKey("project.id"))
+    project1_id = Column(Integer, ForeignKey("project1.id"))
 
     project = relationship("Project", back_populates="statistics")
+    project1 = relationship("Project1", back_populates="statistics")

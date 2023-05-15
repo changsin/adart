@@ -5,6 +5,7 @@ from app.models.item import Item  # noqa
 from app.models.user import User  # noqa
 from app.models.group import Group
 from app.models.project import Project
+from app.models.project1 import Project1
 from app.models.file_format import FileFormat
 from app.models.annotation_type import AnnotationType
 from app.models.task import Task
