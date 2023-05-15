@@ -146,7 +146,7 @@ class Type3PositionE(Enum):
     R4 = (770, "R4")
     R5 = (1026, "R5")
     R6 = (1282, "R6")
-    RU = (1784, "U(RU)")
+    RU = (1794, "U(RU)")
 
     U = (-253, "U")
 
