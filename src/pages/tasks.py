@@ -258,10 +258,10 @@ def add_data_tasks(selected_project: Project):
             saved_data_filenames = _save_uploaded_files(uploaded_data_files, selected_project.id, "data")
 
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
+
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
         if uploaded_label_files:
             saved_anno_filenames = _save_uploaded_files(uploaded_label_files, selected_project.id, "labels")
-
-            project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
             converted_anno_filenames = _convert_anno_files(labels_format_type,
                                                            project_folder,
                                                            saved_data_filenames,
@@ -273,34 +273,54 @@ def add_data_tasks(selected_project: Project):
             tasks_info = get_tasks_info()
 
             new_task_id = tasks_info.get_next_task_id()
-            for idx, converted_filename in enumerate(converted_anno_filenames):
-                data_labels = DataLabels.load(converted_filename)
-                data_count = len(data_labels.images)
-                object_count = sum(len(image.objects) for image in data_labels.images)
 
-                moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
-                shutil.move(converted_filename, moved_converted_filename)
+            if converted_anno_filenames:
+                for idx, converted_filename in enumerate(converted_anno_filenames):
+                    data_labels = DataLabels.load(converted_filename)
+                    data_count = len(data_labels.images)
+                    object_count = sum(len(image.objects) for image in data_labels.images)
 
-                new_task = Task(name=f"{task_name}-{idx}",
+                    moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
+                    shutil.move(converted_filename, moved_converted_filename)
+
+                    new_task = Task(name=f"{task_name}-{idx}",
+                                    project_id=selected_project.id,
+                                    dir_name=project_folder,
+                                    anno_file_name=moved_converted_filename,
+                                    state_id=TaskState.DVS_NEW.value,
+                                    state_name=TaskState.DVS_NEW.description,
+                                    data_count=data_count,
+                                    object_count=object_count)
+                    data_total_count += data_count
+                    response = api_target().create_task(new_task.to_json())
+                    logger.info(response)
+                    st.write(f"Task {response['id']} {response['name']} created")
+
+                selected_project.task_total_count += len(converted_anno_filenames)
+                selected_project.data_total_count += data_total_count
+                api_target().update_project(selected_project.to_json())
+            elif saved_data_filenames:
+                data_count = len(saved_data_filenames)
+                new_task = Task(name=f"{task_name}-{0}",
                                 project_id=selected_project.id,
                                 dir_name=project_folder,
-                                anno_file_name=moved_converted_filename,
+                                anno_file_name=None,
                                 state_id=TaskState.DVS_NEW.value,
                                 state_name=TaskState.DVS_NEW.description,
                                 data_count=data_count,
-                                object_count=object_count)
-                # tasks_info.add(new_task)
-                # tasks_info.save()
+                                object_count=0)
                 data_total_count += data_count
                 response = api_target().create_task(new_task.to_json())
                 logger.info(response)
                 st.write(f"Task {response['id']} {response['name']} created")
 
-            selected_project.task_total_count += len(converted_anno_filenames)
-            selected_project.data_total_count += data_total_count
-            api_target().update_project(selected_project.to_json())
+                selected_project.task_total_count += 1
+                selected_project.data_total_count += data_total_count
+                api_target().update_project(selected_project.to_json())
 
-            st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+                st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
+            else:
+                st.warning("Please upload files")
 
 
 def add_model_task(selected_project: Project):

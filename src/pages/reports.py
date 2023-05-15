@@ -1,4 +1,5 @@
 import base64
+import os
 from collections import namedtuple
 
 import altair as alt
@@ -317,7 +318,7 @@ def show_image_clusters():
         reduced_features = pca.fit_transform(flattened_images)
 
         # Create a DataFrame with reduced features, cluster labels, and filenames
-        filenames = [data_files["."][i] for i in range(len(data_files["."]))]
+        filenames = [os.path.basename(data_files["."][i]) for i in range(len(data_files["."]))]
         df = pd.DataFrame({'PC1': reduced_features[:, 0], 'PC2': reduced_features[:, 1], 'Cluster': labels, 'Filename': filenames})
 
         # Generate thumbnail images and encode them as base64
