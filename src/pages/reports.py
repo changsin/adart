@@ -13,13 +13,7 @@ from src.common.charts import (
     show_download_charts_button
 )
 from src.common.logger import get_logger
-from src.common.utils import load_images
 from src.models.data_labels import DataLabels
-from src.models.metrics import (
-    cluster_images,
-    reduce_features,
-    plot_image_clusters
-)
 from .home import (
     is_authenticated,
     get_data_files,
@@ -251,22 +245,6 @@ def show_label_metrics():
         show_download_charts_button(selected_project.id)
 
 
-def show_image_clusters():
-    selected_project = select_project()
-    if selected_project:
-        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
-        # Preprocess and cluster images
-        images = load_images(data_files["."])
-        if len(images) < 5:
-            st.warning("Please add more images for clustering purposes")
-            return
-
-        cluster_labels = cluster_images(images, n_clusters=5)
-        reduced_features = reduce_features(images)
-        plot_image_clusters(selected_project.id, "label clusters", data_files["."],
-                            images, cluster_labels, reduced_features)
-
-
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -277,7 +255,6 @@ def main():
         "Show file metrics": lambda: show_file_metrics(),
         "Show image metrics": lambda: show_image_metrics(),
         "Show label metrics": lambda: show_label_metrics(),
-        "Show image clusters": lambda: show_image_clusters()
     }
 
     # Create a sidebar with menu options

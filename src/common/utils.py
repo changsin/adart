@@ -134,12 +134,12 @@ def from_text_file(text_file):
     #         return struct.unpack('<ii', header_data[4:])
 
 
-def load_images(data_files):
+def load_images(data_files, size: tuple = (100, 100)):
     images = []
     for filename in data_files:
         img = cv2.imread(filename)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (100, 100))  # Resize the image to desired dimensions
+        img = cv2.resize(img, size)  # Resize the image to desired dimensions
         images.append(img)
     return images
 

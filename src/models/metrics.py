@@ -58,8 +58,9 @@ def plot_image_clusters(project_id: str, title: str, filenames: list, images: li
             Tooltip('Filename', title='Filename'),
             Tooltip('Cluster', title='Cluster')
         ]
+    ).properties(
+        title=title  # Set the chart title
     )
-
     # make the chart interactive
     chart_image_clusters = scatter_plot.interactive()
     chart_image_clusters = chart_image_clusters.properties(
