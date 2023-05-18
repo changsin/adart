@@ -1,4 +1,5 @@
 import json
+import math
 import os
 
 import attr
@@ -28,6 +29,16 @@ class DataLabels:
     def save(self, filename: str):
         json_data = json.dumps(self.to_json(), default=utils.default, ensure_ascii=False, indent=2)
         utils.to_file(json_data, filename)
+
+    def get_class_labels(self):
+        """
+        :return: all class labels
+        """
+        class_labels = set()
+        for image in self.images:
+            image_class_labels = image.get_class_labels()
+            class_labels = class_labels.union(image_class_labels)
+        return class_labels
 
     @staticmethod
     def from_json(json_dict):
@@ -106,6 +117,13 @@ class DataLabels:
                 "height": self.height,
                 "objects": self.objects
             }
+
+        def get_class_labels(self):
+            class_labels = set()
+            for obj in self.objects:
+                class_labels.add(obj.label)
+            return class_labels
+
 
         def get_class_label_stats(self):
             class_labels = dict()
@@ -208,3 +226,36 @@ class DataLabels:
                                      points=points,
                                      attributes=attributes,
                                      verification_result=adq_object.verification_result)
+
+        @staticmethod
+        def get_bounding_rectangle(label_object) -> list:
+            """
+            get the rectangle of a polygon or a spline
+            :param label_object: label object whose points could be [[x,y,r]...] or [[x,y]...]
+            :return: xtl,ytl, xbr,ybr
+            """
+            if label_object.type == 'box':
+                return label_object.points[0]
+
+            x_index, y_index = 0, 1
+            points = label_object.points
+
+            if points:
+                min_x, max_x = math.inf, -math.inf
+                min_y, max_y = math.inf, -math.inf
+
+                # Iterate over the remaining control points and update the minimum and maximum x and y values
+                for pt in points:
+                    x = int(pt[x_index])
+                    y = int(pt[y_index])
+                    if x < min_x:
+                        min_x = x
+                    if x > max_x:
+                        max_x = x
+
+                    if y < min_y:
+                        min_y = y
+                    if y > max_y:
+                        max_y = y
+
+                return [min_x, min_y, max_x, max_y]
