@@ -168,12 +168,15 @@ class ImageManager:
         x_values = [int(pt['x']) for pt in points]
         y_values = [int(pt['y']) for pt in points]
 
-        min_x = min(x_values)
-        min_y = min(y_values)
-        max_x = max(x_values)
-        max_y = max(y_values)
+        if x_values and y_values:
+            min_x = min(x_values)
+            min_y = min(y_values)
+            max_x = max(x_values)
+            max_y = max(y_values)
 
-        return [min_x, min_y, max_x, max_y]
+            return [min_x, min_y, max_x, max_y]
+        else:
+            logger.warning(f"empty shape {shape}")
 
     def resizing_img(self, min_width=700, min_height=700, max_height=800, max_width=800):
         """resizing the image by max_height and max_width.
@@ -229,7 +232,7 @@ class ImageManager:
                 scaled_points.append(scaled_point)
 
         scaled_shape['points'] = scaled_points
-        logger.info(f"shape: {shape} -> scaled_shape: {scaled_shape} ratio_w: {self._resized_ratio_w} ratio_h: {self._resized_ratio_h}")
+        # logger.info(f"shape: {shape} -> scaled_shape: {scaled_shape} ratio_w: {self._resized_ratio_w} ratio_h: {self._resized_ratio_h}")
         # TODO: later upscale other shape types as needed
         return scaled_shape
 
@@ -311,14 +314,16 @@ class ImageManager:
                 prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
                 prev_img = prev_img[y:y_end, x:x_end]
             elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary' or shape['shapeType'] == 'polygon':
-                min_x, min_y, max_x, max_y = ImageManager.get_bounding_rectangle(shape)
-                min_x = max(min_x, 0)
-                min_y = max(min_y, 0)
-                max_x = min(max_x, self._image.width)
-                max_y = min(max_y, self._image.height)
+                bounding_rectangle = ImageManager.get_bounding_rectangle(shape)
+                if bounding_rectangle:
+                    min_x, min_y, max_x, max_y = bounding_rectangle
+                    min_x = max(min_x, 0)
+                    min_y = max(min_y, 0)
+                    max_x = min(max_x, self._image.width)
+                    max_y = min(max_y, self._image.height)
 
-                prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
-                prev_img = prev_img[min_y:max_y, min_x:max_x]
+                    prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
+                    prev_img = prev_img[min_y:max_y, min_x:max_x]
 
             elif shape['shapeType'] == 'VP':
                 resized_points = []
