@@ -1,14 +1,24 @@
 import os.path
 from base64 import b64encode
 
+import cv2
+import numpy as np
 import streamlit as st
 from PIL import Image
 
 import src.viewer.app as app
 from src.common.constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
 from src.common.logger import get_logger
+from src.common.utils import glob_files, load_images
+from src.models.data_labels import DataLabels
+from src.models.metrics import (
+    cluster_images,
+    reduce_features,
+    plot_image_clusters
+)
 from .home import (
     get_data_files,
+    get_label_files,
     is_authenticated,
     login,
     logout,
@@ -100,6 +110,156 @@ def review_model_task(selected_task):
         st.write("No uploaded files to review")
 
 
+def create_label_thumbnail(image: Image, label_object: DataLabels.Object, target_size: tuple=(50, 50)):
+    """init annotation for current shapes.
+
+    Args:
+        :param target_size:
+        :param image: PIL image
+        :param label_object: label object
+    Returns:
+            prev_img: cv2 image of the preview thumbnail.
+    """
+    raw_image = np.asarray(image).astype("uint8")
+    height, width, alpha = raw_image.shape
+    width = max(width, 1)
+    height = max(height, 1)
+    prev_img = np.zeros((height, width, alpha), dtype="uint8")
+
+    if label_object.type == 'box':
+        point_list = label_object.points[0]
+        xtl, ytl, xbr, ybr = (
+            int(point_list[0]),
+            int(point_list[1]),
+            int(point_list[2]),
+            int(point_list[3])
+        )
+        x = max(xtl, 0)
+        y = max(ytl, 0)
+
+        x_end = min(xbr, height)
+        y_end = min(ybr, height)
+
+        prev_img[y:y_end, x:x_end] = raw_image[y:y_end, x:x_end]
+        prev_img = prev_img[y:y_end, x:x_end]
+    elif label_object.type == 'spline' or label_object.type == 'boundary' or label_object.type == 'polygon':
+        if label_object.points:
+            min_x, min_y, max_x, max_y = DataLabels.Object.get_bounding_rectangle(label_object)
+            min_x = max(min_x, 0)
+            min_y = max(min_y, 0)
+            max_x = min(max_x, width)
+            max_y = min(max_y, height)
+
+            prev_img[min_y:max_y, min_x:max_x] = raw_image[min_y:max_y, min_x:max_x]
+            prev_img = prev_img[min_y:max_y, min_x:max_x]
+
+    # Resize prev_img to target_size
+    if prev_img.size > 0:
+        return cv2.resize(prev_img, target_size[::-1])
+
+
+def load_label_thumbnails(data_folder: str, data_labels: DataLabels, label_thumbnail_folder: str):
+    # if they are not created, create them first
+    if not os.path.exists(label_thumbnail_folder):
+        os.mkdir(label_thumbnail_folder)
+
+        for label_image in data_labels.images:
+            image_filename = os.path.join(data_folder, label_image.name)
+            image = Image.open(image_filename)
+            for idx, obj in enumerate(label_image.objects):
+                thumbnail_name = os.path.join(label_thumbnail_folder,
+                                              f"{obj.label}-{idx}-{label_image.name}")
+                label_thumbnail = create_label_thumbnail(image, obj)
+                if label_thumbnail is not None:
+                    cv2.imwrite(thumbnail_name, label_thumbnail)
+
+    thumbnail_names = glob_files(label_thumbnail_folder,
+                                 SUPPORTED_IMAGE_FILE_EXTENSIONS)
+    thumbnail_names.sort()
+    label_thumbnails = load_images(thumbnail_names, size=(50, 50))
+
+    return label_thumbnails, thumbnail_names
+
+
+def detect_label_anomalies(selected_project):
+    """
+    run cluster analysis on label images
+    :return:
+    """
+    label_files_dict = get_label_files(selected_project)
+    class_labels = set()
+    label_thumbnails = []
+    thumbnail_names = []
+    if label_files_dict:
+        logger.info(label_files_dict)
+        data_folder = os.path.join(selected_project.dir_name, "data")
+        label_thumbnail_folder = os.path.join(selected_project.dir_name, "label_thumbnails")
+
+        for project_folder, label_files in label_files_dict.items():
+            for task_idx, label_file in enumerate(label_files):
+                st.write(f"Analyzing class labels for task {task_idx}")
+                logger.info(os.path.join(project_folder, label_file))
+                data_labels = DataLabels.load(os.path.join(project_folder, label_file))
+                logger.info(f"looking into {data_folder} {label_thumbnail_folder}")
+                thumbnails, names = load_label_thumbnails(data_folder, data_labels, label_thumbnail_folder)
+
+                if thumbnails:
+                    label_thumbnails.extend(thumbnails)
+                    thumbnail_names.extend(names)
+
+                cur_class_labels = data_labels.get_class_labels()
+                class_labels = class_labels.union(cur_class_labels)
+
+        class_count = len(class_labels)
+        st.write(f"Found {len(label_thumbnails)} labels in {class_count} classes: {class_labels}")
+        cluster_labels = cluster_images(label_thumbnails, n_clusters=class_count)
+        reduced_features = reduce_features(label_thumbnails)
+
+        plot_image_clusters(selected_project.id, "Label clusters", thumbnail_names,
+                            label_thumbnails, cluster_labels, reduced_features)
+
+
+def show_image_clusters(selected_project):
+    data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+    # Preprocess and cluster images
+    images = load_images(data_files["."])
+    if len(images) < 5:
+        st.warning("Please add more images for clustering purposes")
+        return
+
+    cluster_labels = cluster_images(images, n_clusters=5)
+    reduced_features = reduce_features(images)
+    plot_image_clusters(selected_project.id, "Image clusters", data_files["."],
+                        images, cluster_labels, reduced_features)
+
+
+OVERLAPS = "Overlaps"
+TINY_OBJECTS = "Tiny objects"
+CLUSTER_LABELS = "Cluster labels"
+CLUSTER_IMAGES = "Cluster images"
+
+
+def auto_review():
+    selected_project = select_project(is_sidebar=True)
+    options = [OVERLAPS, TINY_OBJECTS, CLUSTER_IMAGES, CLUSTER_LABELS]
+
+    with st.form("Auto-Reviews"):
+        selected_options = []
+        if selected_project:
+            for option in options:
+                selected = st.checkbox(option)
+                if selected:
+                    selected_options.append(option)
+
+            start = st.form_submit_button("Start auto-review")
+            if start:
+                st.write(f"Starting {selected_options}")
+                if CLUSTER_LABELS in selected_options:
+                    detect_label_anomalies(selected_project)
+                if CLUSTER_IMAGES in selected_options:
+                    show_image_clusters(selected_project)
+
+
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -110,6 +270,7 @@ def main():
         "Review Images": lambda: review_images(),
         "Review Task": lambda: review_task(),
         "Compare Tasks": lambda: compare_tasks(),
+        "Auto Review": lambda: auto_review()
     }
 
     # Create a sidebar with menu options

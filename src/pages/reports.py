@@ -1,16 +1,9 @@
-import base64
-import os
 from collections import namedtuple
 
 import altair as alt
-import cv2
-import numpy as np
 import pandas as pd
 import shapely
 import streamlit as st
-from altair import Tooltip
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
 
 from src.common.charts import (
     display_chart,
@@ -81,35 +74,6 @@ def show_image_metrics():
         st.write("No image data")
 
 
-def get_bounding_rectangle(label_object) -> list:
-    """
-    get the rectangle of a polygon or a spline
-    :param label_object: label object whose points could be [[x,y,r]...] or [[x,y]...]
-    :return: xtl,ytl, xbr,ybr
-    """
-    if label_object.type == 'box':
-        return label_object.points[0]
-
-    x_index, y_index = 0, 1
-    points = label_object.points
-
-    min_x = max_x = points[0][x_index]
-    min_y = max_y = points[0][y_index]
-
-    # Iterate over the remaining control points and update the minimum and maximum x and y values
-    for pt in points[1:]:
-        if pt[x_index] < min_x:
-            min_x = int(pt[x_index])
-        elif pt[x_index] > max_x:
-            max_x = int(pt[x_index])
-        if pt[y_index] < min_y:
-            min_y = int(pt[y_index])
-        elif pt[y_index] > max_y:
-            max_y = int(pt[y_index])
-
-    return [min_x, min_y, max_x, max_y]
-
-
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     logger.info(f"label_files_dict {label_files_dict}")
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
@@ -141,7 +105,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     logger.warn("empty points in {}".format(object_cur.label))
                     continue
 
-                xtl1, ytl1, xbr1, ybr1 = get_bounding_rectangle(object_cur)
+                xtl1, ytl1, xbr1, ybr1 = DataLabels.Object.get_bounding_rectangle(object_cur)
                 rect1 = Rectangle(xtl1, ytl1, xbr1, ybr1)
                 width1 = rect1.xmax - rect1.xmin
                 height1 = rect1.ymax - rect1.ymin
@@ -156,7 +120,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         logger.warn("empty points in {}".format(image.objects[ob_id2].label))
                         continue
 
-                    xtl2, ytl2, xbr2, ybr2 = get_bounding_rectangle(image.objects[ob_id2])
+                    xtl2, ytl2, xbr2, ybr2 = DataLabels.Object.get_bounding_rectangle(image.objects[ob_id2])
                     rect2 = Rectangle(xtl2, ytl2, xbr2, ybr2)
 
                     overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
@@ -281,80 +245,6 @@ def show_label_metrics():
         show_download_charts_button(selected_project.id)
 
 
-def load_images(data_files):
-    images = []
-    for filename in data_files:
-        img = cv2.imread(filename)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img = cv2.resize(img, (100, 100))  # Resize the image to desired dimensions
-        images.append(img)
-    return images
-
-
-def cluster_images(images, n_clusters):
-    X = np.array(images)
-    X = X.reshape(X.shape[0], -1)
-
-    kmeans = KMeans(n_clusters=n_clusters)
-    kmeans.fit(X)
-
-    return kmeans.labels_
-
-
-def show_image_clusters():
-    selected_project = select_project()
-    if selected_project:
-        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
-        # Preprocess and cluster images
-        images = load_images(data_files["."])
-        if len(images) < 5:
-            st.warning("Please add more images for clustering purposes")
-            return
-
-        labels = cluster_images(images, n_clusters=5)
-
-        # Perform dimensionality reduction for plotting
-        flattened_images = np.array(images).reshape(len(images), -1)
-        pca = PCA(n_components=2)
-        reduced_features = pca.fit_transform(flattened_images)
-
-        # Create a DataFrame with reduced features, cluster labels, and filenames
-        filenames = [os.path.basename(data_files["."][i]) for i in range(len(data_files["."]))]
-        df = pd.DataFrame({'PC1': reduced_features[:, 0], 'PC2': reduced_features[:, 1], 'Cluster': labels, 'Filename': filenames})
-
-        # Generate thumbnail images and encode them as base64
-        thumbnail_images = [cv2.resize(img, (100, 100)) for img in images]
-        encoded_images = [base64.b64encode(cv2.imencode('.png', img)[1]).decode() for img in thumbnail_images]
-
-        # Add base64 encoded images to the DataFrame
-        df['Thumbnail'] = encoded_images
-
-        # Create Altair scatter plot
-        scatter_plot = alt.Chart(df).mark_circle(size=60).encode(
-            x='PC1',
-            y='PC2',
-            color=alt.Color('Cluster:N', scale=alt.Scale(scheme='category10')),
-            tooltip=[
-                Tooltip('Filename', title='Filename'),
-                Tooltip('Cluster', title='Cluster')
-            ]
-        )
-
-        # make the chart interactive
-        chart_image_clusters = scatter_plot.interactive()
-        chart_image_clusters = chart_image_clusters.properties(
-            width=600,
-            height=400
-        ).add_selection(
-            alt.selection_interval(bind='scales', encodings=['x', 'y'])
-        ).add_selection(
-            alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-        )
-
-        if chart_image_clusters:
-            display_chart(selected_project.id, "clusters", chart_image_clusters)
-
-
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -365,7 +255,6 @@ def main():
         "Show file metrics": lambda: show_file_metrics(),
         "Show image metrics": lambda: show_image_metrics(),
         "Show label metrics": lambda: show_label_metrics(),
-        "Show image clusters": lambda: show_image_clusters()
     }
 
     # Create a sidebar with menu options

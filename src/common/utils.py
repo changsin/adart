@@ -1,11 +1,13 @@
 import glob
 import json
 import os
-from PIL import Image
 from pathlib import Path
 
-from .constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
+import cv2
 import streamlit as st
+from PIL import Image
+
+from .constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
 
 # Convert bytes to a more human-readable format
 ONE_K_BYTES = 1024.0
@@ -130,3 +132,14 @@ def from_text_file(text_file):
     #         header_data = f.read(8)
     #         # Unpack the width and height from the header
     #         return struct.unpack('<ii', header_data[4:])
+
+
+def load_images(data_files, size: tuple = (100, 100)):
+    images = []
+    for filename in data_files:
+        img = cv2.imread(filename)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.resize(img, size)  # Resize the image to desired dimensions
+        images.append(img)
+    return images
+

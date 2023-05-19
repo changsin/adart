@@ -285,7 +285,7 @@ class ImageManager:
         Args:
             shape(dict): the bounding boxes of the image.
         Returns:
-            prev_img(list): list of preview images with default label.
+            prev_img: PIL image of the preview thumbnail.
         """
         raw_image = np.asarray(self._image).astype("uint8")
         width, height, alpha = raw_image.shape
@@ -293,7 +293,6 @@ class ImageManager:
         height = max(height, 1)
         prev_img = np.zeros((width, height, alpha), dtype="uint8")
 
-        label = ""
         if shape:
             if shape['shapeType'] == 'box':
                 point_dict = shape['points'][0]
