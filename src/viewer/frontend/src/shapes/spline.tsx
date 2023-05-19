@@ -105,51 +105,26 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
   const path = new fabric.Path(pathString, {
     stroke: color,
     fill: '',
-    strokeWidth: 5,
+    strokeWidth: 1,
     opacity,
-  });
-
-  const selectedPath = new fabric.Path(pathString, {
-    stroke: color,
-    fill: '',
-    strokeWidth: 10,
-    opacity,
-    visible: false
   });
 
   canvas.add(path);
-  canvas.add(selectedPath);
 
   path.on("mousedown", () => {
     canvas.discardActiveObject(); // Deselect any previously selected object
-    if (selectedPath.visible) {
-        // If the annotation is already selected, deselect it
-        path.trigger("deselected"); // Manually trigger the deselected event
-        selectedPath.visible = false;
-    } else {
-        // Otherwise, select the annotation
-        selectedPath.set({visible: true});
-        canvas.setActiveObject(selectedPath);
-        path.trigger("selected"); // Manually trigger the selected event
-    }
+    path.trigger("selected"); // Manually trigger the selected event
   });
 
   path.on("mouseup", (event) => {
-      if (!event.target) {
-      // If no object is clicked, deselect any selected object
-      const activeObject = canvas.getActiveObject();
-      if (activeObject === selectedPath) {
-          path.trigger("deselected"); // Manually trigger the deselected event
-          selectedPath.visible = false;
-      }
+    if (!event.target) {
+      path.trigger("deselected"); // Manually trigger the deselected event
     }
   });
 
   // // Add a click event listener to show the highlight rectangle
   path.on("selected", () => {
-    selectedPath.set({visible: true});
-    canvas.setActiveObject(selectedPath);
-
+    path.strokeWidth = 2;
     if (onSelectHandler) {
       onSelectHandler(shape, path);
     }
@@ -157,7 +132,7 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
 
   // Add a click event listener to hide the highlight rectangle
   path.on("deselected", () => {
-      selectedPath.visible = false;
+      path.strokeWidth = 1;
   });
 
   const controlPoints = drawControlPoints(points as SplinePoint[], 'black')

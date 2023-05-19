@@ -17,7 +17,6 @@ import { Box } from "./shapes/box"
 import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
-import { FabricShape } from "./shapes/fabric-shape"
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -25,9 +24,11 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
-    const [polygonVisible, togglePolygon] = useState(false);
     const [opacity, setOpacity] = useState<number>(0.3);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
+    const [checkedLabels, setCheckedLabels] = useState<string[]>([]);
+
+
 
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;
@@ -37,13 +38,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         }
     };
     
-    const togglePolygonVisibility = (value: boolean) => {
-        togglePolygon(value);
-        if (canvas) {
-            canvas.renderAll();
-        }
-    };
-
     function is_error(shape: ShapeProps): boolean {
         if (shape.verification_result?.error_code &&
             shape.verification_result?.error_code.length > 0) {
@@ -65,7 +59,16 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         }
         return color;
     }
-      
+
+    const handleLabelToggle = (label: string) => {
+        setCheckedLabels((prevCheckedLabels) => {
+          if (prevCheckedLabels.includes(label)) {
+            return prevCheckedLabels.filter((l) => l !== label);
+          } else {
+            return [...prevCheckedLabels, label];
+          }
+        });
+    };
     // // Decompress imageData on mount
     // const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
     //     new Uint8ClampedArray()
@@ -122,27 +125,30 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         setCanvas(canvasTmp)
     }, [canvasDataUri])
 
-      // Add shapes to the canvas
+    // Add shapes to the canvas
     useEffect(() => {
         if (canvas) {
+            // Filter the shapes based on the labels
+            const filteredShapes = shapes.filter((shape) =>
+                checkedLabels.includes(shape.label)
+            );
+
             // Add shapes to the canvas
             shapes.forEach((shape) => {
-                let color = pickColor(shape);
-                if (shape.shapeType === "box") {
-                // // const box = <Box shape={shape} color={shapeColor} opacity={opacity} canvas={canvas} />;
-                    Box({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
-                // FabricShape({shape, color: shapeColor, opacity, canvas});
-                } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                    Spline({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
-                } else if (shape.shapeType === "polygon") {
-                    if (polygonVisible === true || is_error(shape)) {
-                        Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
+                if (checkedLabels.includes(shape.label)) {
+                    let color = pickColor(shape);
+                    if (shape.shapeType === "box") {
+                        Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                    } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
+                        Spline({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                    } else if (shape.shapeType === "polygon") {
+                        Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                    } else if (shape.shapeType === "VP") {
+                        VanishingPoint({ shape, color: color, opacity, canvas });
+                    } else {
+                        console.warn(`Invalid shape "${shape}" specified". Skipping...`);
+                        return;
                     }
-                } else if (shape.shapeType === "VP") {
-                    VanishingPoint({shape, color: color, opacity, canvas});
-                } else {
-                    console.warn(`Invalid shape "${shape.shapeType}" specified". Skipping...`)
-                    return
                 }
             })
  
@@ -154,7 +160,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             canvas.renderAll()
         }
 
-    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, polygonVisible])
+    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, checkedLabels])
 
     const onSelectShapeHandler = ((shape: ShapeProps, fabricShape: fabric.Object) => {
         console.log(`onSelectedShape ${JSON.stringify(shape)}`)
@@ -232,20 +238,20 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         clearHandler();
       
         shapes.forEach((shape) => {
-            let color = pickColor(shape);
-            if (shape.shapeType === "box") {
-                Box({ shape, color: color, opacity, canvas });
-            } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                Spline({ shape, color: color, opacity, canvas });
-            } else if (shape.shapeType === "polygon" && polygonVisible === true) {
-                if (polygonVisible === true || is_error(shape)) {
-                    Polygon({shape, color: color, opacity, canvas});
+            if (checkedLabels.includes(shape.label)) {
+                let color = pickColor(shape);
+                if (shape.shapeType === "box") {
+                    Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
+                    Spline({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                } else if (shape.shapeType === "polygon") {
+                    Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                } else if (shape.shapeType === "VP") {
+                    VanishingPoint({ shape, color: color, opacity, canvas });
+                } else {
+                    console.warn(`Invalid shape "${shape}" specified". Skipping...`);
+                    return;
                 }
-            } else if (shape.shapeType === "VP") {
-                VanishingPoint({ shape, color: color, opacity, canvas });
-            } else {
-                console.warn(`Invalid shape "${shape}" specified". Skipping...`);
-                return;
             }
         });
       };
@@ -255,7 +261,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const clearHandler = () => {
         setNewBBoxIndex(0)
         canvas.getObjects().forEach((rect) => canvas.remove(rect))
-        sendCoordinates([])
       }
 
     const sendCoordinates = (returnLabels: string[]) => {
@@ -326,12 +331,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 </button>
                 <button
                     className={mode === "dark" ? styles.dark : ""}
-                    onClick={() => togglePolygonVisibility(!polygonVisible)}
-                >
-                    {polygonVisible ? "Hide Polygons" : "Show Polygons"}
-                </button>
-                <button
-                    className={mode === "dark" ? styles.dark : ""}
                     onClick={removeBoxHandler}
                 >
                     Remove select
@@ -349,15 +348,25 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     Clear all
                 </button>
                 <div>
-                <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={opacity * 100}
-                    onChange={handleOpacityChange}
-                    />
-                    Label Opacity
-                    </div>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={opacity * 100}
+                        onChange={handleOpacityChange}
+                        />
+                        Label Opacity
+                </div>
+                {Array.from(new Set(labels)).map((label) => (
+                    <label key={label}>
+                        <input
+                            type="checkbox"
+                            checked={checkedLabels.includes(label)}
+                            onChange={() => handleLabelToggle(label)}
+                        />
+                    {label}
+                    </label>
+                ))}
               </div>
         </>
     )
