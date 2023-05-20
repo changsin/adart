@@ -128,10 +128,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     // Add shapes to the canvas
     useEffect(() => {
         if (canvas) {
-            // Filter the shapes based on the labels
-            const filteredShapes = shapes.filter((shape) =>
-                checkedLabels.includes(shape.label)
-            );
+            clearHandler();
 
             // Add shapes to the canvas
             shapes.forEach((shape) => {

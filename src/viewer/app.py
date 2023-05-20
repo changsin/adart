@@ -101,7 +101,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
     def go_to_image():
         save(st.session_state["image_index"], im)
         selected_option = st.session_state["img_file"]
-        image_index = st.session_state["img_files"].index(selected_option.split(". ")[-1])
+        image_index = st.session_state["img_files"].index(selected_option.split(") ")[-1])
         st.session_state["image_index"] = image_index
 
     def viewer_menu():
@@ -119,7 +119,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         if not is_second_viewer:
             # Modify the select_box to include the file index prefix
-            select_box_options = [f"{i + 1}/{n_files}. {filename}" for i, filename in enumerate(st.session_state["img_files"])]
+            select_box_options = [f"({i + 1}/{n_files}) {filename}" for i, filename in enumerate(st.session_state["img_files"])]
             st.selectbox(" ",
                          select_box_options,
                          index=st.session_state["image_index"],
