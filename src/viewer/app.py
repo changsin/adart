@@ -100,23 +100,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
     def go_to_image():
         save(st.session_state["image_index"], im)
-        image_index = st.session_state["img_files"].index(st.session_state["img_file"])
+        selected_option = st.session_state["img_file"]
+        image_index = st.session_state["img_files"].index(selected_option.split(". ")[-1])
         st.session_state["image_index"] = image_index
 
     def viewer_menu():
-        def _write_class_stats():
-            # Create the HTML table string
-            custom_headers = ['class', 'count']
-            table_str = '<table><tr>'
-            for header in custom_headers:
-                table_str += f'<th>{header}</th>'
-            table_str += '</tr>'
-            for class_name, count in class_label_stats.items():
-                table_str += f'<tr><td>{class_name}</td><td>{count}</td></tr>'
-            table_str += '</table>'
-
-            st.sidebar.markdown(table_str, unsafe_allow_html=True)
-
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         # Main content: review images
@@ -126,37 +114,57 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
             st.session_state['image_index'] = 0
             image_index = 0
 
-        st.sidebar.write("Total files:", n_files)
-        st.sidebar.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
+        # st.write("Total files:", n_files)
+        # st.write("Current file: {}/{}".format(st.session_state["image_index"] + 1, n_files))
 
         if not is_second_viewer:
-            st.sidebar.selectbox("Files",
-                                 st.session_state["img_files"],
-                                 index=st.session_state["image_index"],
-                                 on_change=go_to_image,
-                                 key="img_file")
+            # Modify the select_box to include the file index prefix
+            select_box_options = [f"{i + 1}/{n_files}. {filename}" for i, filename in enumerate(st.session_state["img_files"])]
+            st.selectbox(" ",
+                         select_box_options,
+                         index=st.session_state["image_index"],
+                         on_change=go_to_image,
+                         key="img_file")
 
-            col1, col2 = st.sidebar.columns(2)
+            col1, col2, col3 = st.columns(3)
             with col1:
                 st.button(label="< Previous", on_click=previous_image)
                 # st.button(label="**Save**", on_click=save)
             with col2:
-                st.button(label="Next >", on_click=next_image)
                 st.button(label="Refresh", on_click=refresh)
-
-        if data_labels.images[image_index]:
-            class_label_stats = data_labels.images[image_index].get_class_label_stats()
-            _write_class_stats()
+            with col3:
+                st.button(label="Next >", on_click=next_image)
 
         return image_index
+
+    # def call_frontend(im: ImageManager, image_index: int) -> dict:
+    #     resized_img = im.resizing_img()
+    #     resized_shapes = im.get_downscaled_shapes()
+    #     shape_color = _pick_color(resized_shapes[0].get('label'), DEFAULT_SHAPE_COLOR)
+    #     # st.markdown("#### {}: {}".format(selected_task.name, st.session_state['img_files'][image_index]))
+    #
+    #     # Display the selected shape
+    #     return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
+    #                         key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
+    def _write_class_stats():
+        class_label_stats = data_labels.images[image_index].get_class_label_stats()
+        # Create the HTML table string
+        custom_headers = ['class', 'count']
+        table_str = '<table><tr>'
+        for header in custom_headers:
+            table_str += f'<th>{header}</th>'
+        table_str += '</tr>'
+        for class_name, count in class_label_stats.items():
+            table_str += f'<tr><td>{class_name}</td><td>{count}</td></tr>'
+        table_str += '</table>'
+
+        st.markdown(table_str, unsafe_allow_html=True)
 
     def call_frontend(im: ImageManager, image_index: int) -> dict:
         resized_img = im.resizing_img()
         resized_shapes = im.get_downscaled_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), DEFAULT_SHAPE_COLOR)
-        st.markdown("#### {}: {}".format(selected_task.name, st.session_state['img_files'][image_index]))
 
-        # Display the selected shape
         return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
                             key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
 

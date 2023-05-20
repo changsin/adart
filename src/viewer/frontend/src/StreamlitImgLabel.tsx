@@ -310,66 +310,57 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     }, [])
 
     return (
-        <>
-            <TransformWrapper disabled={isInteractingWithBox}
-            >
-                <TransformComponent>
-                    <canvas
-                            id="c"
-                            className={mode === "dark" ? styles.dark : ""}
-                            width={canvasWidth}
-                            height={canvasHeight}
-                        />
-                </TransformComponent>
+        <div style={{ display: 'flex' }}>
+          <div>
+            <TransformWrapper disabled={isInteractingWithBox}>
+              <TransformComponent>
+                <canvas
+                  id="c"
+                  className={mode === 'dark' ? styles.dark : ''}
+                  width={canvasWidth}
+                  height={canvasHeight}
+                />
+              </TransformComponent>
             </TransformWrapper>
-            <div className={mode === "dark" ? styles.dark : ""}>
-                <button
-                    className={mode === "dark" ? styles.dark : ""}
-                    onClick={addBoxHandler}
-                >
-                    Mark Untagged
-                </button>
-                <button
-                    className={mode === "dark" ? styles.dark : ""}
-                    onClick={removeBoxHandler}
-                >
-                    Remove select
-                </button>
-                <button
-                    className={mode === "dark" ? styles.dark : ""}
-                    onClick={resetHandler}
-                >
-                    Reset
-                </button>
-                <button
-                    className={mode === "dark" ? styles.dark : ""}
-                    onClick={clearHandler}
-                >
-                    Clear all
-                </button>
-                <div>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        value={opacity * 100}
-                        onChange={handleOpacityChange}
-                        />
-                        Label Opacity
-                </div>
-                {Array.from(new Set(labels)).map((label) => (
-                    <label key={label}>
+          </div>
+      
+          <div className={mode === 'dark' ? styles.dark : ''}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <button onClick={addBoxHandler}>Mark Untagged</button>
+              <button onClick={removeBoxHandler}>Remove select</button>
+              <button onClick={resetHandler}>Reset</button>
+              <button onClick={clearHandler}>Clear all</button>
+            </div>
+            <div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={opacity * 100}
+                onChange={handleOpacityChange}
+              />
+              Label Opacity
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {Array.from(new Set(labels)).map((label) => {
+                    const labelCount = labels.filter((l) => l === label).length;
+                    const labelText = `${label} (${labelCount})`;
+
+                    return (
+                        <label key={label} style={{ marginRight: '10px' }}>
                         <input
                             type="checkbox"
                             checked={checkedLabels.includes(label)}
                             onChange={() => handleLabelToggle(label)}
                         />
-                    {label}
-                    </label>
-                ))}
-              </div>
-        </>
-    )
+                        {labelText}
+                        </label>
+                    );
+                })}
+            </div>
+          </div>
+        </div>
+    );
 }
 
 export default withStreamlitConnection(StreamlitImgLabel)
