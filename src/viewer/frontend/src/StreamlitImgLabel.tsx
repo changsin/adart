@@ -6,7 +6,6 @@ import {
     withStreamlitConnection,
 } from "streamlit-component-lib"
 import { fabric } from "fabric"
-import { inflateSync } from "zlib"
 import styles from "./StreamlitImgLabel.module.css"
 import {
     BoxPoint,
@@ -22,14 +21,80 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
     const [labels, setLabels] = useState<string[]>([])
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
-    const { canvasWidth, canvasHeight, shapes, shapeColor, imageData }: PythonArgs = props.args
+    const {canvasWidth, canvasHeight, shapes, shapeColor, imageData}: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
-    const [opacity, setOpacity] = useState<number>(0.3);
+    const [opacity, setOpacity] = useState<number>(1.0);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
-    const [checkedLabels, setCheckedLabels] = useState<string[]>([]);
 
+    const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
+    const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
+    const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>([]);
+    const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
 
+    const updateShapes = (newShapes: ShapeProps[]) => {
+        setLabels(newShapes.map((shape) => shape.label));
+        // Update any other relevant state variables
+        // ...
+        setShapesInternal(newShapes);
+    };
 
+    const handleExpandLabel = (label: string) => {
+        setExpandedLabels((prevExpandedLabels) =>
+          prevExpandedLabels.includes(label)
+            ? prevExpandedLabels.filter((l) => l !== label)
+            : [...prevExpandedLabels, label]
+        );
+    };
+
+    const handleIndividualLabelToggle = (label: string) => {
+        setCheckedIndividualLabels((prevCheckedIndividualLabels) => {
+            if (prevCheckedIndividualLabels.includes(label)) {
+                return prevCheckedIndividualLabels.filter((l) => l !== label);
+            } else {
+                return [...prevCheckedIndividualLabels, label];
+            }
+        });
+    };
+
+    // const handleClassLabelToggle = (label: string) => {
+    //     setCheckedClassLabels((prevCheckedClassLabels) => {
+    //       if (prevCheckedClassLabels.includes(label)) {
+    //         return prevCheckedClassLabels.filter((l) => l !== label);
+    //       } else {
+    //         return [...prevCheckedClassLabels, label];
+    //       }
+    //     });
+    // };
+    const handleClassLabelToggle = (label: string) => {
+        setCheckedClassLabels((prevCheckedClassLabels) => {
+          if (prevCheckedClassLabels.includes(label)) {
+            // Uncheck class label
+            const updatedClassLabels = prevCheckedClassLabels.filter((l) => l !== label);
+            // Uncheck all individual labels for the class
+            const updatedIndividualLabels = checkedIndividualLabels.filter(
+              (individualLabel) => {
+                const [individualLabelClass] = individualLabel.split("-");
+                return individualLabelClass !== label;
+              }
+            );
+            setCheckedIndividualLabels(updatedIndividualLabels);
+            return updatedClassLabels;
+          } else {
+            // Check class label
+            const updatedClassLabels = [...prevCheckedClassLabels, label];
+            // Check all individual labels for the class
+            const updatedIndividualLabels = shapesInternal
+              .filter((shape) => shape.label === label)
+              .map((shape) => `${shape.label}-${shape.shape_id}`);
+            setCheckedIndividualLabels((prevCheckedIndividualLabels) => [
+              ...prevCheckedIndividualLabels,
+              ...updatedIndividualLabels,
+            ]);
+            return updatedClassLabels;
+          }
+        });
+      };
+      
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;
         setOpacity(opacityValue);
@@ -60,40 +125,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         return color;
     }
 
-    const handleLabelToggle = (label: string) => {
-        setCheckedLabels((prevCheckedLabels) => {
-          if (prevCheckedLabels.includes(label)) {
-            return prevCheckedLabels.filter((l) => l !== label);
-          } else {
-            return [...prevCheckedLabels, label];
-          }
-        });
-    };
-    // // Decompress imageData on mount
-    // const [decompressedData, setDecompressedData] = useState<Uint8ClampedArray>(
-    //     new Uint8ClampedArray()
-    // );
-    // // useEffect(() => {
-    // //     // decompress imageData using zlib
-    // //     const compressedArray = new Uint8Array(imageData);
-    // //     const compressedBuffer = Buffer.from(compressedArray);
-    // //     const decompressedArray = inflateSync(compressedBuffer);
-    // //     const decompressedData = new Uint8ClampedArray(decompressedArray);
-    // //     setDecompressedData(decompressedData);
-    // // }, [imageData]);
-
-    // const decompressedImageData = useMemo(() => {
-    //     // decompress imageData using zlib
-    //     const compressedArray = new Uint8Array(imageData);
-    //     const compressedBuffer = Buffer.from(compressedArray);
-    //     const decompressedArray = inflateSync(compressedBuffer);
-    //     return new Uint8ClampedArray(decompressedArray);
-    // }, [imageData]);
-      
-    // useEffect(() => {
-    //     setDecompressedData(decompressedImageData);
-    // }, [decompressedImageData]);
-      
     /*
      * Translate Python image data to a JavaScript Image
      */
@@ -131,8 +162,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             clearHandler();
 
             // Add shapes to the canvas
-            shapes.forEach((shape) => {
-                if (checkedLabels.includes(shape.label)) {
+            shapesInternal.forEach((shape) => {
+                if (checkedIndividualLabels.includes(`${shape.label}-${shape.shape_id}`)) {
                     let color = pickColor(shape);
                     if (shape.shapeType === "box") {
                         Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
@@ -150,14 +181,14 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             })
  
             // Set labels
-            setLabels(shapes.map((shape) => shape.label))
+            setLabels(shapesInternal.map((shape) => shape.label))
 
             Streamlit.setFrameHeight()
 
             canvas.renderAll()
         }
 
-    }, [canvas, canvasHeight, canvasWidth, imageData, shapes, shapeColor, props.args, opacity, checkedLabels])
+    }, [canvas, canvasHeight, canvasWidth, imageData, shapesInternal, shapeColor, props.args, opacity, checkedClassLabels, checkedIndividualLabels])
 
     const onSelectShapeHandler = ((shape: ShapeProps, fabricShape: fabric.Object) => {
         console.log(`onSelectedShape ${JSON.stringify(shape)}`)
@@ -178,49 +209,53 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             w: canvasWidth * 0.2,
             h: canvasHeight * 0.2,
         }],
-        label: "untagged",
+        label: "Untagged",
         shapeType: "box",
         attributes: null,
-        verification_result: ({ error_code: "untagged", comment: null})
+        verification_result: ({ error_code: "Untagged", comment: null})
     });
             
     // Add new bounding box to the image
     const addBoxHandler = () => {
-        const box = untaggedBox(newBBoxIndex)
-        setNewBBoxIndex(newBBoxIndex + 1)
-
-        const newRect = new fabric.Rect({
-                                top: box.points[0].y,
-                                left: box.points[0].x,
-                                width: (box.points[0] as BoxPoint).w,
-                                height: (box.points[0] as BoxPoint).h,
-                                fill: "",
-                                objectCaching: true,
-                                stroke: "red",
-                                strokeWidth: 1,
-                                strokeUniform: true,
-                                hasRotatingPoint: false,
-                            })
-
-        // Attach event listeners to the rectangle object
-        newRect.on('modified', () => {
-            (box.points[0] as BoxPoint).x = newRect.left ?? 0;
-            (box.points[0] as BoxPoint).y = newRect.top ?? 0;
-            (box.points[0] as BoxPoint).w = newRect.width ?? 0;
-            (box.points[0] as BoxPoint).h = newRect.height ?? 0;
-
-            console.log("sending ");
-            console.log(box);
-            sendSelectedShape(box);
-            shapes.push(box)
-        })
-
-        newRect.on('mousedown', () => setIsInteractingWithBox(true));
-        newRect.on('mouseup', () => setIsInteractingWithBox(false));
-        newRect.on('mousemove', () => setIsInteractingWithBox(true));
+        const box = untaggedBox(newBBoxIndex);
+        setNewBBoxIndex(newBBoxIndex + 1);
+      
+        if (canvas) {
+            const newRect = new fabric.Rect({
+                top: box.points[0].y,
+                left: box.points[0].x,
+                width: (box.points[0] as BoxPoint).w,
+                height: (box.points[0] as BoxPoint).h,
+                fill: "",
+                objectCaching: true,
+                stroke: "red",
+                strokeWidth: 1,
+                strokeUniform: true,
+                hasRotatingPoint: false,
+            })
+      
+            newRect.on('modified', () => {
+                // Update the shape object when the rectangle is modified
+                (box.points[0] as BoxPoint).x = newRect.left ?? 0;
+                (box.points[0] as BoxPoint).y = newRect.top ?? 0;
+                (box.points[0] as BoxPoint).w = newRect.width ?? 0;
+                (box.points[0] as BoxPoint).h = newRect.height ?? 0;
+            
+                console.log("sending ");
+                console.log(box);
+                sendSelectedShape(box);
+                shapesInternal.push(box);
+                checkedClassLabels.push("Untagged")
+            });
         
-        canvas.add(newRect)
-    }
+            newRect.on('mousedown', () => setIsInteractingWithBox(true));
+            newRect.on('mouseup', () => setIsInteractingWithBox(false));
+            newRect.on('mousemove', () => setIsInteractingWithBox(true));
+        
+            canvas.add(newRect);
+        }
+    };
+      
 
     // Remove the selected bounding box
     const removeBoxHandler = () => {
@@ -234,8 +269,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const resetHandler = () => {
         clearHandler();
       
-        shapes.forEach((shape) => {
-            if (checkedLabels.includes(shape.label)) {
+        shapesInternal.forEach((shape) => {
+            if (checkedIndividualLabels.includes(`${shape.label}-${shape.shape_id}`)) {
                 let color = pickColor(shape);
                 if (shape.shapeType === "box") {
                     Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
@@ -252,13 +287,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             }
         });
       };
-      
 
     // Remove all the bounding boxes
     const clearHandler = () => {
-        setNewBBoxIndex(0)
+        setNewBBoxIndex(shapes.length)
         canvas.getObjects().forEach((rect) => canvas.remove(rect))
-      }
+    }
 
     const sendCoordinates = (returnLabels: string[]) => {
         setLabels(returnLabels)
@@ -338,7 +372,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
               />
               Label Opacity
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {Array.from(new Set(labels)).map((label) => {
                     const labelCount = labels.filter((l) => l === label).length;
                     const labelText = `${label} (${labelCount})`;
@@ -354,6 +388,58 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         </label>
                     );
                 })}
+            </div> */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {/* Expandable labels */}
+            {Array.from(new Set(labels)).map((label) => {
+                const labelCount = labels.filter((l) => l === label).length;
+                const labelText = `${label} (${labelCount})`;
+                const isExpanded = expandedLabels.includes(label);
+                const isClassLabelChecked = checkedClassLabels.includes(label);
+
+                return (
+                <div key={label}>
+                    <label
+                    style={{ marginRight: '10px', cursor: 'pointer' }}
+                    onClick={() => handleExpandLabel(label)}
+                    >
+                    <strong>{isExpanded ? '-' : '+'}</strong> {labelText}
+                    </label>
+                    {isExpanded && (
+                    <div style={{ marginLeft: '20px' }}>
+                    {/* Class label */}
+                        <label style={{ marginRight: '10px' }}>
+                        <input
+                            type="checkbox"
+                            checked={isClassLabelChecked}
+                            onChange={() => handleClassLabelToggle(label)}
+                        />
+                        Select All
+                        </label>
+                        {/* Individual labels */}
+                        {shapesInternal.map((l, index) => {
+                        if (l.label === label) {
+                            return (
+                            <label
+                                key={`${label}-${l.shape_id}`}
+                                style={{ marginRight: '10px' }}
+                            >
+                                <input
+                                type="checkbox"
+                                checked={checkedIndividualLabels.includes(`${l.label}-${l.shape_id}`)}
+                                onChange={() => handleIndividualLabelToggle(`${l.label}-${l.shape_id}`)}
+                                />
+                                {l.label}-{l.shape_id}
+                            </label>
+                            );
+                        }
+                        return null;
+                        })}
+                    </div>
+                    )}
+                </div>
+                );
+            })}
             </div>
           </div>
         </div>
