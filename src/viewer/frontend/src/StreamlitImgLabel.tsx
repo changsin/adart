@@ -25,6 +25,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [opacity, setOpacity] = useState<number>(1.0);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
+    const [selectedShapeAttributes, setSelectedShapeAttributes] = useState<ShapeProps | null>(null);
 
     const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
@@ -186,7 +187,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const onSelectShapeHandler = ((shape: ShapeProps, fabricShape: fabric.Object) => {
         console.log(`onSelectedShape ${JSON.stringify(shape)}`)
         sendSelectedShape(shape);
-
+    
+        setSelectedShapeAttributes(shape);
+    
         if (canvas) {
             canvas.remove(fabricShape);
             canvas.renderAll();
@@ -351,7 +354,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
           <div className={mode === 'dark' ? styles.dark : ''}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <button onClick={addBoxHandler}>Mark Untagged</button>
-              <button onClick={removeBoxHandler}>Remove select</button>
               <button onClick={resetHandler}>Reset</button>
               <button onClick={clearHandler}>Clear all</button>
             </div>
@@ -365,23 +367,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
               />
               Label Opacity
             </div>
-            {/* <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {Array.from(new Set(labels)).map((label) => {
-                    const labelCount = labels.filter((l) => l === label).length;
-                    const labelText = `${label} (${labelCount})`;
-
-                    return (
-                        <label key={label} style={{ marginRight: '10px' }}>
-                        <input
-                            type="checkbox"
-                            checked={checkedLabels.includes(label)}
-                            onChange={() => handleLabelToggle(label)}
-                        />
-                        {labelText}
-                        </label>
-                    );
-                })}
-            </div> */}
             <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Expandable labels */}
             {Array.from(new Set(labels)).map((label) => {
@@ -434,7 +419,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 );
             })}
             </div>
-          </div>
+            {selectedShapeAttributes && (
+                <div>
+                    <pre>{JSON.stringify(selectedShapeAttributes.attributes, null, 2)}</pre>
+                </div>
+            )}
+            </div>
         </div>
     );
 }
