@@ -26,10 +26,12 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [opacity, setOpacity] = useState<number>(1.0);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
 
+    const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
     const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
-    const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>([]);
-    const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
+    const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>(shapesInternal
+        .filter((shape) => shape.verification_result !== null)
+        .map((shape) => `${shape.label}-${shape.shape_id}`));
 
     const updateShapes = (newShapes: ShapeProps[]) => {
         setLabels(newShapes.map((shape) => shape.label));
@@ -56,15 +58,6 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         });
     };
 
-    // const handleClassLabelToggle = (label: string) => {
-    //     setCheckedClassLabels((prevCheckedClassLabels) => {
-    //       if (prevCheckedClassLabels.includes(label)) {
-    //         return prevCheckedClassLabels.filter((l) => l !== label);
-    //       } else {
-    //         return [...prevCheckedClassLabels, label];
-    //       }
-    //     });
-    // };
     const handleClassLabelToggle = (label: string) => {
         setCheckedClassLabels((prevCheckedClassLabels) => {
           if (prevCheckedClassLabels.includes(label)) {
