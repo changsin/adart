@@ -300,7 +300,7 @@ export function displayAttributes(shape: ShapeProps): any {
   } else if (shape.shapeType === 'polygon') {
     convertedJson = fromPolygonAttributes(attributes);
   } else {
-    convertedJson = attributes;
+    convertedJson = JSON.stringify(attributes);
   }
 
   return convertedJson;
