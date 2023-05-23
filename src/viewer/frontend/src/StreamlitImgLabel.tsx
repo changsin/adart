@@ -16,6 +16,8 @@ import { Box } from "./shapes/box"
 import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
+import {displayAttributes} from "./shapes/shape-attributes"
+import { getByDisplayValue } from "@testing-library/dom";
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -25,7 +27,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
     const [opacity, setOpacity] = useState<number>(1.0);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
-    const [selectedShapeAttributes, setSelectedShapeAttributes] = useState<ShapeProps | null>(null);
+    const [selectedShape, setSelectedShape] = useState<ShapeProps | null>(null);
 
     const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
@@ -188,7 +190,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         console.log(`onSelectedShape ${JSON.stringify(shape)}`)
         sendSelectedShape(shape);
     
-        setSelectedShapeAttributes(shape);
+        setSelectedShape(shape);
     
         if (canvas) {
             canvas.remove(fabricShape);
@@ -308,7 +310,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     // Adjust the theme according to the system
     const onSelectMode = (mode: string) => {
-        setMode(mode)
+        setMode(mode);
         if (mode === "dark") document.body.classList.add("dark-mode")
         else document.body.classList.remove("dark-mode")
     }
@@ -419,9 +421,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 );
             })}
             </div>
-            {selectedShapeAttributes && (
+            {selectedShape && (
                 <div>
-                    <pre>{JSON.stringify(selectedShapeAttributes.attributes, null, 2)}</pre>
+                    <pre>{displayAttributes(selectedShape)}</pre>
                 </div>
             )}
             </div>
