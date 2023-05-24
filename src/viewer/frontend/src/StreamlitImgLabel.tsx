@@ -388,32 +388,34 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                     {isExpanded && (
                     <div style={{ marginLeft: '20px' }}>
                     {/* Class label */}
-                        <label style={{ marginRight: '10px' }}>
-                        <input
-                            type="checkbox"
-                            checked={isClassLabelChecked}
-                            onChange={() => handleClassLabelToggle(label)}
-                        />
-                        Select All
-                        </label>
-                        {/* Individual labels */}
-                        {shapesInternal.map((l, index) => {
-                        if (l.label === label) {
-                            return (
-                            <label
-                                key={`${label}-${l.shape_id}`}
-                                style={{ marginRight: '10px' }}
-                            >
+                        {labelCount > 1 && (
+                            <label style={{ marginRight: '10px' }}>
                                 <input
                                 type="checkbox"
-                                checked={checkedIndividualLabels.includes(`${l.label}-${l.shape_id}`)}
-                                onChange={() => handleIndividualLabelToggle(`${l.label}-${l.shape_id}`)}
+                                checked={isClassLabelChecked}
+                                onChange={() => handleClassLabelToggle(label)}
                                 />
-                                {l.label}-{l.shape_id}
+                                Select All
                             </label>
-                            );
-                        }
-                        return null;
+                        )}
+                        {/* Individual labels */}
+                        {shapesInternal.map((l, index) => {
+                            if (l.label === label) {
+                                return (
+                                <label
+                                    key={`${label}-${l.shape_id}`}
+                                    style={{ marginRight: '10px' }}
+                                >
+                                    <input
+                                    type="checkbox"
+                                    checked={checkedIndividualLabels.includes(`${l.label}-${l.shape_id}`)}
+                                    onChange={() => handleIndividualLabelToggle(`${l.label}-${l.shape_id}`)}
+                                    />
+                                    {l.label}-{l.shape_id}
+                                </label>
+                                );
+                            }
+                            return null;
                         })}
                     </div>
                     )}
