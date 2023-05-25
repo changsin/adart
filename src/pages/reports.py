@@ -5,6 +5,8 @@ import pandas as pd
 import shapely
 import streamlit as st
 
+import plotly.express as px
+
 from src.common.charts import (
     display_chart,
     plot_aspect_ratios_brightness,
@@ -30,16 +32,20 @@ Rectangle = namedtuple('Rectangle', 'xmin ymin xmax ymax')
 def show_file_metrics():
     selected_project = select_project()
     if selected_project:
-        logger.info(selected_project)
-        data_files = get_data_files(selected_project.dir_name)
-        if data_files:
-            chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
-            col1, col2 = st.columns(2)
-            if chart_files_ctime:
-                display_chart(selected_project.id, "files_ctime", chart_files_ctime, column=col1)
 
-            if chart_file_sizes:
-                display_chart(selected_project.id, "file_sizes", chart_file_sizes, column=col2)
+        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+        #chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
+                                                                              #data_files)
+        #logger.info(selected_project)
+        #data_files = get_data_files(selected_project.dir_name)
+        #if data_files:
+        chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
+        col1, col2 = st.columns(2)
+        if chart_files_ctime:
+            display_chart(selected_project.id, "files_ctime", chart_files_ctime, column=col1)
+
+        if chart_file_sizes:
+            display_chart(selected_project.id, "file_sizes", chart_file_sizes, column=col2)
 
         # label_files = get_label_files(selected_project)
         # if label_files:
@@ -216,31 +222,46 @@ def show_label_metrics():
         if chart_overlap_areas:
             display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
 
+        # if dimensions:
+        #     df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
+        #                                  columns=['filename', 'width', 'height', 'class'])
+        #     chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
+        #         x='width',
+        #         y='height',
+        #         color='class',
+        #         tooltip=['class', 'width', 'height', 'filename']
+        #         ).properties(
+        #             title="Label Dimensions"
+        #         )
+        #
+        #     # make the chart interactive
+        #     chart_dimensions = chart_dimensions.interactive()
+        #     chart_dimensions = chart_dimensions.properties(
+        #         width=600,
+        #         height=400
+        #     ).add_selection(
+        #         alt.selection_interval(bind='scales', encodings=['x', 'y'])
+        #     ).add_selection(
+        #         alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
+        #     )
+        #
+        #     if chart_dimensions:
+        #         display_chart(selected_project.id, "dimensions", chart_dimensions)
+
+        #Using Plotly
+
         if dimensions:
             df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
                                          columns=['filename', 'width', 'height', 'class'])
-            chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
-                x='width',
-                y='height',
-                color='class',
-                tooltip=['class', 'width', 'height', 'filename']
-                ).properties(
-                    title="Label Dimensions"
-                )
 
-            # make the chart interactive
-            chart_dimensions = chart_dimensions.interactive()
-            chart_dimensions = chart_dimensions.properties(
-                width=600,
-                height=400
-            ).add_selection(
-                alt.selection_interval(bind='scales', encodings=['x', 'y'])
-            ).add_selection(
-                alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-            )
+            chart_dimensions = px.scatter(df_dimensions, x='width', y='height', color='class',
+                                        hover_data=['class', 'width', 'height', 'filename'],
+                                        title="Label Dimensions")
+
+            chart_dimensions.update_layout(width=600, height=400)
 
             if chart_dimensions:
-                display_chart(selected_project.id, "dimensions", chart_dimensions)
+                 display_chart(selected_project.id, "dimensions", chart_dimensions)
 
         show_download_charts_button(selected_project.id)
 
