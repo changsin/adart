@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+from PIL import Image 
 
 from src.common.constants import ADQ_WORKING_FOLDER
 from src.pages import (
@@ -39,6 +40,15 @@ def main():
 
 if __name__ == '__main__':
     st.set_page_config(page_title="Adart", layout="wide")
+    def add_logo(logo_path, width, height):
+    #"""Read and return a resized logo"""
+        logo = Image.open(logo_path)
+        modified_logo = logo.resize((width, height))
+        return modified_logo
+
+    resources_dir = "resources"
+    my_logo = add_logo(logo_path=os.path.join(resources_dir, 'ADaRT_blue.png'), width=350, height=150)
+    st.sidebar.image(my_logo)
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
 
@@ -47,3 +57,5 @@ if __name__ == '__main__':
     else:
         main()
         logout()
+
+
