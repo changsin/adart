@@ -84,23 +84,23 @@ def plot_image_clusters(project_id: str, title: str, filenames: list, images: li
                   'rgb(148, 103, 189)', 'rgb(140, 86, 75)', 'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
                   'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
     # Create scatter plot using Plotly
-    fig = px.scatter(df, x='PC1', y='PC2', color='Cluster',
+    chart = px.scatter(df, x='PC1', y='PC2', color='Cluster',
                  title=title, hover_data=['Filename', 'Cluster'],
                  color_discrete_sequence=color_sequence)
 
     # Set plot title
-    fig.update_layout(title=title)
+    chart.update_layout(title=title)
 
     # Configure the layout
-    fig.update_layout(width=600, height=400, hovermode='closest')
+    chart.update_layout(width=600, height=400, hovermode='closest')
 
     # Add selection and interaction
-    fig.update_xaxes(scaleanchor="y", scaleratio=1)
-    fig.update_yaxes(scaleratio=1)
-    fig.update_traces(selected_marker=dict(color='white', size=60))
+    chart.update_xaxes(scaleanchor="y", scaleratio=1)
+    chart.update_yaxes(scaleratio=1)
+    chart.update_traces(selected_marker=dict(color='white', size=60))
 
     # Display the plot
-    st.plotly_chart(fig)
+    st.plotly_chart(chart)
 
 
     #if chart_image_clusters:

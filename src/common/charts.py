@@ -86,9 +86,9 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     # )
 
     # Create a histogram of the aspect ratios using Plotly
-    fig_aspect_ratios = go.Figure(data=[go.Bar(x=df_aspect_ratios['aspect_ratio'], y=df_aspect_ratios['count'])])
+    chart_aspect_ratios = go.Figure(data=[go.Bar(x=df_aspect_ratios['aspect_ratio'], y=df_aspect_ratios['count'])])
 
-    fig_aspect_ratios.update_layout(
+    chart_aspect_ratios.update_layout(
         title='Aspect Ratios of Images',
         xaxis_title='Aspect Ratio',
         yaxis_title='Count',
@@ -98,7 +98,7 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     )
 
     # Make the chart interactive
-    fig_aspect_ratios.update_xaxes(rangeselector=dict(buttons=list([
+    chart_aspect_ratios.update_xaxes(rangeselector=dict(buttons=list([
         dict(count=1, label="1m", step="month", stepmode="backward"),
         dict(count=6, label="6m", step="month", stepmode="backward"),
         dict(count=1, label="YTD", step="year", stepmode="todate"),
@@ -107,7 +107,7 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     ])), rangeslider=dict(visible=True))
 
     # Display the plotly chart
-    st.plotly_chart(fig_aspect_ratios)
+    #st.plotly_chart(chart_aspect_ratios)
 
     brightness_values_list = [(k, v) for k, v in brightness_values.items()]
     # Create a Pandas DataFrame from the brightness
@@ -145,9 +145,9 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     ])), rangeslider=dict(visible=True))
 
     # Display the plot
-    st.plotly_chart(chart_brightness)
+    #st.plotly_chart(chart_brightness)
 
-    return fig_aspect_ratios, chart_brightness
+    return chart_aspect_ratios, chart_brightness
 
 
 @st.cache_data
@@ -176,15 +176,17 @@ def plot_file_sizes(df_file_info: pd.DataFrame):
     # return chart
 
     #Redoing the chart using plotly
-    fig = px.histogram(df_file_info, x='size', nbins=50,
+    chart = px.histogram(df_file_info, x='size', nbins=50,
                        title='File Size Distribution',
                        labels={'size': 'File Size (bytes)', 'count': 'Count'},
                        hover_data=['size'])
 
-    fig.update_layout(width=600, height=400, hovermode='closest')
+    chart.update_layout(width=600, height=400, hovermode='closest')
 
     # Display the plot
-    st.plotly_chart(fig)
+    #st.plotly_chart(chart)
+
+    return chart
 
 
 @st.cache_data
@@ -246,7 +248,7 @@ def plot_file_info(title: str, files_dict: dict):
     chart_ctime.update_layout(width=600, height=400, hovermode='closest')
 
     # Display the plot
-    st.plotly_chart(chart_ctime)
+    #st.plotly_chart(chart_ctime)
 
     chart_sizes = plot_file_sizes(df_ctime)
 
@@ -333,7 +335,9 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
         chart.data[0].update({field: True})
 
     # Display the plot
-    st.plotly_chart(chart)
+    #st.plotly_chart(chart)
+
+    return chart
 
 
 # def display_chart(project_id, name, chart, column=None):
