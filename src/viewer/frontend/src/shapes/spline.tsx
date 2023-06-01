@@ -32,7 +32,6 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
       pathStrings.push(`C${prevPoint.x},${prevPoint.y} ${currPoint.x},${currPoint.y} ${currPoint.x},${currPoint.y}`);
       innerPathStrings.push(`C${innerPrevControlPoint.x},${innerPrevControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y}`);
       outerPathStrings.push(`C${outerPrevControlPoint.x},${outerPrevControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y}`);
-
     }
   }
 
@@ -65,15 +64,7 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     opacity,
   });
 
-  const areaPathString = `${innerPathString} ${outerPathString.split(" ").reverse().join(" ")} Z`; // Create a closed path between inner and outer lines
-
-  const areaPath = new fabric.Path(areaPathString, {
-    stroke: '',
-    fill: 'green',
-    opacity,
-  });
-
-  const group = new fabric.Group([path, innerPath, outerPath, areaPath], {
+  const group = new fabric.Group([path, innerPath, outerPath], {
     selectable: true,
     strokeWidth: default_line_width,
   });

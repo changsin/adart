@@ -219,9 +219,9 @@ class ImageManager:
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
             for point in shape['points']:
                 scaled_point = dict()
-                scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
-                scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
-                scaled_point['r'] = int(point['r'] * self._resized_ratio_w)
+                scaled_point['x'] = point['x'] * self._resized_ratio_w
+                scaled_point['y'] = point['y'] * self._resized_ratio_h
+                scaled_point['r'] = point['r'] * self._resized_ratio_w
                 scaled_points.append(scaled_point)
         elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
             scaled_points = []
@@ -253,16 +253,16 @@ class ImageManager:
         elif shape['shapeType'] == 'spline' or shape['shapeType'] == 'boundary':
             for point in shape['points']:
                 resized_point = dict()
-                resized_point['x'] = int(point['x'] / self._resized_ratio_w)
-                resized_point['y'] = int(point['y'] / self._resized_ratio_h)
-                resized_point['r'] = int(point['r'] / self._resized_ratio_w)
+                resized_point['x'] = point['x'] / self._resized_ratio_w
+                resized_point['y'] = point['y'] / self._resized_ratio_h
+                resized_point['r'] = point['r'] / self._resized_ratio_w
                 resized_points.append(resized_point)
         elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
             resized_points = []
             for point in shape['points']:
                 resized_point = dict()
-                resized_point['x'] = int(point['x'] / self._resized_ratio_w)
-                resized_point['y'] = int(point['y'] / self._resized_ratio_h)
+                resized_point['x'] = point['x'] / self._resized_ratio_w
+                resized_point['y'] = point['y'] / self._resized_ratio_h
                 resized_points.append(resized_point)
 
         resized_shape['points'] = resized_points
