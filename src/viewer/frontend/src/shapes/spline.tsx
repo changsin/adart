@@ -1,11 +1,11 @@
 import React from "react";
 import { fabric } from "fabric"
-import { SplinePoint, ShapeRenderProps } from "../interfaces";
+import { SplinePoint, ShapeRenderProps, Occlusion } from "../interfaces";
 
 const default_line_width = 0.5;
 
 export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.5, canvas, onSelectHandler }) => {
-  const { shapeType, points, label } = shape;
+  const { shapeType, points, attributes } = shape;
 
   const pathStrings: string[] = [];
   const innerPathStrings: string[] = [];
@@ -77,11 +77,11 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
   })
   .join(" ");
 
-  const areaPathString = `${innerPathString} L${points[points.length - 1].x},${points[points.length - 1].y} ${reversedOuterPathString} Z`;  console.log(areaPathString)
+  const areaPathString = `${innerPathString} L${points[points.length - 1].x},${points[points.length - 1].y} ${reversedOuterPathString} Z`;
 
   const areaPath = new fabric.Path(areaPathString, {
     stroke: '',
-    fill: 'green',
+    fill: color,
     opacity,
   });
 
@@ -119,8 +119,67 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     canvas.add(point);
   });
 
+  if (attributes && attributes?.occlusions) {
+    const occlusions: Occlusion[] = (attributes.occlusions || []) as Occlusion[];
+    const occlusionPaths: fabric.Path[] = []; // Array to hold occlusion paths
+
+    console.log("###Occlusions");
+    console.log(JSON.stringify(occlusions));
+
+    // Create occlusion paths
+    occlusions.forEach((occlusion) => {
+      const occlusionPathStrings: string[] = [];
+      const occlusionPoints: SplinePoint[] = [];
+
+      const topX = interpolateXForY(points as SplinePoint[], occlusion.top);
+      const bottomX = interpolateXForY(points as SplinePoint[], occlusion.bottom);
+
+      occlusionPoints.push({ x: topX, y: occlusion.top, r: default_line_width });
+      occlusionPoints.push(
+        ...(points as SplinePoint[]).filter((point) => point.y > occlusion.top && point.y < occlusion.bottom)
+      );
+      occlusionPoints.push({ x: bottomX, y: occlusion.bottom, r: default_line_width });
+
+      for (let i = 0; i < occlusionPoints.length; i++) {
+        const currPoint = occlusionPoints[i];
+
+        if (i === 0) {
+          occlusionPathStrings.push(`M${currPoint.x},${currPoint.y}`);
+        } else {
+          const prevPoint = occlusionPoints[i - 1];
+          occlusionPathStrings.push(`L${currPoint.x},${currPoint.y}`);
+        }
+      }
+
+      const occlusionPathString = occlusionPathStrings.join(" ");
+      const occlusionPath = new fabric.Path(occlusionPathString, {
+        stroke: "black",
+        fill: "",
+        // TODO: set the correct r value later
+        strokeWidth: default_line_width * 8,
+        opacity: opacity,
+      });
+
+      occlusionPaths.push(occlusionPath); // Add occlusion path to the array
+    });
+
+    group.addWithUpdate(...occlusionPaths); // Add all occlusion paths to the group
+  }
+
   return null;
 };
+
+function interpolateXForY(points: SplinePoint[], y: number): number {
+  const p1 = points.find((point) => point.y <= y);
+  const p2 = points.find((point) => point.y >= y);
+
+  if (p1 && p2) {
+    const t = (y - p1.y) / (p2.y - p1.y);
+    return p1.x + t * (p2.x - p1.x);
+  }
+
+  return 0;
+}
 
 function drawControlPoints(points: SplinePoint[], color: string = 'black'): fabric.Object[] {
     const controlPoints: fabric.Object[] = [];

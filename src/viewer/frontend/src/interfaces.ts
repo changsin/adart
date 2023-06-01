@@ -21,9 +21,13 @@ export interface VerificationResult {
   comment: string | null;
 }
 
+export interface Occlusion {
+  top: number;
+  bottom: number;
+}
+
 export interface Attributes {
-  key: string;
-  value: string;
+  [key: string]: string | number | Occlusion[] | null;
 }
 
 // interface to use between StreamlitImgLabel and shape FCs
@@ -32,7 +36,7 @@ export interface ShapeProps {
   label: string;
   points: BoxPoint[] | SplinePoint[] | Point[]
   shapeType: "box" | "spline" | "boundary" | "polygon" | "VP";
-  attributes: Attributes[] | null;
+  attributes: Attributes | null;
   verification_result: VerificationResult | null;
 }
 
