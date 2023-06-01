@@ -64,7 +64,28 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
     opacity,
   });
 
-  const group = new fabric.Group([path, innerPath, outerPath], {
+  // Fill the area between inner and outerPath with areaPath
+  const reversedOuterPathString = outerPathString
+  .split(" ")
+  .reverse()
+  .map((command) => {
+    if (command.startsWith("M")) {
+      // Change M command to L command because M will start a new path
+      return command.replace("M", "L");
+    }
+    return command;
+  })
+  .join(" ");
+
+  const areaPathString = `${innerPathString} L${points[points.length - 1].x},${points[points.length - 1].y} ${reversedOuterPathString} Z`;  console.log(areaPathString)
+
+  const areaPath = new fabric.Path(areaPathString, {
+    stroke: '',
+    fill: 'green',
+    opacity,
+  });
+
+  const group = new fabric.Group([path, innerPath, outerPath, areaPath], {
     selectable: true,
     strokeWidth: default_line_width,
   });

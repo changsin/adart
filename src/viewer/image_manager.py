@@ -257,6 +257,20 @@ class ImageManager:
                 resized_point['y'] = point['y'] / self._resized_ratio_h
                 resized_point['r'] = point['r'] / self._resized_ratio_w
                 resized_points.append(resized_point)
+
+                if shape.get('attributes') and shape.get('attributes').get('occlusions'):
+                    del resized_shape['attributes']['occlusions']
+                    occlusions = shape['attributes']['occlusions']
+
+                    resized_occlusions = []
+                    for occlusion in occlusions:
+                        resized_occ = dict()
+                        resized_occ['top'] = occlusion['top'] / self._resized_ratio_h
+                        resized_occ['bottom'] = occlusion['bottom'] / self._resized_ratio_h
+                        resized_occlusions.append(resized_occ)
+
+                    resized_shape['attributes']['occlusions'] = resized_occlusions
+
         elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
             resized_points = []
             for point in shape['points']:
