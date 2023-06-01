@@ -36,7 +36,7 @@ def load_thumbnail(file_path):
 
 def show_images(project_folder):
     thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
-    logger.info(f"{project_folder} {thumbnail_filenames}")
+    # logger.info(f"{project_folder} {thumbnail_filenames}")
     # Define the number of columns
     num_columns = 5
 

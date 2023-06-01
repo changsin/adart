@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import {
     ComponentProps,
@@ -17,7 +17,6 @@ import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
 import {displayAttributes} from "./shapes/shape-attributes"
-import { getByDisplayValue } from "@testing-library/dom";
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")

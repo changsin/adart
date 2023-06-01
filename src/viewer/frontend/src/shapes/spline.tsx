@@ -2,143 +2,110 @@ import React from "react";
 import { fabric } from "fabric"
 import { SplinePoint, ShapeRenderProps } from "../interfaces";
 
-export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.3, canvas, onSelectHandler }) => {
+const default_line_width = 0.5;
+
+export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.5, canvas, onSelectHandler }) => {
   const { shapeType, points, label } = shape;
 
-  let pathString = '';
-  const firstPoint = new fabric.Point(points[0].x, points[0].y);
+  const pathStrings: string[] = [];
+  const innerPathStrings: string[] = [];
+  const outerPathStrings: string[] = [];
 
-  pathString += `M${firstPoint.x},${firstPoint.y}`;
-
-  for (let i = 1; i < points.length; i++) {
-    const prevPoint = points[i - 1];
+  for (let i = 0; i < points.length; i++) {
     const currPoint = points[i];
-    const strokeWidth = (prevPoint as SplinePoint).r;
+    const currWidth = (currPoint as SplinePoint).r;
 
-    pathString += `L${currPoint.x},${currPoint.y}`;
+    const innerControlPoint = new fabric.Point(currPoint.x - currWidth, currPoint.y);
+    const outerControlPoint = new fabric.Point(currPoint.x + currWidth, currPoint.y);
+
+    if (i === 0) {
+      pathStrings.push(`M${currPoint.x},${currPoint.y}`);
+      innerPathStrings.push(`M${innerControlPoint.x},${innerControlPoint.y}`);
+      outerPathStrings.push(`M${outerControlPoint.x},${outerControlPoint.y}`);
+    } else {
+      const prevPoint = points[i - 1];
+      const prevWidth = (prevPoint as SplinePoint).r;
+
+      const innerPrevControlPoint = new fabric.Point(prevPoint.x - prevWidth, prevPoint.y);
+      const outerPrevControlPoint = new fabric.Point(prevPoint.x + prevWidth, prevPoint.y);
+
+      pathStrings.push(`C${prevPoint.x},${prevPoint.y} ${currPoint.x},${currPoint.y} ${currPoint.x},${currPoint.y}`);
+      innerPathStrings.push(`C${innerPrevControlPoint.x},${innerPrevControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y}`);
+      outerPathStrings.push(`C${outerPrevControlPoint.x},${outerPrevControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y}`);
+
+    }
   }
-// export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.3, canvas }) => {
-//   const { shapeType, points, label } = shape;
 
-//   let pathString = '';
-//   const firstPoint = new fabric.Point(points[0].x, points[0].y);
-//   let strokeWidth = (points[0] as SplinePoint).r;
+  const pathString = pathStrings.join(" ");
+  const innerPathString = innerPathStrings.join(" ");
+  const outerPathString = outerPathStrings.join(" ");
 
-//   pathString += `M${firstPoint.x},${firstPoint.y}`;
-
-//   for (let i = 1; i < points.length - 2; i++) {
-//     const prevPoint = points[i - 1];
-//     const currPoint = points[i];
-//     const nextPoint = points[i + 1];
-//     const endStrokeWidth = (nextPoint as SplinePoint).r;
-
-//     const cp1 = new fabric.Point(currPoint.x - (nextPoint.x - prevPoint.x) / 6, currPoint.y - (nextPoint.y - prevPoint.y) / 6);
-//     const cp2 = new fabric.Point(nextPoint.x + (currPoint.x - nextPoint.x) / 6, nextPoint.y + (currPoint.y - nextPoint.y) / 6);
-
-//     pathString += `C${cp1.x},${cp1.y},${cp2.x},${cp2.y},${nextPoint.x},${nextPoint.y}`;
-//     strokeWidth = endStrokeWidth;
-//   }
-
-//   const lastPoint = new fabric.Point(points[points.length - 1].x, points[points.length - 1].y);
-//   pathString += `L${lastPoint.x},${lastPoint.y}`;
-
-//   const spline = new fabric.Path(pathString, {
-//     stroke: color,
-//     strokeWidth: strokeWidth,
-//     fill: '',
-//     opacity: opacity,
-//     selectable: false
-//   });
-
-//   canvas.add(spline);
-// export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opacity = 0.2, canvas }) => {
-//   const { shapeType, points, label } = shape;
-
-//   let pathString = '';
-//   const firstPoint = new fabric.Point(points[0].x, points[0].y);
-//   const strokeWidth = (points[0] as SplinePoint).r;
-
-//   pathString += `M${firstPoint.x},${firstPoint.y}`;
-
-//   for (let i = 1; i < points.length - 2; i++) {
-//     const prevPoint = points[i - 1];
-//     const currPoint = points[i];
-//     const nextPoint = points[i + 1];
-//     const endStrokeWidth = (nextPoint as SplinePoint).r;
-
-//     const cp1 = new fabric.Point(currPoint.x - (nextPoint.x - prevPoint.x) / 6, currPoint.y - (nextPoint.y - prevPoint.y) / 6);
-//     const cp2 = new fabric.Point(nextPoint.x + (currPoint.x - nextPoint.x) / 6, nextPoint.y + (currPoint.y - nextPoint.y) / 6);
-
-//     const distance = Math.abs(nextPoint.x - currPoint.x);
-//     const strokeWidth = Math.max(1, (endStrokeWidth * (distance / 100)));
-
-//     pathString += `C${cp1.x},${cp1.y},${cp2.x},${cp2.y},${nextPoint.x},${nextPoint.y}`;
-    
-//     const spline = new fabric.Path(pathString, {
-//       stroke: color,
-//       strokeWidth: strokeWidth,
-//       fill: '',
-//       opacity: opacity,
-//       selectable: false
-//     });
-  
-//     canvas.add(spline);
-  // }
-
-  // const lastPoint = new fabric.Point(points[points.length - 1].x, points[points.length - 1].y);
-  // pathString += `L${lastPoint.x},${lastPoint.y}`;
-
-  // const spline = new fabric.Path(pathString, {
-  //   stroke: color,
-  //   strokeWidth: strokeWidth,
-  //   fill: '',
-  //   opacity: opacity,
-  //   selectable: false
-  // });
-
-  // canvas.add(spline);
-
-  if (shapeType === "boundary" && color != "red") {
-    color = "yellow"
+  if (shapeType === "boundary" && color !== "red") {
+    color = "yellow";
   }
 
   const path = new fabric.Path(pathString, {
     stroke: color,
     fill: '',
-    strokeWidth: 1,
+    strokeWidth: default_line_width,
     opacity,
   });
 
-  canvas.add(path);
-
-  path.on("mousedown", () => {
-    canvas.discardActiveObject(); // Deselect any previously selected object
-    path.trigger("selected"); // Manually trigger the selected event
+  const innerPath = new fabric.Path(innerPathString, {
+    stroke: color,
+    fill: '',
+    strokeWidth: default_line_width,
+    opacity,
   });
 
-  path.on("mouseup", (event) => {
+  const outerPath = new fabric.Path(outerPathString, {
+    stroke: color,
+    fill: '',
+    strokeWidth: default_line_width,
+    opacity,
+  });
+
+  const areaPathString = `${innerPathString} ${outerPathString.split(" ").reverse().join(" ")} Z`; // Create a closed path between inner and outer lines
+
+  const areaPath = new fabric.Path(areaPathString, {
+    stroke: '',
+    fill: 'green',
+    opacity,
+  });
+
+  const group = new fabric.Group([path, innerPath, outerPath, areaPath], {
+    selectable: true,
+    strokeWidth: default_line_width,
+  });
+
+  canvas.add(group);
+
+  group.on("mousedown", () => {
+    canvas.discardActiveObject();
+    group.trigger("selected");
+  });
+
+  group.on("mouseup", (event) => {
     if (!event.target) {
-      path.trigger("deselected"); // Manually trigger the deselected event
+      group.trigger("deselected");
     }
   });
 
-  // // Add a click event listener to show the highlight rectangle
-  path.on("selected", () => {
-    path.strokeWidth = 2;
+  group.on("selected", () => {
+    group.strokeWidth = default_line_width * 2;
     if (onSelectHandler) {
-      onSelectHandler(shape, path);
+      onSelectHandler(shape, group);
     }
   });
 
-  // Add a click event listener to hide the highlight rectangle
-  path.on("deselected", () => {
-      path.strokeWidth = 1;
+  group.on("deselected", () => {
+    group.strokeWidth = default_line_width;
   });
 
-  const controlPoints = drawControlPoints(points as SplinePoint[], 'black')
-  controlPoints.forEach(((point) => {
-      canvas.add(point)
-  }))
+  const controlPoints = drawControlPoints(points as SplinePoint[], 'black');
+  controlPoints.forEach((point) => {
+    canvas.add(point);
+  });
 
   return null;
 };
@@ -152,7 +119,7 @@ function drawControlPoints(points: SplinePoint[], color: string = 'black'): fabr
       const x_offset = points[i].r;
       const line_x = new fabric.Line([x - x_offset, y, x + x_offset, y], {
           stroke: color,
-          strokeWidth: 1,
+          strokeWidth: default_line_width,
       });
 
       controlPoints.push(line_x)
