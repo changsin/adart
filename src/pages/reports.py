@@ -6,6 +6,18 @@ import shapely
 import streamlit as st
 
 import plotly.express as px
+import io
+from PIL import Image
+import plotly.graph_objects as go
+import os.path
+import numpy as np
+import base64
+import dash
+from dash import Dash
+import dash_core_components as dcc
+import dash_html_components as html
+
+
 
 from src.common.charts import (
     display_chart,
@@ -23,6 +35,7 @@ from .home import (
     login,
     logout,
     select_project)
+from src.pages.reviews import load_thumbnail
 
 logger = get_logger(__name__)
 
@@ -39,13 +52,14 @@ def show_file_metrics():
         #logger.info(selected_project)
         #data_files = get_data_files(selected_project.dir_name)
         #if data_files:
-        chart_files_ctime, chart_file_sizes = plot_file_info("Data files info", data_files)
+        chart_files_ctime, chart_file_sizes, table_files_ctime = plot_file_info("Data files info", data_files)
+
         col1, col2 = st.columns(2)
         if chart_files_ctime:
-            display_chart(selected_project.id, "files_ctime", chart_files_ctime, column=col1)
+            display_chart(selected_project.id, "files_ctime", chart_files_ctime, table_files_ctime, column=col1)
 
         if chart_file_sizes:
-            display_chart(selected_project.id, "file_sizes", chart_file_sizes, column=col2)
+            display_chart(selected_project.id, "file_sizes", chart_file_sizes, table_files_ctime, column=col2)
 
         # label_files = get_label_files(selected_project)
         # if label_files:
@@ -67,13 +81,13 @@ def show_image_metrics():
     selected_project = select_project()
     if selected_project:
         data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
-        chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
+        chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness  = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               data_files)
         col1, col2 = st.columns(2)
         if chart_aspect_ratios:
-            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios, column=col1)
+            display_chart(selected_project.id, "aspect_ratios", chart_aspect_ratios, table_aspect_ratios, column=col1)
         if chart_brightness:
-            display_chart(selected_project.id, "brightness", chart_brightness, column=col2)
+            display_chart(selected_project.id, "brightness", chart_brightness, table_brightness, column=col2)
 
         show_download_charts_button(selected_project.id)
     else:
@@ -208,19 +222,36 @@ def show_label_metrics():
 
         class_labels, overlap_areas, dimensions, errors = get_label_metrics(label_files)
 
-        chart_errors = plot_chart("Error Count", "error", "count", errors)
+        chart_errors, table_errors = plot_chart("Error Count", "error", "count", errors)
         if chart_errors:
-            display_chart(selected_project.id, "error_count", chart_errors)
-
-        chart_class_count = plot_chart("Class Count", "class", "count", class_labels)
+            display_chart(selected_project.id, "error_count", chart_errors, table_errors)
+            show_table = st.button("Show Table", key="show_table1")
+            if show_table:
+                st.table(table_errors)
+                collapse_table = st.button("Collapse Table", key="collapse_table1")
+                if collapse_table:
+                    st.table_errors([])  # Empty table to collapse the view
+        chart_class_count, table_class = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
-            display_chart(selected_project.id, "class_count", chart_class_count)
+            display_chart(selected_project.id, "class_count", chart_class_count, table_class)
+            show_table = st.button("Show Table", key="show_table2")
+            if show_table:
+                st.table(table_class)
+                collapse_table = st.button("Collapse Table", key="collapse_table2")
+                if collapse_table:
+                    st.table_class([])  # Empty table to collapse the view
 
-        chart_overlap_areas = plot_chart("Overlap Areas",
+        chart_overlap_areas, table_overlap_areas = plot_chart("Overlap Areas",
                                          x_label="overlap %", y_label="count",
                                          data_dict=overlap_areas)
         if chart_overlap_areas:
-            display_chart(selected_project.id, "overlap_areas", chart_overlap_areas)
+            display_chart(selected_project.id, "overlap_areas", chart_overlap_areas, table_overlap_areas)
+            show_table = st.button("Show Table", key="show_table3")
+            if show_table:
+                st.table(table_overlap_areas)
+                collapse_table = st.button("Collapse Table", key="collapse_table3")
+                if collapse_table:
+                    st.table_overlap_areas([])  # Empty table to collapse the view
 
         # if dimensions:
         #     df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
@@ -251,17 +282,184 @@ def show_label_metrics():
         #Using Plotly
 
         if dimensions:
+            # df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
+            #                              columns=['filename', 'width', 'height', 'class'])
+            #
+            # chart_dimensions = px.scatter(df_dimensions, x='width', y='height', color='class',
+            #                             hover_data=['class', 'width', 'height', 'filename'],
+            #                             title="Label Dimensions")
+            #
+            # chart_dimensions.update_layout(width=600, height=400)
+
             df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
                                          columns=['filename', 'width', 'height', 'class'])
 
-            chart_dimensions = px.scatter(df_dimensions, x='width', y='height', color='class',
-                                        hover_data=['class', 'width', 'height', 'filename'],
-                                        title="Label Dimensions")
+            table_dimensions = df_dimensions
 
+            # Generate thumbnails
+            project_folder = selected_project.dir_name
+            thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
+            logger.info(f"{project_folder} {thumbnail_filenames}")
+
+            thumbnails = []
+
+            for file in thumbnail_filenames["."]:
+                thumbnail_image = load_thumbnail(file)
+                thumbnails.append(thumbnail_image)
+
+            # Add thumbnails to the DataFrame
+            df_dimensions['thumbnail'] = thumbnail_filenames
+
+            # Create a list of image source paths
+            image_sources = [thumbnail_filenames.get(file, '') for file in df_dimensions['filename']]
+
+            # Filter out entries with missing image paths or empty values
+            valid_indices = [i for i, source in enumerate(image_sources) if source]
+
+            # Filter the data frame and image sources
+            df_dimensions_filtered = df_dimensions.iloc[valid_indices]
+            image_sources_filtered = [image_sources[i] for i in valid_indices]
+
+            #Dash Version
+            # Create a Dash app
+            app = dash.Dash(__name__)
+
+            # Define the custom hover template
+            hover_template = (
+                "<b>Class:</b> %{customdata[0]}<br>"
+                "<b>Width:</b> %{customdata[1]}<br>"
+                "<b>Height:</b> %{customdata[2]}<br>"
+                '<img src="data:image/png;base64, %{customdata[3]}" alt="Thumbnail" width="100">'
+            )
+
+            # Encode the thumbnails as base64 strings
+            encoded_thumbnails = []
+            for filename in df_dimensions['filename']:
+                thumbnail_path = thumbnail_filenames.get(filename, '')
+                if thumbnail_path:
+                    with open(thumbnail_path, 'rb') as f:
+                        encoded_thumbnail = base64.b64encode(f.read()).decode('utf-8')
+                        encoded_thumbnails.append(encoded_thumbnail)
+                else:
+                    encoded_thumbnails.append('')
+
+            # Create a copy of the customdata array with an additional column for the encoded thumbnails
+            customdata_with_thumbnails = df_dimensions[['class', 'width', 'height']].copy()
+            customdata_with_thumbnails['thumbnail'] = encoded_thumbnails
+
+            # Assign a numeric value to each unique class label
+            class_labels = customdata_with_thumbnails['class'].unique()
+            class_mapping = {label: i for i, label in enumerate(class_labels)}
+            class_numeric = customdata_with_thumbnails['class'].map(class_mapping)
+
+            # Create the scatter plot with custom hover template
+            # chart_dimensions = go.Figure(
+            #     data=go.Scatter(
+            #         x=customdata_with_thumbnails['width'],
+            #         y=customdata_with_thumbnails['height'],
+            #         mode='markers',
+            #         marker=dict(color='class'),
+            #         hovertemplate=hover_template,
+            #         customdata=customdata_with_thumbnails.values.T,
+            #     ),
+            #
+            #     layout=go.Layout(
+            #         title="Label Dimensions",
+            #         width=600,
+            #         height=400
+            #     )
+            #)
+
+            #this gets you the chart in the normal format as a standin
+            chart_dimensions = px.scatter(df_dimensions, x='width', y='height', color='class',
+                                          hover_data=['class', 'width', 'height', 'filename'],
+                                          title="Label Dimensions")
             chart_dimensions.update_layout(width=600, height=400)
 
+
+            chart_dimensions.update_traces(hoverinfo="none", hovertemplate=None)
+            logger.info(f"Chart dinemsions was made *****")
+
+            # Convert the chart to a Dash Graph component
+            graph_dimensions = dcc.Graph(figure=chart_dimensions)
+
+            # Create the app layout
+            app.layout = html.Div(children=[
+                graph_dimensions
+            ])
+            logger.info(f"App layout done *****")
+
+            #dash_app_html = app.to_html()
+            app.debug = True
+
+            # Render the Dash app as an iframe in Streamlit
+            #st.markdown(dash_app_html, unsafe_allow_html=True)
+            #st.title('Dash Plot')
+
+            #st.components.v1.html(app.index())
+            #logger.info(f"App loading done *****")
+
+            #end Dash version
+
+
+            #Plotly version
+            # Define the custom hover template
+            # hover_template = (
+            #     "<b>Class:</b> %{customdata[0]}<br>"
+            #     "<b>Width:</b> %{customdata[1]}<br>"
+            #     "<b>Height:</b> %{customdata[2]}<br>"
+            #     "<b>Height:</b> %{customdata[3]}<br>"
+            #     #'<img src="data:image/png;base64, %{customdata[3]}" alt="Thumbnail" width="100">'
+            # )
+            #
+            # # Encode the thumbnails as base64 strings
+            # encoded_thumbnails = []
+            # logger.info(f"*******thumbnail info {thumbnail_filenames}")
+            #
+            # for filename in thumbnail_filenames:
+            #     with open(filename, 'rb') as f:
+            #         encoded_thumbnail = base64.b64encode(f.read()).decode('utf-8')
+            #         encoded_thumbnails.append(encoded_thumbnail)
+            #
+            # logger.info(f"*******thumbnail info{thumbnail_path} {thumbnail_filenames}")
+            #
+            # # Assign a numeric value to each unique class label
+            # class_labels = df_dimensions['class'].unique()
+            # class_mapping = {label: i for i, label in enumerate(class_labels)}
+            # class_numeric = df_dimensions['class'].map(class_mapping)
+            #
+            # # Create the scatter plot with custom hover template
+            # chart_dimensions = go.Figure(
+            #     data=go.Scatter(
+            #         x=df_dimensions['width'],
+            #         y=df_dimensions['height'],
+            #         mode='markers',
+            #         marker=dict(color=class_numeric),
+            #         hoverinfo="none",  # Disable default hover labels
+            #         customdata=encoded_thumbnails,  # Use encoded thumbnails as custom data
+            #     ),
+            #     layout=go.Layout(
+            #         title="Label Dimensions",
+            #         width=600,
+            #         height=400
+            #     )
+            # )
+            #
+            #
+            #
+            # # Update the customdata with encoded thumbnails
+            # #for i, encoded_thumbnail in enumerate(encoded_thumbnails):
+            # #    chart_dimensions.data[0].customdata[i] += (encoded_thumbnail,)
+            #
+            # # Add the image_sources_array as a trace-level customdata
+            # #chart_dimensions.data[0].update(
+            # #    customdata=np.column_stack((chart_dimensions.data[0].customdata, image_sources_array)))
+
+            #app.run_server(debug=True)
             if chart_dimensions:
-                 display_chart(selected_project.id, "dimensions", chart_dimensions)
+                display_chart(selected_project.id, "dimensions", chart_dimensions, table_dimensions)
+
+
 
         show_download_charts_button(selected_project.id)
 

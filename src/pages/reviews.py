@@ -61,6 +61,7 @@ def review_images():
 
 def review_task():
     selected_project = select_project(is_sidebar=True)
+
     if selected_project:
         selected_task = select_task(selected_project.id)
         if selected_task:

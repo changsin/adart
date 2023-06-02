@@ -52,6 +52,8 @@ def select_project(is_sidebar=True):
             selected_project = st.sidebar.selectbox("Select project",
                                                     options=options,
                                                     index=len(options) - 1)
+            #Writing the name of the Project as a title on the main page
+            st.title(f"Project: {selected_project}")
 
         else:
             selected_project = st.selectbox("Select project",
@@ -79,6 +81,8 @@ def select_task(project_id: int, label="Select task") -> Task:
         selected_task = st.sidebar.selectbox(label,
                                              options=options,
                                              index=len(options) - 1)
+        #Writing the name of the task as a subheader on the main page
+        st.subheader(f"Task: {selected_task}")
         if selected_task:
             task_id, _ = selected_task.split('-', maxsplit=1)
             return tasks_info.get_task_by_id(int(task_id))
