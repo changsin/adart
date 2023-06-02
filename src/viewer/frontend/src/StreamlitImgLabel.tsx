@@ -24,7 +24,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [canvas, setCanvas] = useState(new fabric.Canvas(""))
     const {canvasWidth, canvasHeight, shapes, shapeColor, imageData}: PythonArgs = props.args
     const [newBBoxIndex, setNewBBoxIndex] = useState<number>(shapes.length)
-    const [opacity, setOpacity] = useState<number>(1.0);
+    const [opacity, setOpacity] = useState<number>(0.5);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
     const [selectedShape, setSelectedShape] = useState<ShapeProps | null>(null);
 
@@ -32,7 +32,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
     const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
     const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>(shapesInternal
-        .filter((shape) => shape.verification_result !== null)
+        .filter((shape) => (shape.verification_result !== null) || (shape.label === 'spline'))
         .map((shape) => `${shape.label}-${shape.shape_id}`));
 
     const updateShapes = (newShapes: ShapeProps[]) => {

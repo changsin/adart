@@ -122,7 +122,6 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
   if (attributes && attributes?.occlusions) {
     const occlusions: Occlusion[] = (attributes.occlusions || []) as Occlusion[];
 
-    console.log("###Occlusions");
     console.log(JSON.stringify(occlusions));
 
     // Create occlusion paths
@@ -134,7 +133,7 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
       const topX = interpolateXForY(points as SplinePoint[], occlusion.top);
       const bottomX = interpolateXForY(points as SplinePoint[], occlusion.bottom);
 
-      const x_offset = default_line_width * 8;
+      const x_offset = default_line_width * 10;
     
       occlusionPoints.push({ x: topX, y: occlusion.top, r: x_offset });
       occlusionPoints.push(
