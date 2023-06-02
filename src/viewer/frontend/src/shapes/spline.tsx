@@ -121,7 +121,6 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
 
   if (attributes && attributes?.occlusions) {
     const occlusions: Occlusion[] = (attributes.occlusions || []) as Occlusion[];
-    const occlusionPaths: fabric.Path[] = []; // Array to hold occlusion paths
 
     console.log("###Occlusions");
     console.log(JSON.stringify(occlusions));
@@ -160,10 +159,8 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
         opacity: opacity,
       });
 
-      occlusionPaths.push(occlusionPath); // Add occlusion path to the array
+      group.addWithUpdate(occlusionPath); // Add each occlusion path to the group
     });
-
-    group.addWithUpdate(...occlusionPaths); // Add all occlusion paths to the group
   }
 
   return null;
