@@ -127,39 +127,85 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
 
     // Create occlusion paths
     occlusions.forEach((occlusion) => {
-      const occlusionPathStrings: string[] = [];
+      const occlusionInnerPathStrings: string[] = [];
+      const occlusionOuterPathStrings: string[] = [];
       const occlusionPoints: SplinePoint[] = [];
-
+    
       const topX = interpolateXForY(points as SplinePoint[], occlusion.top);
       const bottomX = interpolateXForY(points as SplinePoint[], occlusion.bottom);
 
-      occlusionPoints.push({ x: topX, y: occlusion.top, r: default_line_width });
+      const x_offset = default_line_width * 8;
+    
+      occlusionPoints.push({ x: topX, y: occlusion.top, r: x_offset });
       occlusionPoints.push(
         ...(points as SplinePoint[]).filter((point) => point.y > occlusion.top && point.y < occlusion.bottom)
       );
-      occlusionPoints.push({ x: bottomX, y: occlusion.bottom, r: default_line_width });
-
+      occlusionPoints.push({ x: bottomX, y: occlusion.bottom, r: x_offset });
+    
       for (let i = 0; i < occlusionPoints.length; i++) {
         const currPoint = occlusionPoints[i];
-
+        const currWidth = currPoint.r;
+    
+        const innerControlPoint = new fabric.Point(currPoint.x - currWidth, currPoint.y);
+        const outerControlPoint = new fabric.Point(currPoint.x + currWidth, currPoint.y);
+    
         if (i === 0) {
-          occlusionPathStrings.push(`M${currPoint.x},${currPoint.y}`);
+          occlusionInnerPathStrings.push(`M${innerControlPoint.x},${innerControlPoint.y}`);
+          occlusionOuterPathStrings.push(`M${outerControlPoint.x},${outerControlPoint.y}`);
         } else {
           const prevPoint = occlusionPoints[i - 1];
-          occlusionPathStrings.push(`L${currPoint.x},${currPoint.y}`);
+          const prevWidth = prevPoint.r;
+    
+          const innerPrevControlPoint = new fabric.Point(prevPoint.x - prevWidth, prevPoint.y);
+          const outerPrevControlPoint = new fabric.Point(prevPoint.x + prevWidth, prevPoint.y);
+    
+          occlusionInnerPathStrings.push(`C${innerPrevControlPoint.x},${innerPrevControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y} ${innerControlPoint.x},${innerControlPoint.y}`);
+          occlusionOuterPathStrings.push(`C${outerPrevControlPoint.x},${outerPrevControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y} ${outerControlPoint.x},${outerControlPoint.y}`);
         }
       }
 
-      const occlusionPathString = occlusionPathStrings.join(" ");
-      const occlusionPath = new fabric.Path(occlusionPathString, {
+      const occlusionInnerPathString = occlusionInnerPathStrings.join(" ");
+      const occlusionOuterPathString = occlusionOuterPathStrings.join(" ");
+      // Fill the area between inner and outerPath with areaPath
+      const occlusionReversedOuterPathString = occlusionOuterPathString
+      .split(" ")
+      .reverse()
+      .map((command) => {
+        if (command.startsWith("M")) {
+          // Change M command to L command because M will start a new path
+          return command.replace("M", "L");
+        }
+        return command;
+      })
+      .join(" ");
+
+      const occlusionAreaPathString = `${occlusionInnerPathString} L${occlusionPoints[occlusionPoints.length - 1].x},${occlusionPoints[occlusionPoints.length - 1].y} ${occlusionReversedOuterPathString} Z`;
+      console.log("occlusionAreaPathString")
+      console.log(occlusionAreaPathString)
+
+      const occlusionInnerPath = new fabric.Path(occlusionInnerPathString, {
         stroke: "black",
         fill: "",
-        // TODO: set the correct r value later
-        strokeWidth: default_line_width * 8,
+        strokeWidth: default_line_width,
+        opacity: opacity,
+      });
+    
+      const occlusionOuterPath = new fabric.Path(occlusionOuterPathString, {
+        stroke: "black",
+        fill: "",
+        strokeWidth: default_line_width,
         opacity: opacity,
       });
 
-      group.addWithUpdate(occlusionPath); // Add each occlusion path to the group
+      const occlusionAreaPath = new fabric.Path(occlusionAreaPathString, {
+        stroke: '',
+        fill: "black",
+        opacity,
+      });
+
+      group.addWithUpdate(occlusionInnerPath);
+      group.addWithUpdate(occlusionOuterPath);
+      group.addWithUpdate(occlusionAreaPath);
     });
   }
 
