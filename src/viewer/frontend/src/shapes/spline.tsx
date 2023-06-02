@@ -179,27 +179,26 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
       .join(" ");
 
       const occlusionAreaPathString = `${occlusionInnerPathString} L${occlusionPoints[occlusionPoints.length - 1].x},${occlusionPoints[occlusionPoints.length - 1].y} ${occlusionReversedOuterPathString} Z`;
-      console.log("occlusionAreaPathString")
-      console.log(occlusionAreaPathString)
 
+      const occlusionOpacity = 1.0;
       const occlusionInnerPath = new fabric.Path(occlusionInnerPathString, {
-        stroke: "black",
+        stroke: "red",
         fill: "",
         strokeWidth: default_line_width,
-        opacity: opacity,
+        opacity: occlusionOpacity,
       });
     
       const occlusionOuterPath = new fabric.Path(occlusionOuterPathString, {
-        stroke: "black",
+        stroke: "red",
         fill: "",
         strokeWidth: default_line_width,
-        opacity: opacity,
+        opacity: occlusionOpacity,
       });
 
       const occlusionAreaPath = new fabric.Path(occlusionAreaPathString, {
         stroke: '',
         fill: "black",
-        opacity,
+        opacity: occlusionOpacity,
       });
 
       group.addWithUpdate(occlusionInnerPath);
