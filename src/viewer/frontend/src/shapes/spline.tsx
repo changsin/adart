@@ -130,16 +130,16 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
       const occlusionOuterPathStrings: string[] = [];
       const occlusionPoints: SplinePoint[] = [];
     
-      const topX = interpolateXForY(points as SplinePoint[], occlusion.top);
-      const bottomX = interpolateXForY(points as SplinePoint[], occlusion.bottom);
+      const topPoint = interpolateSplinePointForY(points as SplinePoint[], occlusion.top);
+      const bottomPoint = interpolateSplinePointForY(points as SplinePoint[], occlusion.bottom);
 
       const x_offset = default_line_width * 10;
     
-      occlusionPoints.push({ x: topX, y: occlusion.top, r: x_offset });
-      occlusionPoints.push(
-        ...(points as SplinePoint[]).filter((point) => point.y > occlusion.top && point.y < occlusion.bottom)
-      );
-      occlusionPoints.push({ x: bottomX, y: occlusion.bottom, r: x_offset });
+      occlusionPoints.push(topPoint);
+      // occlusionPoints.push(
+      //   ...(points as SplinePoint[]).filter((point) => point.y > occlusion.top && point.y < occlusion.bottom)
+      // );
+      occlusionPoints.push(bottomPoint);
     
       for (let i = 0; i < occlusionPoints.length; i++) {
         const currPoint = occlusionPoints[i];
@@ -210,16 +210,36 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
   return null;
 };
 
-function interpolateXForY(points: SplinePoint[], y: number): number {
-  const p1 = points.find((point) => point.y <= y);
-  const p2 = points.find((point) => point.y >= y);
+function interpolateSplinePointForY(points: SplinePoint[], y: number): SplinePoint {
+  let left = 0;
+  let right = points.length - 1;
 
-  if (p1 && p2) {
-    const t = (y - p1.y) / (p2.y - p1.y);
-    return p1.x + t * (p2.x - p1.x);
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    const midY = points[mid].y;
+
+    if (midY === y) {
+      return { ...points[mid] };
+    } else if (midY < y) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
   }
 
-  return 0;
+  // Now, the left and right indices represent the adjacent points to the desired y-coordinate
+  const prevPoint = points[right];
+  const nextPoint = points[left];
+
+  const t = (y - prevPoint.y) / (nextPoint.y - prevPoint.y);
+
+  // Interpolate x value
+  const interpolatedX = prevPoint.x + t * (nextPoint.x - prevPoint.x);
+
+  // Interpolate r value
+  const interpolatedR = prevPoint.r + t * (nextPoint.r - prevPoint.r);
+
+  return { x: interpolatedX, y, r: interpolatedR };
 }
 
 function drawControlPoints(points: SplinePoint[], color: string = 'black'): fabric.Object[] {

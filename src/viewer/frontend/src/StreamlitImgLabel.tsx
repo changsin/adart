@@ -32,7 +32,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
     const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
     const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>(shapesInternal
-        .filter((shape) => (shape.verification_result !== null) || (shape.label === 'spline'))
+        .filter((shape) => (shape.verification_result !== null) || (shape.label === 'spline') || (shape.label === 'VP'))
         .map((shape) => `${shape.label}-${shape.shape_id}`));
 
     const updateShapes = (newShapes: ShapeProps[]) => {
