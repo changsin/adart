@@ -96,3 +96,11 @@ app=# select * from "alembic_version";
 
 This tells you what the current version is. Based on the version number,
 Alembic knows how to apply the migration version scripts in the correct order.
+
+
+# 2. Backend
+To access the Swagger UI of Rest API, open the page
+
+http://[local IP address]/docs
+
+Replace [local IP address] with the actual IP address: e.g., http://192.168.45.238/docs

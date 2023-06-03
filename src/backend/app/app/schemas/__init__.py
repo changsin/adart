@@ -4,6 +4,7 @@ from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate
 from .group import Group, GroupCreate, GroupInDB, GroupUpdate
 from .project import Project, ProjectSummary, ProjectDetail, ProjectsWithCount, ProjectCreate, ProjectCreateTotal, ProjectInDB, ProjectUpdate, ProjectUpdateTotal, AnnotatorWithCount
+from .project1 import Project1, Project1Summary, Project1Detail, Project1WithCount, Project1Create, Project1CreateTotal, Project1InDB, Project1Update, Project1UpdateTotal, AnnotatorWithCount
 from .annotation_class import AnnotationClass, AnnotationClassCreate, AnnotationClassInDB, AnnotationClassUpdate
 from .annotation_error import AnnotationError, AnnotationErrorCreate, AnnotationErrorInDB, AnnotationErrorUpdate
 from .annotation_type import AnnotationType, AnnotationTypeCreate, AnnotationTypeInDB, AnnotationTypeUpdate
