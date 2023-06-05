@@ -321,6 +321,21 @@ class TaskPointers:
                 json_data = utils.from_file(task_filename)
                 return Task.from_json(json_data)
 
+    def update_task(self, task_to_update: Task):
+        if len(self.task_pointers) > 0:
+            index_to_update = None
+            for index, task_pointer in enumerate(self.task_pointers):
+                if task_pointer.id == task_to_update.id:
+                    index_to_update = index
+                    break
+
+            task_pointer_to_update = TaskPointer(id=task_to_update.id,
+                                                 name=task_to_update.name,
+                                                 project_id=task_to_update.project_id,
+                                                 dir_name=task_to_update.dir_name,
+                                                 anno_file_name=task_to_update.anno_file_name)
+            self.task_pointers[index_to_update] = task_pointer_to_update
+
     @staticmethod
     def from_json(json_dict):
         return TaskPointers(task_pointers=[TaskPointer.from_json(json_task)

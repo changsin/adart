@@ -46,7 +46,7 @@ def get_tasks_info():
     return TasksInfo.from_json(api_target().list_tasks())
 
 
-def select_project(is_sidebar=True):
+def select_project(is_sidebar=True) -> Project:
     projects_pointers = get_project_pointers()
     if len(projects_pointers.project_pointers) > 0:
         df_projects = pd.DataFrame([project_pointer.to_json()
