@@ -1,5 +1,4 @@
 import os.path
-from base64 import b64encode
 
 import cv2
 import numpy as np
@@ -64,12 +63,7 @@ def review_task():
     if selected_project:
         selected_task = select_task(selected_project.id)
         if selected_task:
-            if selected_project.extended_properties:
-                review_model_task(selected_task)
-            else:
-                # # Navigate to a new page with the task details
-                # st.experimental_set_query_params(task_id=selected_task.id)
-                app.main(selected_task)
+            app.main(selected_task)
 
 
 def compare_tasks():
@@ -85,29 +79,6 @@ def compare_tasks():
                 app.main(task1)
             with col2:
                 app.main(task2, is_second_viewer=True)
-
-
-def review_model_task(selected_task):
-    if selected_task.data_files and len(selected_task.data_files) > 0:
-        for folder, files in selected_task.data_files.items():
-            for file in files:
-                st.write("📄{}".format(file))
-                basename, extension = os.path.splitext(file)
-                if extension.lower() == ".pdf":
-                    pdf_file = open(os.path.join(folder, file), "rb").read()
-                    # Embed the PDF file in an iframe
-                    pdf_url = "data:application/pdf;base64," + b64encode(pdf_file).decode("utf-8")
-                    st.write(f'<iframe src="{pdf_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
-                elif extension.lower() in SUPPORTED_IMAGE_FILE_EXTENSIONS:
-                    st.image(os.path.join(folder, file))
-                elif extension.lower() in [".docx", ".doc"]:
-                    word_file = open(os.path.join(folder, file), "rb").read()
-                    # Embed the Word document in an iframe using HTML tags
-                    word_url = "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + b64encode(
-                        word_file).decode("utf-8")
-                    st.markdown(f'<iframe https://view.officeapps.live.com/op/embed.aspx?src="{word_url}" width="700" height="1000"></iframe>', unsafe_allow_html=True)
-    else:
-        st.write("No uploaded files to review")
 
 
 def create_label_thumbnail(image: Image, label_object: DataLabels.Object, target_size: tuple=(50, 50)):
@@ -269,7 +240,7 @@ def main():
     menu = {
         "Review Images": lambda: review_images(),
         "Review Task": lambda: review_task(),
-        "Compare Tasks": lambda: compare_tasks(),
+        # "Compare Tasks": lambda: compare_tasks(),
         "Auto Review": lambda: auto_review()
     }
 
