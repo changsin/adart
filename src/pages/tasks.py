@@ -179,7 +179,7 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
     return converted_anno_files
 
 
-def assign_tasks():
+def change_status():
     selected_project = select_project()
     if selected_project:
         with st.form("Add Data Task"):
@@ -195,13 +195,40 @@ def assign_tasks():
             else:
                 st.write("No task is created")
 
-            selected_user = select_user(is_sidebar=False)
-            if selected_user:
-                st.write(f"User {selected_user.full_name} is picked")
+            selected_state = st.radio("State", TaskState.get_all_types())
 
             assigned = st.form_submit_button("Assign tasks")
             if assigned:
+                for task_pointer in task_pointers_checked:
+                    task = task_pointers.get_task_by_id(task_pointer.id)
+                    task.state_name = selected_state
+                    task.state_id = TaskState.get_enum_value(selected_state)
 
+                    task.save()
+
+
+def assign_tasks():
+    selected_project = select_project()
+    if selected_project:
+        with st.form("Change Data Task"):
+            st.subheader(f"Assign tasks to users for project {selected_project.name}")
+            task_pointers = get_task_pointers(selected_project.id)
+            task_pointers_checked = []
+            if len(task_pointers.task_pointers) > 0:
+                for task_pointer in task_pointers.task_pointers:
+                    if st.checkbox(task_pointer.name):
+                        # Do something when the checkbox is selected
+                        task_pointers_checked.append(task_pointer)
+                        st.write(f"Task {task_pointer.name} is checked")
+            else:
+                st.write("No task is created")
+
+            selected_user = select_user(is_sidebar=False)
+            if selected_user:
+                st.write(f"User {selected_user.full_name} is selected")
+
+            assigned = st.form_submit_button("Assign tasks")
+            if assigned:
                 st.write(f"Assigned {[task.name for task in task_pointers_checked]} to {selected_user.full_name}")
                 # TODO: update the status in tasks and projects
                 for task_pointer in task_pointers_checked:
@@ -359,6 +386,7 @@ def main():
         # "Sample Tasks": lambda: create_data_tasks(),
         "Add Tasks": lambda: add_tasks(),
         "Assign Tasks": lambda: assign_tasks(),
+        "Change Status": lambda: change_status(),
         "Delete Task": lambda: delete_task(),
     }
 

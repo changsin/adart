@@ -30,6 +30,17 @@ class TaskState(Enum):
 
         return obj
 
+    @staticmethod
+    def get_enum_value(string_value):
+        for state in TaskState:
+            if state.description == string_value:
+                return state.value
+        return None
+
+    @staticmethod
+    def get_all_types():
+        return [state.description for state in TaskState]
+
 
 @attr.s(slots=True, frozen=False)
 class Task:

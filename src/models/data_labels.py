@@ -40,6 +40,15 @@ class DataLabels:
             class_labels = class_labels.union(image_class_labels)
         return class_labels
 
+    def get_verification_result_sum(self):
+        verification_result_sum = 0
+        for image in self.images:
+            for obj in image.objects:
+                verification_result = obj.verification_result
+                if verification_result:
+                    verification_result_sum += 1
+        return verification_result_sum
+
     @staticmethod
     def from_json(json_dict):
         return DataLabels(

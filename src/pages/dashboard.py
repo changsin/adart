@@ -52,8 +52,8 @@ def dashboard():
         # turn a class object to json dictionary to be processed by pandas dataframe
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
         df_projects = df_projects[constants.PROJECT_COLUMNS]
-        df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
-                                         df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
+        # df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
+        #                                  df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
 
         grouped_tasks = df_tasks.groupby("project_id").sum().reset_index()
         df_projects = pd.merge(df_projects,
@@ -61,6 +61,17 @@ def dashboard():
                                left_on="id", right_on="project_id", how="left")
         # Calculate the task count for each project
         task_counts = df_tasks.groupby("project_id").size().reset_index(name="Task count")
+        task_done_counts = df_tasks[df_tasks["state_name"] == "Done"].groupby("project_id").size().reset_index(name="Task done count")
+
+        # Merge the task counts with the df_projects DataFrame
+        df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
+        df_projects = pd.merge(df_projects, task_done_counts, on="project_id", how="left")
+        # Fill missing values in task_done_counts with 0
+        df_projects["Task done count"] = df_projects["Task done count"].fillna(0)
+
+        # Calculate the percentage done for each project
+        df_projects["% Done"] = (df_projects["Task done count"] / df_projects["Task count"]) * 100
+        df_projects["% Done"] = df_projects["% Done"].fillna(0)  # Replace NaN with 0
 
         # Merge the task counts with the df_projects DataFrame
         df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
@@ -74,11 +85,9 @@ def dashboard():
 
         logger.info(df_projects)
 
-        # Select only the relevant columns and display the results in a table
         results_df = df_projects[
-            ["id", "name", "Image count", "Label count", "Error count", "Task count", "% Done"]]
-        results_df.columns = ["Id", "Name", "Image count", "Label count", "Error count", "Task count", "% Done"]
-        # st.table(results_df)
+            ["id", "name", "Image count", "Label count", "Error count", "Task count_x", "Task done count", "% Done"]]
+        results_df.columns = ["Id", "Name", "Image count", "Label count", "Error count", "Task count", "Task done count", "% Done"]
 
         # Use the custom table formatter for the "% Done" column
         results_df["% Done"] = results_df["% Done"].apply(bar_chart_formatter)

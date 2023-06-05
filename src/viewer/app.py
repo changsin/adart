@@ -81,6 +81,9 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         data_labels.images[image_index] = im.to_data_labels_image()
         data_labels.save(selected_task.anno_file_name)
 
+        selected_task.error_count = data_labels.get_verification_result_sum()
+        selected_task.save()
+
     def refresh():
         save(st.session_state["image_index"], im)
 
@@ -105,6 +108,18 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         st.session_state["image_index"] = image_index
 
     def viewer_menu():
+        # Add custom CSS to reduce the gap between the top of the browser and the first control
+        st.markdown(
+            """
+            <style>
+            .reportview-container .main .block-container {
+                padding-top: 0;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
         # Sidebar: show status
         n_files = len(st.session_state["img_files"])
         # Main content: review images
@@ -124,7 +139,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         col1, col2, col3 = st.columns(3)
         col1.button(label="< Previous", on_click=previous_image)
-        col2.button(label="Refresh", on_click=refresh)
+        col2.button(label="Save", on_click=refresh)
         col3.button(label="Next >", on_click=next_image)
 
         return image_index
@@ -155,7 +170,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         }
         return color_dict.get(label, default_color)
 
-    # Load up the images and the labels
+    # Load up the image and the labels
     data_labels = DataLabels.load(selected_task.anno_file_name)
     if not data_labels:
         st.warning("Data labels are empty")
@@ -170,13 +185,13 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         st.session_state["img_files"] = image_filenames
 
     image_index = st.session_state["image_index"]
-    if not is_second_viewer:
-        image_index = viewer_menu()
     task_folder = os.path.dirname(selected_task.anno_file_name)
     image_filename = os.path.join(task_folder, image_filenames[image_index])
     im = ImageManager(image_filename, data_labels.images[image_index])
 
     # call the frontend
+    if not is_second_viewer:
+        image_index = viewer_menu()
     selected_shape = call_frontend(im, image_index)
     if selected_shape:
         scaled_shape = process_selected_shape(selected_shape)
@@ -185,19 +200,19 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         key = f"{selected_shape_id}_{is_second_viewer}"
         col1, col2, col3 = st.columns(3)
 
-        # thumbnail image
-        with col1:
-            preview_img = im.get_preview_thumbnail(scaled_shape)
-            if preview_img:
-                preview_img.thumbnail((200, 200))
-                col1.image(preview_img)
-                st.write(scaled_shape["label"])
-            points = selected_shape["points"]
-            st.dataframe(pd.DataFrame(points))
+        # # thumbnail image
+        # with col1:
+        #     preview_img = im.get_preview_thumbnail(scaled_shape)
+        #     if preview_img:
+        #         preview_img.thumbnail((200, 200))
+        #         col1.image(preview_img)
+        #         st.write(scaled_shape["label"])
+        #     points = selected_shape["points"]
+        #     st.dataframe(pd.DataFrame(points))
 
-        # attributes
-        with col2:
-            _display_type_attributes(selected_shape, key=key)
+        # # attributes
+        # with col2:
+        #     _display_type_attributes(selected_shape, key=key)
 
         # verification result
         with col3:
