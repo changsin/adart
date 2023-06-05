@@ -75,7 +75,7 @@ def create_user():
             new_user_dict['password'] = password
             response = api_target().create_user(new_user_dict)
             if response:
-                st.markdown(f"### User ({new_user}) ({email}) added with {response}")
+                st.markdown(f"### User ({full_name}) ({email}) created")
             else:
                 st.warning(f"### Create user ({new_user}) ({email}) failed with {response}")
 

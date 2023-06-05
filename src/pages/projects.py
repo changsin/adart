@@ -2,20 +2,22 @@ import os
 import shutil
 
 import streamlit as st
+from src.common.logger import get_logger
 
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
 )
-from src.models.projects_info import Project, ModelProject
+from src.models.projects_info import Project
 from .home import (
     api_target,
-    get_projects_info,
     get_project_pointers,
-    get_tasks_info,
+    get_task_pointers,
     is_authenticated,
     login,
     logout,
     select_project)
+
+logger = get_logger(__name__)
 
 MULTI_SELECT_SEP = ';'
 
@@ -52,7 +54,7 @@ def create_data_project():
                                        description=description
                                        ).to_json()
             response = api_target().create_project(new_project_dict)
-            st.dataframe(response)
+            logger.info(response)
             st.write("Project {} created".format(name))
 
 
@@ -78,18 +80,22 @@ def delete_project():
                 shutil.rmtree(folder_path)
 
             # Then all the tasks
-            tasks_info = get_tasks_info()
-            for selected_task in tasks_info.tasks:
-                if selected_task.project_id == selected_project.id:
-                    tasks_info.tasks.remove(selected_task)
-            tasks_info.save()
+            task_pointers = get_task_pointers()
+            for task_pointer in task_pointers.task_pointers:
+                if task_pointer.project_id == selected_project.id:
+                    task_pointers.task_pointers.remove(task_pointer)
+            task_pointers.save()
 
             # Finally delete the project itself
-            projects_info = get_projects_info()
-            projects_info.projects.remove(selected_project)
+            project_pointers = get_project_pointers()
+            for project_pointer in project_pointers.project_pointers:
+                if project_pointer.id == selected_project.id:
+                    project_pointers.project_pointers.remove(project_pointer)
+                    break
+
+            project_pointers.save()
 
             st.markdown("## Deleted project {} {}".format(selected_project.id, selected_project.name))
-            projects_info.save()
 
 
 def main():

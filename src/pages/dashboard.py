@@ -17,53 +17,7 @@ from .home import (
 logger = get_logger(__name__)
 
 
-def view_project():
-    selected_project = select_project(is_sidebar=True)
-
-    if selected_project:
-        st.markdown("# Project")
-        st.dataframe(pd.DataFrame(selected_project.to_json(), index=[0]))
-
-        extended_props = selected_project.extended_properties
-        if extended_props:
-            st.markdown("## Model validation information")
-            st.dataframe(pd.DataFrame.from_dict(extended_props,
-                                                orient='index'))
-
-        st.markdown("# Tasks")
-        tasks_info = get_tasks_info()
-        tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
-        tasks_json = [task.to_json() for task in tasks]
-        st.dataframe(pd.DataFrame(tasks_json))
-
-    st.markdown("### Annotation error types")
-    annotation_errors_dict = api_target().list_annotation_errors()
-    st.dataframe(annotation_errors_dict)
-
-    st.markdown("### State types")
-    states_dict = api_target().list_states()
-    st.dataframe(states_dict)
-
-    st.markdown("### Annotation types")
-    states_dict = api_target().list_annotation_types()
-    st.dataframe(states_dict)
-
-# def model_validation_dashboard():
-#     projects_info = get_projects_info()
-#     model_projects = []
-#     for project in projects_info.projects:
-#         if project.extended_properties:
-#             model_projects.append(project)
-#
-#     for model_project in model_projects:
-#         model_tasks = get_tasks(model_project.id)
-#
-#         for model_task in model_tasks:
-#             model_task.
-
 # Define a custom table formatter to display the horizontal bar graph in the table
-
-
 def bar_chart_formatter(val):
     # Create a horizontal bar graph showing the percentage done for the current project
     fig, ax = plt.subplots(figsize=(2, 0.5))
@@ -79,26 +33,51 @@ def bar_chart_formatter(val):
 
 
 def dashboard():
+    df_tasks = None
+
+    tasks_info = get_tasks_info()
+    if len(tasks_info.tasks) > 0:
+        df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
+        df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
+
+        # Sort the DataFrame by project_id
+        df_tasks = df_tasks.sort_values(by="project_id")
+    else:
+        st.write("No tasks to show")
+
     st.subheader("**Projects**")
-    # df_projects = pd.DataFrame(columns=constants.PROJECT_COLUMNS)
 
     projects_info = get_projects_info()
     if projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
         df_projects = df_projects[constants.PROJECT_COLUMNS]
-        # logger.info(df_projects.apply())
-        # Calculate percentage of tasks done using a vectorized operation
-        # df_projects["% Done"] = df_projects["task_done_count"] / df_projects["task_total_count"] * 100 \
-        #     if df_projects["task_total_count"].any() != 0 else 0
         df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
                                          df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
+
+        grouped_tasks = df_tasks.groupby("project_id").sum().reset_index()
+        df_projects = pd.merge(df_projects,
+                               grouped_tasks[["project_id", "data_count", "object_count", "error_count"]],
+                               left_on="id", right_on="project_id", how="left")
+        # Calculate the task count for each project
+        task_counts = df_tasks.groupby("project_id").size().reset_index(name="Task count")
+
+        # Merge the task counts with the df_projects DataFrame
+        df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
+
+        df_projects = df_projects.rename(
+            columns={"data_count": "Image count", "object_count": "Label count",
+                     "error_count": "Error count"})
+
         logger.info(f"projects: {df_projects}")
         df_projects["# of images"] = df_projects["data_total_count"]
 
+        logger.info(df_projects)
+
         # Select only the relevant columns and display the results in a table
-        results_df = df_projects[["id", "name", "# of images", "task_total_count", "% Done"]]
-        results_df.columns = ["Id", "Name", "Image count", "Task count", "% Done"]
+        results_df = df_projects[
+            ["id", "name", "Image count", "Label count", "Error count", "Task count", "% Done"]]
+        results_df.columns = ["Id", "Name", "Image count", "Label count", "Error count", "Task count", "% Done"]
         # st.table(results_df)
 
         # Use the custom table formatter for the "% Done" column
@@ -113,25 +92,22 @@ def dashboard():
         st.write(results_df_html, unsafe_allow_html=True)
         # AgGrid(df_projects)
 
-    st.subheader("**Tasks**")
-    tasks_info = get_tasks_info()
-    if len(tasks_info.tasks) > 0:
-        df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
-        df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
-
-        # Sort the DataFrame by project_id
-        df_tasks = df_tasks.sort_values(by="project_id")
-
+    if df_tasks is not None:
+        st.subheader("**Tasks**")
         logger.info(df_tasks)
         # Render the DataFrame with status color as colored square using HTML and CSS
         st.write(
-            df_tasks[["project_id", "id", "name", "annotator_fullname", "reviewer_fullname", "state_name"]]
+            df_tasks[["project_id", "id", "name", "data_count", "object_count", "error_count",
+                      "annotator_fullname", "reviewer_fullname", "state_name"]]
             .rename(columns={
                 "project_id": "Project id",
                 "id": "Task id",
                 "name": "Name",
+                "data_count": "Image count",
+                "object_count": "Label count",
+                "error_count": "Error count",
                 "annotator_fullname": "Annotated by",
-                "reviewer_fullname": "Assigned to",
+                "reviewer_fullname": "Reviewed by",
                 "state_name": "Status"
             })
             .to_html(
@@ -147,8 +123,6 @@ def dashboard():
             ),
             unsafe_allow_html=True
         )
-    else:
-        st.write("No tasks to show")
 
 
 def main():

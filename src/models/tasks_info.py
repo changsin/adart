@@ -12,7 +12,6 @@ from src.common.constants import (
     TASKS,
     JSON_EXT
 )
-from src.models.projects_info import ProjectPointers
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
@@ -116,7 +115,7 @@ class Task:
         }
 
     def save(self):
-        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(self.id))
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(self.project_id))
         if not os.path.exists(project_folder):
             os.mkdir(project_folder)
 

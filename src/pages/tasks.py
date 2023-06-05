@@ -185,23 +185,26 @@ def assign_tasks():
         with st.form("Add Data Task"):
             st.subheader(f"Assign tasks to users for project {selected_project.name}")
             task_pointers = get_task_pointers(selected_project.id)
+            task_pointers_checked = []
             if len(task_pointers.task_pointers) > 0:
                 for task_pointer in task_pointers.task_pointers:
                     if st.checkbox(task_pointer.name):
                         # Do something when the checkbox is selected
+                        task_pointers_checked.append(task_pointer)
                         st.write(f"Task {task_pointer.name} is checked")
             else:
                 st.write("No task is created")
 
             selected_user = select_user(is_sidebar=False)
             if selected_user:
-                st.write(f"User {selected_user} is picked")
+                st.write(f"User {selected_user.full_name} is picked")
 
             assigned = st.form_submit_button("Assign tasks")
             if assigned:
-                st.write(f"Assigned {assigned} to {selected_user}")
+
+                st.write(f"Assigned {[task.name for task in task_pointers_checked]} to {selected_user.full_name}")
                 # TODO: update the status in tasks and projects
-                for task_pointer in task_pointers.task_pointers:
+                for task_pointer in task_pointers_checked:
                     task = task_pointers.get_task_by_id(task_pointer.id)
                     task.reviewer_fullname = selected_user.full_name
                     task.reviewer_id = selected_user.id

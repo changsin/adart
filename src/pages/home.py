@@ -38,7 +38,7 @@ def get_projects_info():
     return ProjectsInfo.from_json(api_target().list_projects())
 
 
-def get_task_pointers(project_id) -> TaskPointers:
+def get_task_pointers(project_id: int = -1) -> TaskPointers:
     return TaskPointers.from_json(api_target().list_task_pointers(project_id))
 
 
