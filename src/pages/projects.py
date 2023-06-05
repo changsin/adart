@@ -13,6 +13,7 @@ from src.models.projects_info import Project, ModelProject
 from .home import (
     api_target,
     get_projects_info,
+    get_project_pointers,
     get_tasks_info,
     is_authenticated,
     login,
@@ -39,8 +40,8 @@ def create_data_project():
     with st.form("Create a Data Project"):
         name = st.text_input("**Name:**")
         description = st.text_area("Description")
-        projects_info = get_projects_info()
-        dir_name = projects_info.get_next_project_id()
+        projects_pointers = get_project_pointers()
+        dir_name = projects_pointers.get_next_project_id()
         save_folder = os.path.join(ADQ_WORKING_FOLDER, str(dir_name))
         if not os.path.exists(save_folder):
             os.mkdir(save_folder)

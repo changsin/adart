@@ -22,6 +22,7 @@ from src.common.constants import (
 from src.common.convert_lib import (
     from_gpr_json,
     from_yolo_txt)
+from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
 from src.converters.stvision_reader import StVisionReader
 from src.models.adq_labels import AdqLabels
@@ -32,12 +33,12 @@ from src.pages.users import select_user
 from .home import (
     api_target,
     get_tasks_info,
+    get_task_pointers,
     is_authenticated,
     login,
     logout,
     select_project,
     select_task)
-from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -270,9 +271,9 @@ def add_data_tasks(selected_project: Project):
         submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
             data_total_count = 0
-            tasks_info = get_tasks_info()
+            task_pointers = get_task_pointers(selected_project.id)
 
-            new_task_id = tasks_info.get_next_task_id()
+            new_task_id = task_pointers.get_next_task_id()
 
             if converted_anno_filenames:
                 for idx, converted_filename in enumerate(converted_anno_filenames):

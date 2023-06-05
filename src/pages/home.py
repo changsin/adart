@@ -10,11 +10,10 @@ from src.api.api_local import ApiLocal
 from src.api.api_remote import ApiRemote
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
-    PROJECTS,
     SUPPORTED_IMAGE_FILE_EXTENSIONS
 )
-from src.models.projects_info import ProjectsInfo, Project
-from src.models.tasks_info import Task, TasksInfo
+from src.models.projects_info import ProjectsInfo, Project, ProjectPointers
+from src.models.tasks_info import Task, TasksInfo, TaskPointers
 from src.common.logger import get_logger
 
 LOCALHOST = "http://localhost"
@@ -31,8 +30,16 @@ def api_target() -> ApiBase:
         return ApiRemote(url_base, token)
 
 
+def get_project_pointers() -> ProjectPointers:
+    return ProjectPointers.from_json(api_target().list_project_pointers())
+
+
 def get_projects_info():
     return ProjectsInfo.from_json(api_target().list_projects())
+
+
+def get_task_pointers(project_id) -> TaskPointers:
+    return TaskPointers.from_json(api_target().list_task_pointers(project_id))
 
 
 def get_tasks_info():
@@ -40,9 +47,10 @@ def get_tasks_info():
 
 
 def select_project(is_sidebar=True):
-    projects_info = get_projects_info()
-    if projects_info.num_count > 0:
-        df_projects = pd.DataFrame(projects_info.to_json()[PROJECTS])
+    projects_pointers = get_project_pointers()
+    if len(projects_pointers.project_pointers) > 0:
+        df_projects = pd.DataFrame([project_pointer.to_json()
+                                    for project_pointer in projects_pointers.project_pointers])
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
@@ -59,17 +67,20 @@ def select_project(is_sidebar=True):
                                             index=len(options) - 1)
         if selected_project:
             project_id, name, = selected_project.split('-', maxsplit=1)
-            return projects_info.get_project_by_id(int(project_id))
+            return projects_pointers.get_project_by_id(int(project_id))
     else:
         st.markdown("**No project is created!**")
 
 
 def select_task(project_id: int, label="Select task") -> Task:
-    tasks_info = get_tasks_info()
-    tasks = tasks_info.get_tasks_by_project_id(project_id)
-    if tasks and len(tasks) > 0:
-        df_tasks = pd.DataFrame([task.to_json() for task in tasks])
-        df_tasks = df_tasks[["id", "name", "project_id"]]
+    task_pointers = get_task_pointers(project_id)
+    if len(task_pointers.task_pointers) > 0:
+        df_tasks = pd.DataFrame(task_pointers.to_json()["task_pointers"])
+        df_filtered = df_tasks[df_tasks['project_id'] == project_id][["id", "name", "project_id"]]
+
+        # df_tasks = pd.DataFrame([task_pointers.to_json()])
+        # print(df_tasks)
+        # df_tasks = df_tasks[["id", "name", "project_id"]]
         df_filtered = df_tasks[df_tasks['project_id'] == project_id]
         options = ["{}-{}".format(task_id, name)
                    for task_id, name, project_id in
@@ -81,7 +92,7 @@ def select_task(project_id: int, label="Select task") -> Task:
                                              index=len(options) - 1)
         if selected_task:
             task_id, _ = selected_task.split('-', maxsplit=1)
-            return tasks_info.get_task_by_id(int(task_id))
+            return task_pointers.get_task_by_id(int(task_id))
     else:
         st.markdown("**No task is created!**")
 

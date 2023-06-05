@@ -8,9 +8,9 @@ from src.common.constants import (
     TASKS,
     USERS,
 )
+from src.models.projects_info import Project, ProjectPointers
+from src.models.tasks_info import Task, TaskPointers
 from src.models.users_info import User, UsersInfo
-from src.models.projects_info import ProjectsInfo, Project
-from src.models.tasks_info import TasksInfo, Task
 from .api_base import ApiBase
 
 
@@ -44,39 +44,66 @@ class ApiLocal(ApiBase):
             {"name": "administrator", "is_admin": False, "is_user": False, "is_reviewer": False, "read_only": True, "id": 4}
         ]
 
-    def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
+    def list_project_pointers(self) -> dict:
         if not os.path.exists(ADQ_WORKING_FOLDER):
             os.mkdir(ADQ_WORKING_FOLDER)
 
-        projects_info_filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
-        return utils.from_file(projects_info_filename, "{\"num_count\":0,\"projects\":[]}")
+        projects_filename = os.path.join(ADQ_WORKING_FOLDER, PROJECTS + JSON_EXT)
+        return utils.from_file(projects_filename, "{\"project_pointers\":[]}")
+
+    def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
+        project_pointers_dict = self.list_project_pointers()
+        projects = []
+        if len(project_pointers_dict["project_pointers"]) > 0:
+            project_pointers = ProjectPointers.from_json(project_pointers_dict)
+            for project_pointer in project_pointers.project_pointers:
+                project = ProjectPointers.load(project_pointer.id)
+                projects.append(project.to_json())
+
+        return {"num_count": len(projects), "projects": projects}
 
     def create_project(self, new_project_dict: dict) -> dict:
-        projects_info = ProjectsInfo.from_json(self.list_projects())
+        project_pointers = ProjectPointers.from_json(self.list_project_pointers())
         new_project = Project.from_json(new_project_dict)
-        new_project.id = projects_info.get_next_project_id()
-        projects_info.add(new_project)
-        projects_info.save()
+        new_project.id = project_pointers.get_next_project_id()
+        project_pointers.add(new_project)
+        project_pointers.save()
+        new_project.save()
         return new_project_dict
 
     def update_project(self, project_dict: dict) -> dict:
-        projects_info = ProjectsInfo.from_json(self.list_projects())
-        project_to_update = Project.from_json(project_dict)
-        projects_info.update_project(project_to_update)
-        projects_info.save()
+        project_pointers = ProjectPointers.from_json(self.list_project_pointers())
+        project_to_update = project_pointers.get_project_by_id(project_dict["id"])
+        project_to_update.save()
+        project_pointers.update_project(project_to_update)
         return project_dict
 
+    def list_task_pointers(self, project_id: int = -1) -> dict:
+        tasks_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
+        task_pointers = utils.from_file(tasks_filename, "{\"task_pointers\":[]}")
+        if len(task_pointers["task_pointers"]) > 0 and project_id != -1:
+            project_tasks = list(filter(lambda task_pointer: task_pointer["project_id"] == project_id,
+                                        task_pointers["task_pointers"]))
+            return {"task_pointers": project_tasks}
+        return task_pointers
+
     def list_tasks(self, limit=100) -> dict:
-        tasks_info_filename = os.path.join(ADQ_WORKING_FOLDER, TASKS + JSON_EXT)
-        return utils.from_file(tasks_info_filename, "{\"num_count\":0,\"tasks\":[]}")
+        task_pointers = TaskPointers.from_json(self.list_task_pointers())
+        tasks = []
+        if len(task_pointers.task_pointers) > 0:
+            for task_pointer in task_pointers.task_pointers:
+                tasks.append(task_pointers.load(task_pointer.id).to_json())
+
+        return {"num_count": len(tasks), "tasks": tasks}
 
     def create_task(self, new_task_dict: dict) -> dict:
-        tasks_info = TasksInfo.from_json(self.list_tasks())
-        task_id = tasks_info.get_next_task_id()
+        task_pointers = TaskPointers.from_json(self.list_task_pointers())
+
         new_task = Task.from_json(new_task_dict)
-        new_task.id = task_id
-        tasks_info.add(new_task)
-        tasks_info.save()
+        new_task.id = task_pointers.get_next_task_id()
+        task_pointers.add(new_task)
+        task_pointers.save()
+        new_task.save()
         return new_task.to_json()
 
     def list_annotation_errors(self, limit=100) -> list:

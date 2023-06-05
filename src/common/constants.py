@@ -2,7 +2,9 @@ from enum import Enum
 
 ADQ_WORKING_FOLDER = ".adq"
 PROJECTS = "projects"
+PROJECT = "project"
 TASKS = "tasks"
+TASK = "task"
 USERS = "users"
 JSON_EXT = ".json"
 CHARTS = "charts"

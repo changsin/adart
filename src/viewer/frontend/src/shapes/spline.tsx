@@ -133,8 +133,6 @@ export const Spline: React.FC<ShapeRenderProps> = ({ shape, color = 'green', opa
       const topPoint = interpolateSplinePointForY(points as SplinePoint[], occlusion.top);
       const bottomPoint = interpolateSplinePointForY(points as SplinePoint[], occlusion.bottom);
 
-      const x_offset = default_line_width * 10;
-    
       occlusionPoints.push(topPoint);
       // occlusionPoints.push(
       //   ...(points as SplinePoint[]).filter((point) => point.y > occlusion.top && point.y < occlusion.bottom)
@@ -226,6 +224,10 @@ function interpolateSplinePointForY(points: SplinePoint[], y: number): SplinePoi
       right = mid - 1;
     }
   }
+
+  // make sure that the indices are within range
+  left = Math.min(points.length - 1, left);
+  right = Math.max(0, right);
 
   // Now, the left and right indices represent the adjacent points to the desired y-coordinate
   const prevPoint = points[right];

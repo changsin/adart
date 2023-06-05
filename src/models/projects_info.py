@@ -6,7 +6,12 @@ from abc import ABC
 import attr
 
 import src.common.utils as utils
-from src.common.constants import ADQ_WORKING_FOLDER, PROJECTS, JSON_EXT
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    PROJECT,
+    PROJECTS,
+    JSON_EXT
+)
 
 
 @attr.s(slots=True, frozen=False)
@@ -84,6 +89,16 @@ class Project(ABC):
             "company_info": self.company_info,
             "extended_properties": self.extended_properties
         }
+
+    def save(self):
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(self.id))
+        if not os.path.exists(project_folder):
+            os.mkdir(project_folder)
+
+        filename = os.path.join(project_folder, f"{PROJECT}-{self.id}.{JSON_EXT}")
+        utils.to_file(json.dumps(self,
+                                 default=utils.default, indent=2),
+                      filename)
 
     @staticmethod
     def from_json(json_dict: dict):
@@ -199,3 +214,98 @@ class ProjectsInfo:
     def from_json(json_dict):
         return ProjectsInfo(num_count=json_dict['num_count'],
                             projects=[Project.from_json(json_project) for json_project in json_dict['projects']])
+
+
+@attr.s(slots=True, frozen=False)
+class ProjectPointer:
+    id = attr.ib(validator=attr.validators.instance_of(int))
+    name = attr.ib(validator=attr.validators.instance_of(str))
+    dir_name = attr.ib(validator=attr.validators.instance_of(str))
+
+    def __iter__(self):
+        yield from {
+            "id": self.id,
+            "name": self.name,
+            "dir_name": self.dir_name
+        }.items()
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "dir_name": self.dir_name
+        }
+
+    @staticmethod
+    def from_json(json_dict: dict):
+        return ProjectPointer(
+            id=json_dict.get("id", -1),
+            name=json_dict["name"],
+            dir_name=json_dict["dir_name"])
+
+
+@attr.s(slots=True, frozen=False)
+class ProjectPointers:
+    project_pointers = attr.ib(validator=attr.validators.instance_of(list))
+
+    def to_json(self):
+        print(self)
+        return {
+            "project_pointers": [project_pointer.to_json() for project_pointer in self.project_pointers]
+        }
+
+    def add(self, project: Project):
+        project_pointer = ProjectPointer(id=project.id,
+                                         name=project.name,
+                                         dir_name=project.dir_name)
+        self.project_pointers.append(project_pointer)
+
+    def get_next_project_id(self) -> int:
+        if len(self.project_pointers) == 0:
+            return 0
+
+        project_idx = []
+        for project in self.project_pointers:
+            project_idx.append(project.id)
+
+        return max(project_idx) + 1
+
+    def get_project_by_id(self, project_id: int) -> Project:
+        if len(self.project_pointers) > 0:
+            for project_pointer in self.project_pointers:
+                if project_pointer.id == project_id:
+                    return ProjectPointers.load(project_id)
+
+    def update_project(self, project_to_update: Project):
+        if len(self.project_pointers) > 0:
+            index_to_update = None
+            for index, project_pointer in enumerate(self.project_pointers):
+                if project_pointer.id == project_to_update.id:
+                    index_to_update = index
+                    break
+
+            project_pointer_to_update = ProjectPointer(id=project_to_update.id,
+                                                       name=project_to_update.name,
+                                                       dir_name=project_to_update.dir_name)
+            self.project_pointers[index_to_update] = project_pointer_to_update
+
+    def save(self):
+        if not os.path.exists(ADQ_WORKING_FOLDER):
+            os.mkdir(ADQ_WORKING_FOLDER)
+        filename = os.path.join(ADQ_WORKING_FOLDER, f"{PROJECTS}{JSON_EXT}")
+        utils.to_file(json.dumps(self,
+                                 default=utils.default, indent=2),
+                      filename)
+
+    @staticmethod
+    def load(project_id) -> Project:
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+        project_filename = os.path.join(project_folder, f"{PROJECT}-{project_id}.{JSON_EXT}")
+
+        json_data = utils.from_file(project_filename)
+        return Project.from_json(json_data)
+
+    @staticmethod
+    def from_json(json_dict):
+        return ProjectPointers(project_pointers=[ProjectPointer.from_json(json_project)
+                                                 for json_project in json_dict['project_pointers']])

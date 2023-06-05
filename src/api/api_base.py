@@ -26,6 +26,9 @@ class ApiBase(ABC):
     def list_groups(self) -> list:
         raise "ERROR: The parent method should not be called directly"
 
+    def list_project_pointers(self) -> dict:
+        raise "ERROR: The parent method should not be called directly"
+
     def list_projects(self, limit=100, date_start="1000-01-01", date_end="9999-12-30") -> dict:
         raise "ERROR: The parent method should not be called directly"
 
@@ -33,6 +36,9 @@ class ApiBase(ABC):
         raise "ERROR: The parent method should not be called directly"
 
     def update_project(self, project: dict) -> list:
+        raise "ERROR: The parent method should not be called directly"
+
+    def list_task_pointers(self, project_id: int = -1) -> dict:
         raise "ERROR: The parent method should not be called directly"
 
     def list_tasks(self, limit=100) -> dict:
