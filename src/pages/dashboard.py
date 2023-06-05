@@ -1,18 +1,15 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import streamlit as st
 
 from src.common import constants
 from src.common.logger import get_logger
 from .home import (
-    api_target,
     get_projects_info,
     get_tasks_info,
     is_authenticated,
     login,
-    logout,
-    select_project)
+    logout)
 
 logger = get_logger(__name__)
 
@@ -80,10 +77,7 @@ def dashboard():
             columns={"data_count": "Image count", "object_count": "Label count",
                      "error_count": "Error count"})
 
-        logger.info(f"projects: {df_projects}")
         df_projects["# of images"] = df_projects["data_total_count"]
-
-        logger.info(df_projects)
 
         results_df = df_projects[
             ["id", "name", "Image count", "Label count", "Error count", "Task count_x", "Task done count", "% Done"]]
@@ -103,7 +97,6 @@ def dashboard():
 
     if df_tasks is not None:
         st.subheader("**Tasks**")
-        logger.info(df_tasks)
         # Render the DataFrame with status color as colored square using HTML and CSS
         st.write(
             df_tasks[["project_id", "id", "name", "data_count", "object_count", "error_count",

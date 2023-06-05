@@ -81,7 +81,6 @@ def show_image_metrics():
 
 
 def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
-    logger.info(f"label_files_dict {label_files_dict}")
     label_objects_dict = DataLabels.load_from_dict(label_files_dict)
 
     class_labels = dict()
@@ -89,7 +88,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     dimensions = dict()
     errors = dict()
     for label_file, data_labels in label_objects_dict.items():
-        logger.info(f"get_label_metrics {label_file} {data_labels}")
+        # logger.info(f"get_label_metrics {label_file} {data_labels}")
         for image in data_labels.images:
             count = len(image.objects)
             for ob_id1 in range(count):
@@ -201,7 +200,7 @@ def show_label_metrics():
     selected_project = select_project()
     if selected_project:
         label_files = get_label_files(selected_project)
-        logger.info(label_files)
+        # logger.info(label_files)
         if not label_files:
             st.warning("No label files")
             return
@@ -255,8 +254,8 @@ def show_label_metrics():
                                          columns=['filename', 'width', 'height', 'class'])
 
             chart_dimensions = px.scatter(df_dimensions, x='width', y='height', color='class',
-                                        hover_data=['class', 'width', 'height', 'filename'],
-                                        title="Label Dimensions")
+                                          hover_data=['class', 'width', 'height', 'filename'],
+                                          title="Label Dimensions")
 
             chart_dimensions.update_layout(width=600, height=400)
 

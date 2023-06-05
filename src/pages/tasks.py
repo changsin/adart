@@ -206,6 +206,8 @@ def change_status():
 
                     task.save()
 
+                st.write(f"Changed {[task_ptr.name for task_ptr in task_pointers_checked]} to {selected_state}")
+
 
 def assign_tasks():
     selected_project = select_project()
