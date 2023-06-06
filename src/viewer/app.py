@@ -145,7 +145,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         col1, col2, col3, col4, col5 = st.columns([1, 6, 1, 1, 1])
         with col1:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label=":blue[< Prev]", on_click=previous_image)
+            st.button(label=":blue[:arrow_backward:]", on_click=previous_image)
 
         with col2:
             st.markdown('<div class="label-container">', unsafe_allow_html=True)
@@ -159,11 +159,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         with col3:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label=":blue[Next >]", on_click=next_image)
+            st.button(label=":blue[:arrow_forward:]", on_click=next_image)
 
         with col4:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label="Save", on_click=refresh)
+            st.button(label=":blue[**Save**]", on_click=refresh)
 
         selected_shape = call_frontend(im, image_index)
         with col5:
