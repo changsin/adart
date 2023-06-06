@@ -189,9 +189,7 @@ def change_status():
             if len(task_pointers.task_pointers) > 0:
                 for task_pointer in task_pointers.task_pointers:
                     if st.checkbox(task_pointer.name):
-                        # Do something when the checkbox is selected
                         task_pointers_checked.append(task_pointer)
-                        st.write(f"Task {task_pointer.name} is checked")
             else:
                 st.write("No task is created")
 
@@ -214,14 +212,15 @@ def assign_tasks():
     if selected_project:
         with st.form("Change Data Task"):
             st.subheader(f"Assign tasks to users for project {selected_project.name}")
-            task_pointers = get_task_pointers(selected_project.id)
+            # get all task pointers
+            task_pointers = get_task_pointers()
+            project_task_pointers = list(filter(
+                lambda x: x.project_id == selected_project.id, task_pointers.task_pointers))
             task_pointers_checked = []
-            if len(task_pointers.task_pointers) > 0:
-                for task_pointer in task_pointers.task_pointers:
-                    if st.checkbox(task_pointer.name):
-                        # Do something when the checkbox is selected
+            if len(project_task_pointers) > 0:
+                for idx, task_pointer in enumerate(project_task_pointers):
+                    if st.checkbox(task_pointer.name, key=idx):
                         task_pointers_checked.append(task_pointer)
-                        st.write(f"Task {task_pointer.name} is checked")
             else:
                 st.write("No task is created")
 
@@ -231,8 +230,6 @@ def assign_tasks():
 
             assigned = st.form_submit_button("Assign tasks")
             if assigned:
-                st.write(f"Assigned {[task.name for task in task_pointers_checked]} to {selected_user.full_name}")
-                # TODO: update the status in tasks and projects
                 for task_pointer in task_pointers_checked:
                     task = task_pointers.get_task_by_id(task_pointer.id)
                     task.reviewer_fullname = selected_user.full_name
@@ -244,6 +241,7 @@ def assign_tasks():
                     task_pointers.update_task(task)
 
                 task_pointers.save()
+                st.write(f"Assigned {[task.name for task in task_pointers_checked]} to {selected_user.full_name}")
 
 
 def add_tasks():

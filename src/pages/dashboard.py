@@ -29,102 +29,131 @@ def bar_chart_formatter(val):
     return f"<div style='display:flex;align-items:center;'><div>{val:.1f}%</div><div style='margin-left:10px;width:100px;height:10px;background-color:#d3d3d3;border-radius:5px;'><div style='width:{val}%;height:100%;background-color:#1f77b4;border-radius:5px;'></div></div></div>"
 
 
-def dashboard():
-    df_tasks = None
-
-    tasks_info = get_tasks_info()
+def preprocess_tasks_info(tasks_info):
     if len(tasks_info.tasks) > 0:
         df_tasks = pd.DataFrame([task.to_json() for task in tasks_info.tasks])
         df_tasks = df_tasks.rename(columns=lambda x: x.strip() if isinstance(x, str) else x)
 
         # Sort the DataFrame by project_id
         df_tasks = df_tasks.sort_values(by="project_id")
+        return df_tasks
     else:
         st.write("No tasks to show")
+        return None
 
-    st.subheader("**Projects**")
 
-    projects_info = get_projects_info()
+def preprocess_projects_info(projects_info):
     if projects_info.num_count > 0:
         # turn a class object to json dictionary to be processed by pandas dataframe
         df_projects = pd.DataFrame(projects_info.to_json()[constants.PROJECTS])
         df_projects = df_projects[constants.PROJECT_COLUMNS]
-        # df_projects["% Done"] = np.where(df_projects["task_total_count"] == 0, 0,
-        #                                  df_projects["task_done_count"] / df_projects["task_total_count"] * 100)
+        return df_projects
+    else:
+        st.write("No projects to show")
+        return None
 
+
+def calculate_task_counts(df_projects, df_tasks):
+    # Calculate the task count for each project
+    task_counts = df_tasks.groupby("project_id").size().reset_index(name="Task count")
+    task_done_counts = df_tasks[df_tasks["state_name"] == "Done"].groupby("project_id").size().reset_index(name="Task done count")
+
+    # Merge the task counts with the df_projects DataFrame
+    df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
+    df_projects = pd.merge(df_projects, task_done_counts, on="project_id", how="left")
+    # Fill missing values in task_done_counts with 0
+    df_projects["Task done count"] = df_projects["Task done count"].fillna(0)
+
+    return df_projects
+
+
+def calculate_percentage_done(df_projects):
+    # Calculate the percentage done for each project
+    df_projects["% Done"] = (df_projects["Task done count"] / df_projects["Task count"]) * 100
+    df_projects["% Done"] = df_projects["% Done"].fillna(0)  # Replace NaN with 0
+
+    return df_projects
+
+
+def format_results_df(df_projects):
+    df_projects = df_projects.rename(columns={"data_count": "Image count", "object_count": "Label count", "error_count": "Error count"})
+
+    logger.info(df_projects)
+
+    results_df = df_projects[
+        ["id", "name", "Image count", "Label count", "Error count", "Task count", "Task done count", "% Done"]]
+    results_df.columns = ["Id", "Name", "Image count", "Label count", "Error count", "Task count", "Task done count", "% Done"]
+
+    # Use the custom table formatter for the "% Done" column
+    results_df["% Done"] = results_df["% Done"].apply(bar_chart_formatter)
+
+    return results_df
+
+
+def render_projects_table(results_df):
+    # Assign the resulting DataFrame to a variable and render it as HTML
+    results_df_html = results_df.to_html(escape=False, index=False)
+
+    # Render the HTML table with the formatted "% Done" column
+    st.write(results_df_html, unsafe_allow_html=True)
+
+
+def render_tasks_table(df_tasks):
+    st.subheader("**Tasks**")
+    # Render the DataFrame with status color as colored square using HTML and CSS
+    st.write(
+        df_tasks[["project_id", "id", "name", "data_count", "object_count", "error_count",
+                  "annotator_fullname", "reviewer_fullname", "state_name"]]
+        .rename(columns={
+            "project_id": "Project id",
+            "id": "Task id",
+            "name": "Name",
+            "data_count": "Image count",
+            "object_count": "Label count",
+            "error_count": "Error count",
+            "annotator_fullname": "Annotated by",
+            "reviewer_fullname": "Reviewed by",
+            "state_name": "Status"
+        })
+        .to_html(
+            escape=False,
+            index=False,
+            justify="center",
+            classes="table-hover",
+            col_space="2px",
+            formatters={
+                "Status": lambda
+                    x: f'<div style="background-color:{"red" if x == "New" else "orange" if x == "Working" else "green"}; color:white; border-radius:4px; padding:4px;">{x}<div style="background-color:{"red" if x == "New" else "yellow" if x == "Working" else "green"}; height:12px; width:12px; border-radius:50%; display:inline-block; margin-left:4px;"></div></div>',
+            }
+        ),
+        unsafe_allow_html=True
+    )
+
+
+def dashboard():
+    df_tasks = None
+
+    tasks_info = get_tasks_info()
+    df_tasks = preprocess_tasks_info(tasks_info)
+
+    st.subheader("**Projects**")
+
+    projects_info = get_projects_info()
+    df_projects = preprocess_projects_info(projects_info)
+
+    if df_projects is not None:
         grouped_tasks = df_tasks.groupby("project_id").sum().reset_index()
         df_projects = pd.merge(df_projects,
                                grouped_tasks[["project_id", "data_count", "object_count", "error_count"]],
                                left_on="id", right_on="project_id", how="left")
-        # Calculate the task count for each project
-        task_counts = df_tasks.groupby("project_id").size().reset_index(name="Task count")
-        task_done_counts = df_tasks[df_tasks["state_name"] == "Done"].groupby("project_id").size().reset_index(name="Task done count")
 
-        # Merge the task counts with the df_projects DataFrame
-        df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
-        df_projects = pd.merge(df_projects, task_done_counts, on="project_id", how="left")
-        # Fill missing values in task_done_counts with 0
-        df_projects["Task done count"] = df_projects["Task done count"].fillna(0)
-
-        # Calculate the percentage done for each project
-        df_projects["% Done"] = (df_projects["Task done count"] / df_projects["Task count"]) * 100
-        df_projects["% Done"] = df_projects["% Done"].fillna(0)  # Replace NaN with 0
-
-        # Merge the task counts with the df_projects DataFrame
-        df_projects = pd.merge(df_projects, task_counts, on="project_id", how="left")
-
-        df_projects = df_projects.rename(
-            columns={"data_count": "Image count", "object_count": "Label count",
-                     "error_count": "Error count"})
-
-        df_projects["# of images"] = df_projects["data_total_count"]
-
-        results_df = df_projects[
-            ["id", "name", "Image count", "Label count", "Error count", "Task count_x", "Task done count", "% Done"]]
-        results_df.columns = ["Id", "Name", "Image count", "Label count", "Error count", "Task count", "Task done count", "% Done"]
-
-        # Use the custom table formatter for the "% Done" column
-        results_df["% Done"] = results_df["% Done"].apply(bar_chart_formatter)
-        # # Apply the bar chart formatter to the "% Done" column and return it as HTML
-        # results_df["% Done"] = results_df["% Done"].apply(lambda x: bar_chart_formatter(x, width=150, height=10))
-
-        # Assign the resulting DataFrame to a variable and render it as HTML
-        results_df_html = results_df.to_html(escape=False, index=False)
-
-        # Render the HTML table with the formatted "% Done" column
-        st.write(results_df_html, unsafe_allow_html=True)
-        # AgGrid(df_projects)
+        df_projects = calculate_task_counts(df_projects, df_tasks)
+        df_projects = calculate_percentage_done(df_projects)
+        results_df = format_results_df(df_projects)
+        render_projects_table(results_df)
 
     if df_tasks is not None:
-        st.subheader("**Tasks**")
-        # Render the DataFrame with status color as colored square using HTML and CSS
-        st.write(
-            df_tasks[["project_id", "id", "name", "data_count", "object_count", "error_count",
-                      "annotator_fullname", "reviewer_fullname", "state_name"]]
-            .rename(columns={
-                "project_id": "Project id",
-                "id": "Task id",
-                "name": "Name",
-                "data_count": "Image count",
-                "object_count": "Label count",
-                "error_count": "Error count",
-                "annotator_fullname": "Annotated by",
-                "reviewer_fullname": "Reviewed by",
-                "state_name": "Status"
-            })
-            .to_html(
-                escape=False,
-                index=False,
-                justify="center",
-                classes="table-hover",
-                col_space="2px",
-                formatters={
-                    "Status": lambda
-                        x: f'<div style="background-color:{"red" if x == "New" else "orange" if x == "Working" else "green"}; color:white; border-radius:4px; padding:4px;">{x}<div style="background-color:{"red" if x == "New" else "yellow" if x == "Working" else "green"}; height:12px; width:12px; border-radius:50%; display:inline-block; margin-left:4px;"></div></div>',
-                }
-            ),
-            unsafe_allow_html=True
-        )
+        render_tasks_table(df_tasks)
 
 
 def main():

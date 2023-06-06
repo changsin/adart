@@ -25,6 +25,14 @@ logger = get_logger(__name__)
 
 DEFAULT_SHAPE_COLOR = "magenta"
 
+# Custom CSS to reduce the gap between the top of the browser and the first control
+custom_css = """
+<style>
+.label-container .main .block-container {
+    padding-top: 0;
+}
+</style>
+"""
 
 def _display_type_attributes(selected_shape: dict, key="1"):
     shape_type = selected_shape["shapeType"]
@@ -107,17 +115,19 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         image_index = st.session_state["img_files"].index(selected_option.split(") ")[-1])
         st.session_state["image_index"] = image_index
 
-    def viewer_menu():
-        # Add custom CSS to reduce the gap between the top of the browser and the first control
+    def viewer_menu(im: ImageManager):
         st.markdown(
             """
             <style>
-            .reportview-container .main .block-container {
-                padding-top: 0;
+            .label-container > div:first-child {
+                display: inline-block;
+                width: 150px;
+                padding-right: 10px;
+                vertical-align: top;
             }
             </style>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
         # Sidebar: show status
@@ -131,16 +141,83 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         # Modify the select_box to include the file index prefix
         select_box_options = [f"({i + 1}/{n_files}) {filename}" for i, filename in enumerate(st.session_state["img_files"])]
-        st.selectbox(" ",
-                     select_box_options,
-                     index=st.session_state["image_index"],
-                     on_change=go_to_image,
-                     key="img_file")
 
-        col1, col2, col3 = st.columns(3)
-        col1.button(label="< Previous", on_click=previous_image)
-        col2.button(label="Save", on_click=refresh)
-        col3.button(label="Next >", on_click=next_image)
+        col1, col2, col3, col4, col5 = st.columns([1, 6, 1, 1, 1])
+        with col1:
+            st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
+            st.button(label=":blue[< Prev]", on_click=previous_image)
+
+        with col2:
+            st.markdown('<div class="label-container">', unsafe_allow_html=True)
+            st.selectbox("",
+                         select_box_options,
+                         index=st.session_state["image_index"],
+                         on_change=go_to_image,
+                         key="img_file",
+                         label_visibility="collapsed")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        with col3:
+            st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
+            st.button(label=":blue[Next >]", on_click=next_image)
+
+        with col4:
+            st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
+            st.button(label="Save", on_click=refresh)
+
+        selected_shape = call_frontend(im, image_index)
+        with col5:
+            if selected_shape:
+                scaled_shape = process_selected_shape(selected_shape)
+                # present 3 columns for the selected shape
+                selected_shape_id = selected_shape['shape_id']
+                key = f"{selected_shape_id}_{is_second_viewer}"
+
+                # # thumbnail image
+                # with col1:
+                #     preview_img = im.get_preview_thumbnail(scaled_shape)
+                #     if preview_img:
+                #         preview_img.thumbnail((200, 200))
+                #         col1.image(preview_img)
+                #         st.write(scaled_shape["label"])
+                #     points = selected_shape["points"]
+                #     st.dataframe(pd.DataFrame(points))
+
+                # # attributes
+                # with col2:
+                #     _display_type_attributes(selected_shape, key=key)
+
+                # verification result
+                # with col4:
+                default_index = 0
+                verification_result = im.get_shape_by_id(selected_shape_id)['verification_result']
+                if verification_result:
+                    error_code = verification_result['error_code']
+                    default_index = error_codes.index(error_code)
+
+                comment = ""
+                st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
+                select_label = st.selectbox(":red[Error]",
+                                            error_codes,
+                                            key=f"error_{selected_shape_id}_{key}",
+                                            index=default_index)
+                if select_label:
+                    if not verification_result:
+                        verification_result = dict()
+                    default_comment = verification_result.get('comment', "")
+                    comment = st.text_input("", default_comment, key={key},
+                                            label_visibility="collapsed")
+
+                # save the verification result
+                im.set_review(selected_shape_id, select_label, comment)
+
+                if verification_result and verification_result['error_code'] == 'Untagged':
+                    delete_shape = st.button(":red[Delete]", key=key)
+                    if delete_shape:
+                        im.remove_shape(selected_shape)
+                        logger.info(f"Deleted {selected_shape}")
+
+                save(image_index, im)
 
         return image_index
 
@@ -158,7 +235,6 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         # if shape_id is new, it's an untagged label
         if not im.get_shape_by_id(selected_shape_id):
             im.add_shape(scaled_shape)
-            st.write("Untagged box added")
 
         return scaled_shape
 
@@ -191,58 +267,9 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
     # call the frontend
     if not is_second_viewer:
-        image_index = viewer_menu()
-    selected_shape = call_frontend(im, image_index)
-    if selected_shape:
-        scaled_shape = process_selected_shape(selected_shape)
-        # present 3 columns for the selected shape
-        selected_shape_id = selected_shape['shape_id']
-        key = f"{selected_shape_id}_{is_second_viewer}"
-        col1, col2, col3 = st.columns(3)
-
-        # # thumbnail image
-        # with col1:
-        #     preview_img = im.get_preview_thumbnail(scaled_shape)
-        #     if preview_img:
-        #         preview_img.thumbnail((200, 200))
-        #         col1.image(preview_img)
-        #         st.write(scaled_shape["label"])
-        #     points = selected_shape["points"]
-        #     st.dataframe(pd.DataFrame(points))
-
-        # # attributes
-        # with col2:
-        #     _display_type_attributes(selected_shape, key=key)
-
-        # verification result
-        with col3:
-            default_index = 0
-            verification_result = im.get_shape_by_id(selected_shape_id)['verification_result']
-            if verification_result:
-                error_code = verification_result['error_code']
-                default_index = error_codes.index(error_code)
-
-            comment = ""
-            select_label = col3.selectbox("Error",
-                                          error_codes,
-                                          key=f"error_{selected_shape_id}_{key}",
-                                          index=default_index)
-            if select_label:
-                if not verification_result:
-                    verification_result = dict()
-                default_comment = verification_result.get('comment', "")
-                comment = col3.text_input("Comment", default_comment, key={key})
-
-            # save the verification result
-            im.set_review(selected_shape_id, select_label, comment)
-
-            if verification_result and verification_result['error_code'] == 'Untagged':
-                delete_shape = st.button("Delete", key=key)
-                if delete_shape:
-                    im.remove_shape(selected_shape)
-                    logger.info(f"Deleted {selected_shape}")
-
-            save(image_index, im)
+        # Apply custom CSS
+        st.markdown(custom_css, unsafe_allow_html=True)
+        image_index = viewer_menu(im)
 
 
 #

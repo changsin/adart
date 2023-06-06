@@ -53,10 +53,6 @@ class Project(ABC):
             "task_total_count": self.task_total_count,
             "task_done_count": self.task_done_count,
 
-            "data_total_count": self.data_total_count,
-            "data_sample_count": self.data_sample_count,
-            "annotation_errors": self.annotation_errors,
-
             "domain_id": self.domain_id,
 
             "company_info": self.company_info,
@@ -78,11 +74,6 @@ class Project(ABC):
 
             "task_total_count": self.task_total_count,
             "task_done_count": self.task_done_count,
-
-            "data_total_count": self.data_total_count,
-            "data_sample_count": self.data_sample_count,
-            "annotation_errors": self.annotation_errors,
-
 
             "domain_id": self.domain_id,
 
@@ -115,10 +106,6 @@ class Project(ABC):
 
             task_total_count=json_dict.get("task_total_count", 0),
             task_done_count=json_dict.get("task_done_count", 0),
-
-            data_total_count=json_dict.get("data_total_count", 0),
-            data_sample_count=json_dict.get("data_sample_count", 0),
-            annotation_errors=json_dict.get("annotation_errors", 0),
 
             domain_id=json_dict.get("domain_id", 1),
 
