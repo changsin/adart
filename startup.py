@@ -2,7 +2,10 @@ import os
 import streamlit as st
 from PIL import Image 
 
-from src.common.constants import ADQ_WORKING_FOLDER
+from src.common.constants import (
+    ADQ_WORKING_FOLDER,
+    UserType
+)
 from src.common.utils import get_window_size
 from src.pages import (
     home,
@@ -16,8 +19,12 @@ from src.pages import (
 from src.pages.home import (
     is_authenticated,
     login,
-    logout
+    logout,
+    get_user_by_email
 )
+from src.common.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def main():
@@ -31,36 +38,57 @@ def main():
         "Users": users.main,
     }
 
-    # Create a sidebar with menu options
-    selected_action = st.sidebar.selectbox("Go to page", list(admin_menu.keys()))
+    user_menu = {
+        "Home": home.main,
+        "Dashboard": dashboard.main,
+        "Reports": reports.main,
+    }
 
+    reviewer_menu = {
+        "Home": home.main,
+        "Dashboard": dashboard.main,
+        "Reviews": reviews.main,
+        "Reports": reports.main,
+    }
+
+    username = st.session_state.get("username")
+    user = get_user_by_email(username)
+
+    menu = user_menu
+    if user.group_id == UserType.ADMINISTRATOR.value:
+        menu = admin_menu
+    elif user.group_id == UserType.REVIEWER.value:
+        menu = reviewer_menu
+
+    # Create a sidebar with menu options
+    selected_action = st.sidebar.selectbox("Go to page", list(menu.keys()))
     if selected_action:
         # Call the selected method based on the user's selection
-        admin_menu[selected_action]()
+        menu[selected_action]()
 
 
 if __name__ == '__main__':
     st.set_page_config(page_title="Adart", layout="wide")
-    window_width, _ = get_window_size()
-    max_width = window_width * 0.95 if window_width > 0 else 700
-    st.session_state.sidebar_state = "collapsed"
-    with st.container():
-        st.markdown(
-            f"""
-            <style>
-            .stApp {{
-                max-width: {max_width}px;
-                margin: 0 auto;
-                padding: 0px;
-                border: 1px solid #ccc;
-                top: 5px solid #333;
-                border-radius: 5px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            }}
-            </style>
-            """,
-            unsafe_allow_html=True,
-        )
+    # window_width, _ = get_window_size()
+    # max_width = window_width * 0.95 if window_width > 0 else 700
+    # st.session_state.sidebar_state = "collapsed"
+    # with st.container():
+    #     st.markdown(
+    #         f"""
+    #         <style>
+    #         .stApp {{
+    #             max-width: {max_width}px;
+    #             margin: 0 auto;
+    #             padding: 0px;
+    #             border: 1px solid #ccc;
+    #             top: 5px solid #333;
+    #             border-radius: 5px;
+    #             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    #         }}
+    #         </style>
+    #         """,
+    #         unsafe_allow_html=True,
+    #     )
 
     def add_logo(logo_path, width, height):
         """Read and return a resized logo"""
@@ -71,6 +99,7 @@ if __name__ == '__main__':
     resources_dir = "resources"
     my_logo = add_logo(logo_path=os.path.join(resources_dir, 'ADaRT_blue.png'), width=350, height=150)
     st.sidebar.image(my_logo)
+    st.sidebar.header(st.session_state.get("username"))
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
 

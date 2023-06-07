@@ -92,7 +92,7 @@ def select_task(project_id: int, label="Select task") -> Task:
         user = get_user_by_email(username)
         logger.info(user)
         logger.info(df_filtered)
-        if user.group_id != UserType.ADMINISTRATOR:
+        if user.group_id != UserType.ADMINISTRATOR.value:
             df_filtered = df_filtered[df_filtered['reviewer_id'] == user.id]
 
         options = ["{}-{}".format(task_id, name)
@@ -214,6 +214,7 @@ def logout():
         button_label.text = "Logged out"
         st.session_state['token'] = None
         st.session_state['projects'] = None
+        st.session_state['username'] = None
 
 
 def is_authenticated():
