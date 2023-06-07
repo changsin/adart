@@ -1,16 +1,20 @@
 import pandas as pd
 import streamlit as st
 
+from src.api.security import get_password_hash
 from src.common.constants import (
     UserType,
     USERS
 )
+from src.common.logger import get_logger
 from src.models.users_info import User, UsersInfo
 from .home import (
     is_authenticated,
     api_target,
     login,
     logout)
+
+logger = get_logger(__name__)
 
 
 def select_user(is_sidebar=True):
@@ -64,6 +68,8 @@ def create_user():
 
         submitted = st.form_submit_button("Add User")
         if submitted:
+            password_hash = get_password_hash(password)
+            logger.info(password_hash)
             new_user = User(
                 id=0,
                 email=email,
@@ -72,7 +78,8 @@ def create_user():
                 group_id=UserType.get_value_from_description(group_id),
                 is_superuser=False,
                 phone=phone,
-                description=description)
+                description=description,
+                password=password_hash)
             new_user_dict = new_user.to_json()
             new_user_dict['password'] = password
             response = api_target().create_user(new_user_dict)
@@ -87,6 +94,7 @@ def update_user():
     if selected_user:
         with st.form("Update User"):
             email = st.text_input("**Email:**", selected_user.email)
+            password = st.text_input("**Password:**", type="password")
             full_name = st.text_input("**Full Name:**", selected_user.full_name)
             description = st.text_area("**Description**", selected_user.description)
             is_active = st.checkbox("Is active?", selected_user.is_active)
@@ -97,18 +105,22 @@ def update_user():
 
             submitted = st.form_submit_button("Update User")
             if submitted:
+                password_hash = get_password_hash(password)
+                logger.info(password_hash)
+
                 selected_user.email = email
                 selected_user.full_name = full_name
                 selected_user.is_active = is_active
                 selected_user.group_id = UserType.get_value_from_description(group_id)
                 selected_user.phone = phone
                 selected_user.description = description
+                selected_user.password = password_hash
 
                 users_info = UsersInfo.get_users_info()
                 users_info.update_user(selected_user)
                 users_info.save()
 
-                st.markdown("### User ({}) ({}) updated".format(selected_user, email))
+                st.markdown("### User ({}) ({}) updated".format(selected_user.full_name, email))
 
 
 def delete_user():

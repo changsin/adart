@@ -172,12 +172,14 @@ def get_label_files(selected_project: Project):
 
 
 def get_token(url, username: str, password: str):
-    if "http://localhost" == url and password == "password1234!":
-        return "token"
+    # if "http://localhost" == url and password == "password1234!":
+    if "http://localhost" == url:
+        token = src.api.api_local.ApiLocal.get_access_token(url + "/api/v1/login/access-token", username, password)
     else:
         token = src.api.api_base.get_access_token(url + "/api/v1/login/access-token", username, password)
-        print("access token is {}".format(token))
-        return token
+
+    print("access token is {}".format(token))
+    return token
 
 
 def login():

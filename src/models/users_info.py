@@ -20,6 +20,7 @@ class User:
     is_superuser = attr.ib(default=False, validator=attr.validators.instance_of(bool))
     phone = attr.ib(default="", validator=attr.validators.instance_of(str))
     description = attr.ib(default="", validator=attr.validators.instance_of(str))
+    password = attr.ib(default="", validator=attr.validators.instance_of(str))
 
     def to_json(self) -> dict:
         return {
@@ -30,7 +31,8 @@ class User:
             "group_id": self.group_id,
             "is_superuser": self.is_superuser,
             "phone": self.phone,
-            "description": self.description
+            "description": self.description,
+            "password": self.password
         }
 
     @staticmethod
@@ -38,12 +40,13 @@ class User:
         return User(
             id=json_dict["id"],
             email=json_dict["email"],
-            full_name=json_dict["full_name"] if json_dict["full_name"] else "",
+            full_name=json_dict.get("full_name", ""),
             is_active=json_dict["is_active"],
             group_id=json_dict["group_id"],
             is_superuser=json_dict["is_superuser"],
-            phone=json_dict["phone"] if json_dict["phone"] else "",
-            description=json_dict["description"] if json_dict["description"] else ""
+            phone=json_dict.get("phone", ""),
+            description=json_dict.get("description", ""),
+            password=json_dict.get("password", "")
         )
 
 

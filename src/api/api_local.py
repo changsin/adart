@@ -1,5 +1,12 @@
 import os
-
+from datetime import timedelta
+from .api_base import ApiBase
+from .security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    verify_password,
+    get_password_hash,
+    create_access_token
+)
 import src.common.utils as utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
@@ -11,13 +18,28 @@ from src.common.constants import (
 from src.models.projects_info import Project, ProjectPointers
 from src.models.tasks_info import Task, TaskPointers
 from src.models.users_info import User, UsersInfo
-from .api_base import ApiBase
 from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
 
 class ApiLocal(ApiBase):
+    @staticmethod
+    def get_access_token(login_url, username, password) -> str:
+        api_local = ApiLocal(login_url, None)
+        user_dict = api_local.get_user_by_email(username)
+
+        if user_dict and user_dict.get("email") == username:
+            hashed_password = get_password_hash(password)
+            stored_password_hash = user_dict["password"]
+            logger.info(f"hashed_password: {hashed_password} {stored_password_hash}")
+            if verify_password(password, stored_password_hash):
+                access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+                token = create_access_token(username, access_token_expires)
+                api_local.token = token
+                logger.info(f"access_token: {token}")
+                return token
+
     def list_users(self) -> dict:
         users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
         users_info_dict = utils.from_file(users_filename, "{\"num_count\": 0, \"users\":[]}")
@@ -35,7 +57,8 @@ class ApiLocal(ApiBase):
     def get_user_by_email(self, email) -> dict:
         users_info = UsersInfo.get_users_info()
         current_user = users_info.get_user_by_email(email)
-        return current_user.to_json()
+        if current_user:
+            return current_user.to_json()
 
     def delete_user(self, user_id: int) -> dict:
         users_info = UsersInfo.get_users_info()
