@@ -47,8 +47,6 @@ def create_data_project():
         submitted = st.form_submit_button("Create project")
         if submitted:
             st.markdown(f"**Name:** {name}")
-            st.markdown(f"**Data folder:** {save_folder}")
-
             new_project_dict = Project(name,
                                        dir_name=save_folder,
                                        description=description
@@ -65,7 +63,17 @@ def update_project():
 
 
 def update_data_project(selected_project: Project):
-    st.sidebar.write("Coming soon")
+    with st.form("Update Project"):
+        name = st.text_input("**Name:**", value=selected_project.name)
+        description = st.text_area("Description", value=selected_project.description)
+        submitted = st.form_submit_button("Update project")
+        if submitted:
+            st.markdown(f"**Name:** {name}")
+            selected_project.name = name
+            selected_project.description = description
+            response = api_target().update_project(selected_project.to_json())
+            logger.info(response)
+            st.write("Project {} updated".format(name))
 
 
 def delete_project():

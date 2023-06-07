@@ -77,6 +77,8 @@ class ApiLocal(ApiBase):
     def update_project(self, project_dict: dict) -> dict:
         project_pointers = ProjectPointers.from_json(self.list_project_pointers())
         project_to_update = project_pointers.get_project_by_id(project_dict["id"])
+        project_to_update.name = project_dict["name"]
+        project_to_update.description = project_dict["description"]
         project_to_update.save()
         project_pointers.update_project(project_to_update)
         return project_dict
