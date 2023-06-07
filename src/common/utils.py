@@ -5,6 +5,7 @@ from pathlib import Path
 
 import cv2
 import streamlit as st
+import streamlit_javascript as st_js
 from PIL import Image
 
 from .constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
@@ -143,3 +144,8 @@ def load_images(data_files, size: tuple = (100, 100)):
         images.append(img)
     return images
 
+
+def get_window_size():
+    window_width = st_js.st_javascript("window.outerWidth")
+    window_height = st_js.st_javascript("window.outerHeight")
+    return window_width, window_height

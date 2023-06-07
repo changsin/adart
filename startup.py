@@ -3,6 +3,7 @@ import streamlit as st
 from PIL import Image 
 
 from src.common.constants import ADQ_WORKING_FOLDER
+from src.common.utils import get_window_size
 from src.pages import (
     home,
     dashboard,
@@ -40,23 +41,26 @@ def main():
 
 if __name__ == '__main__':
     st.set_page_config(page_title="Adart", layout="wide")
-    # st.markdown(
-    #     """
-    #     <style>
-    #     .stApp {
-    #         max-width: 1600px;
-    #         margin: 0 auto;
-    #         padding: 0px;
-    #         border: 1px solid #ccc;
-    #         top: 5px solid #333;
-    #         border-radius: 5px;
-    #         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    #     }
-    #     </style>
-    #     """,
-    #     unsafe_allow_html=True,
-    # )
-
+    window_width, _ = get_window_size()
+    max_width = window_width * 0.95 if window_width > 0 else 700
+    st.session_state.sidebar_state = "collapsed"
+    with st.container():
+        st.markdown(
+            f"""
+            <style>
+            .stApp {{
+                max-width: {max_width}px;
+                margin: 0 auto;
+                padding: 0px;
+                border: 1px solid #ccc;
+                top: 5px solid #333;
+                border-radius: 5px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }}
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
     def add_logo(logo_path, width, height):
         """Read and return a resized logo"""
@@ -75,5 +79,3 @@ if __name__ == '__main__':
     else:
         main()
         logout()
-
-

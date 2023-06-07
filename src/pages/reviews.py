@@ -8,7 +8,10 @@ from PIL import Image
 import src.viewer.app as app
 from src.common.constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
 from src.common.logger import get_logger
-from src.common.utils import glob_files, load_images
+from src.common.utils import (
+    glob_files,
+    load_images
+)
 from src.models.data_labels import DataLabels
 from src.models.metrics import (
     cluster_images,
