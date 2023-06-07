@@ -20,6 +20,9 @@ class ApiBase(ABC):
     def create_user(self, new_user_dict: dict) -> dict:
         raise "ERROR: The parent method should not be called directly"
 
+    def get_user_by_email(self, email) -> dict:
+        raise "ERROR: The parent method should not be called directly"
+
     def delete_user(self, user_id: int) -> dict:
         raise "ERROR: The parent method should not be called directly"
 

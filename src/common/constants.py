@@ -28,7 +28,31 @@ PROJECT_COLUMNS = ['id', 'name', 'task_total_count', 'task_done_count']
 
 TASK_COLUMNS = ['id', 'name', "project_id"]
 
-USER_TYPES = ["user", "reviewer", "inspector", "administrator"]
+
+class UserType(Enum):
+    # NONE = (0, "None")
+    USER = (1, "user")
+    REVIEWER = (2, "reviewer")
+    INSPECTOR = (3, "inspector")
+    ADMINISTRATOR = (4, "administrator")
+
+    def __new__(cls, value, description):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj.description = description
+
+        return obj
+
+    @staticmethod
+    def get_all_types():
+        return [user_type.description for user_type in UserType]
+
+    @staticmethod
+    def get_value_from_description(description):
+        for user_type in UserType:
+            if user_type.description == description:
+                return user_type.value
+        return None
 
 
 class ErrorType(Enum):

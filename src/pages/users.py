@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from src.common.constants import (
-    USER_TYPES,
+    UserType,
     USERS
 )
 from src.models.users_info import User, UsersInfo
@@ -59,7 +59,7 @@ def create_user():
         full_name = st.text_input("**Full Name:**")
         description = st.text_area("**Description**")
         is_active = st.checkbox("Is active?", True)
-        group_id = st.radio("Group", USER_TYPES)
+        group_id = st.radio("Group", UserType.get_all_types())
         phone = st.text_input("**Phone number:**")
 
         submitted = st.form_submit_button("Add User")
@@ -69,7 +69,7 @@ def create_user():
                 email=email,
                 full_name=full_name,
                 is_active=is_active,
-                group_id=USER_TYPES.index(group_id) + 1,
+                group_id=UserType.get_value_from_description(group_id),
                 is_superuser=False,
                 phone=phone,
                 description=description)
@@ -91,8 +91,8 @@ def update_user():
             description = st.text_area("**Description**", selected_user.description)
             is_active = st.checkbox("Is active?", selected_user.is_active)
             group_id = st.radio("Group",
-                                options=USER_TYPES,
-                                index=selected_user.group_id)
+                                options=UserType.get_all_types(),
+                                index=selected_user.group_id - 1)
             phone = st.text_input("**Phone number:**", selected_user.phone)
 
             submitted = st.form_submit_button("Update User")
@@ -100,7 +100,7 @@ def update_user():
                 selected_user.email = email
                 selected_user.full_name = full_name
                 selected_user.is_active = is_active
-                selected_user.group_id = USER_TYPES.index(group_id)
+                selected_user.group_id = UserType.get_value_from_description(group_id)
                 selected_user.phone = phone
                 selected_user.description = description
 

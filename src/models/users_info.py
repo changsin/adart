@@ -65,6 +65,12 @@ class UsersInfo:
                 if user.id == user_id:
                     return user
 
+    def get_user_by_email(self, email: str) -> User:
+        if len(self.users) > 0:
+            for user in self.users:
+                if user.email == email:
+                    return user
+
     def to_json(self) -> dict:
         return {
             "num_count": self.num_count,

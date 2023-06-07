@@ -10,10 +10,12 @@ from src.api.api_local import ApiLocal
 from src.api.api_remote import ApiRemote
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
-    SUPPORTED_IMAGE_FILE_EXTENSIONS
+    SUPPORTED_IMAGE_FILE_EXTENSIONS,
+    UserType
 )
 from src.models.projects_info import ProjectsInfo, Project, ProjectPointers
 from src.models.tasks_info import Task, TasksInfo, TaskPointers
+from src.models.users_info import User
 from src.common.logger import get_logger
 
 LOCALHOST = "http://localhost"
@@ -28,6 +30,10 @@ def api_target() -> ApiBase:
         return ApiLocal(url_base, token)
     else:
         return ApiRemote(url_base, token)
+
+
+def get_user_by_email(email: str) -> User:
+    return User.from_json(api_target().get_user_by_email(email))
 
 
 def get_project_pointers() -> ProjectPointers:
@@ -73,15 +79,22 @@ def select_project(is_sidebar=True) -> Project:
 
 
 def select_task(project_id: int, label="Select task") -> Task:
-    task_pointers = get_task_pointers(project_id)
-    if len(task_pointers.task_pointers) > 0:
-        df_tasks = pd.DataFrame(task_pointers.to_json()["task_pointers"])
-        df_filtered = df_tasks[df_tasks['project_id'] == project_id][["id", "name", "project_id"]]
+    tasks_info = get_tasks_info()
+    if len(tasks_info.tasks) > 0:
+        df_tasks = pd.DataFrame(tasks_info.to_json()["tasks"])
+        # df_filtered = df_tasks[df_tasks['project_id'] == project_id][["id", "name", "project_id"]]
 
         # df_tasks = pd.DataFrame([task_pointers.to_json()])
         # print(df_tasks)
         # df_tasks = df_tasks[["id", "name", "project_id"]]
-        df_filtered = df_tasks[df_tasks['project_id'] == project_id]
+        df_filtered = df_tasks[df_tasks["project_id"] == project_id]
+        username = st.session_state.get("username")
+        user = get_user_by_email(username)
+        logger.info(user)
+        logger.info(df_filtered)
+        if user.group_id != UserType.ADMINISTRATOR:
+            df_filtered = df_filtered[df_filtered['reviewer_id'] == user.id]
+
         options = ["{}-{}".format(task_id, name)
                    for task_id, name, project_id in
                    df_filtered[["id", "name", "project_id"]].values.tolist()]
@@ -92,7 +105,7 @@ def select_task(project_id: int, label="Select task") -> Task:
                                              index=len(options) - 1)
         if selected_task:
             task_id, _ = selected_task.split('-', maxsplit=1)
-            return task_pointers.get_task_by_id(int(task_id))
+            return tasks_info.get_task_by_id(int(task_id))
     else:
         st.markdown("**No task is created!**")
 
@@ -159,7 +172,7 @@ def get_label_files(selected_project: Project):
 
 
 def get_token(url, username: str, password: str):
-    if "http://localhost" == url and username == 'admin' and password == "password1234!":
+    if "http://localhost" == url and password == "password1234!":
         return "token"
     else:
         token = src.api.api_base.get_access_token(url + "/api/v1/login/access-token", username, password)
@@ -189,6 +202,7 @@ def login():
         else:
             st.session_state['token'] = token
             st.session_state['url_base'] = selected_url
+            st.session_state['username'] = username
             return True
 
 

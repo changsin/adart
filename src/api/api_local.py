@@ -32,6 +32,11 @@ class ApiLocal(ApiBase):
         users_info.save()
         return new_user_dict
 
+    def get_user_by_email(self, email) -> dict:
+        users_info = UsersInfo.get_users_info()
+        current_user = users_info.get_user_by_email(email)
+        return current_user.to_json()
+
     def delete_user(self, user_id: int) -> dict:
         users_info = UsersInfo.get_users_info()
         selected_user = users_info.get_user_by_id(user_id)
