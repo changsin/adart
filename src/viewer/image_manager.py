@@ -280,9 +280,6 @@ class ImageManager:
                 resized_points.append(resized_point)
 
         resized_shape['points'] = resized_points
-        # Null out comment since it is not used by the frontend and will only make rendering slower
-        if resized_shape['verification_result']:
-            resized_shape['verification_result']['comment'] = None
         return resized_shape
 
     def get_downscaled_shapes(self):

@@ -21,6 +21,15 @@ export interface VerificationResult {
   comment: string | null;
 }
 
+export const ErrorType = Object.freeze({
+  DVE_NOERROR: [0, "No error"],
+  DVE_MISS: [1, "Mis-tagged"],
+  DVE_UNTAG: [2, "Untagged"],
+  DVE_OVER: [3, "Over-tagged"],
+  DVE_RANGE: [4, "Range_error"],
+  DVE_ATTR: [5, "Attributes_error"],
+});
+
 export interface Occlusion {
   top: number;
   bottom: number;

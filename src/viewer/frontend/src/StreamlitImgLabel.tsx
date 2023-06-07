@@ -11,12 +11,15 @@ import {
     BoxPoint,
     ShapeProps,
     PythonArgs,
+    ErrorType,
+    VerificationResult
 } from "./interfaces";
 import { Box } from "./shapes/box"
 import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
 import {displayAttributes} from "./shapes/shape-attributes"
+import { Tooltip } from "react-tooltip";
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -27,6 +30,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [opacity, setOpacity] = useState<number>(0.5);
     const [isInteractingWithBox, setIsInteractingWithBox] = useState(false);
     const [selectedShape, setSelectedShape] = useState<ShapeProps | null>(null);
+    const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(selectedShape?.verification_result || { error_code: '', comment: '' });
 
     const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
@@ -190,12 +194,24 @@ const StreamlitImgLabel = (props: ComponentProps) => {
         sendSelectedShape(shape);
     
         setSelectedShape(shape);
+        setVerificationResult(shape.verification_result);
     
         if (canvas) {
             canvas.remove(fabricShape);
             canvas.renderAll();
         }
     })
+
+    const onSetVerificationResult = (verificationResult: VerificationResult| null) => {
+        if (selectedShape) {
+            const updatedShape: ShapeProps = {
+              ...selectedShape,
+              verification_result: verificationResult
+            }
+            setSelectedShape(updatedShape);
+            sendSelectedShape(updatedShape);
+        }
+    }
           
     // Create a default bounding box
     const untaggedBox = (shape_id: number): ShapeProps  => ({
@@ -242,7 +258,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 console.log(box);
                 sendSelectedShape(box);
                 shapesInternal.push(box);
-                checkedClassLabels.push("Untagged")
+                handleClassLabelToggle("Untagged");
+                setIsInteractingWithBox(true);
             });
         
             newRect.on('mousedown', () => setIsInteractingWithBox(true));
@@ -252,15 +269,26 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             canvas.add(newRect);
         }
     };
-      
 
     // Remove the selected bounding box
     const removeBoxHandler = () => {
-        const selectObject = canvas.getActiveObject()
-        console.log(`removeObject ${JSON.stringify(selectObject)}`)
-        const selectIndex = canvas.getObjects().indexOf(selectObject)
-        canvas.remove(selectObject)
-        sendCoordinates(labels.filter((label, i) => i !== selectIndex))
+        const selectedObject = canvas.getActiveObject();
+        console.log(`removeObject ${JSON.stringify(selectedObject)}`);
+
+        if (selectedShape) {
+            if (selectedShape.attributes) {
+                selectedShape.attributes["status"] = "DELETED";
+            } else {
+                selectedShape["attributes"] = {"status": "DELETED"};
+            }
+            console.log(selectedShape);
+            sendSelectedShape(selectedShape);
+
+            if (canvas) {
+                canvas.remove(selectedObject);
+                canvas.renderAll();
+            }
+        }
     }
 
     const resetHandler = () => {
@@ -354,7 +382,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
       
           <div className={mode === 'dark' ? styles.dark : ''}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button onClick={addBoxHandler}>Mark Untagged</button>
+              <button onClick={addBoxHandler}>Untagged</button>
+              <button onClick={removeBoxHandler}>Delete</button>
               <button onClick={resetHandler}>Reset</button>
               <button onClick={clearHandler}>Clear all</button>
             </div>
@@ -423,10 +452,52 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             })}
             </div>
             {selectedShape && (
-                <div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <label>
+                        {selectedShape.label}
+                    </label>
                     <pre>{displayAttributes(selectedShape)}</pre>
+                    <label>
+                        Error:
+                        <select
+                            value={verificationResult?.error_code ?? ''}
+                            onChange={(e) => {
+                                const errorCodeValue = e.target.value as string;
+                                setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
+                                ...prevVerificationResult,
+                                error_code: errorCodeValue !== '' ? errorCodeValue : '',
+                                comment: prevVerificationResult?.comment !== undefined ? prevVerificationResult?.comment : ''
+                                }));
+                            }}
+                        >
+                        <option value="">None</option>
+                        <option value={ErrorType.DVE_MISS[1]}>{ErrorType.DVE_MISS[1]}</option>
+                        <option value={ErrorType.DVE_UNTAG[1]}>{ErrorType.DVE_UNTAG[1]}</option>
+                        <option value={ErrorType.DVE_OVER[1]}>{ErrorType.DVE_OVER[1]}</option>
+                        <option value={ErrorType.DVE_RANGE[1]}>{ErrorType.DVE_RANGE[1]}</option>
+                        <option value={ErrorType.DVE_ATTR[1]}>{ErrorType.DVE_ATTR[1]}</option>
+                        </select>
+                    </label>
+                    <label>
+                    <input
+                        type="text"
+                        value={verificationResult?.comment ?? ''}
+                        onChange={(e) => {
+                            const commentValue = e.target?.value as string;
+                            setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
+                                ...prevVerificationResult,
+                                error_code: prevVerificationResult?.error_code !== undefined ? prevVerificationResult?.error_code : '',
+                                comment: commentValue
+                            }));
+                        }}
+                        placeholder={verificationResult?.comment ? '' : 'Comment...'}
+                        />
+                    </label>
+                    <button onClick={() => onSetVerificationResult(verificationResult)}>
+                    Set Error
+                    </button>
                 </div>
-            )}
+                )}
             </div>
         </div>
     );

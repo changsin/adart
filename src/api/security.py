@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from src.api.token_schema import TokenPayload
 
 ALGORITHM: str = "HS256"
-SECRET_KEY: str = "TO_BE_FILLED"
+SECRET_KEY: str = "0eb6cf90ff9953fcb9db7f355e012c2253c6b4c6ba8d991abb78744f8b21829e"
 EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
 

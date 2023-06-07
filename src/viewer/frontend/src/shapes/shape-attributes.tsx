@@ -228,7 +228,6 @@ function fromAttributes(json: any, propertyMappings: PropertyMappings): any {
   }
 
   return JSON.stringify(convertedJson, null, 2);
-
 }
 
 function fromSplineAttributes(json: any): any {
@@ -294,13 +293,12 @@ export function displayAttributes(shape: ShapeProps): any {
 
   if (shape.shapeType === 'spline') {
     convertedJson = fromSplineAttributes(attributes);
-
   } else if (shape.shapeType === 'boundary') {
     convertedJson = fromBoundaryAttributes(attributes);
   } else if (shape.shapeType === 'polygon') {
     convertedJson = fromPolygonAttributes(attributes);
   } else {
-    convertedJson = JSON.stringify(attributes);
+    convertedJson = JSON.stringify(attributes, null, 2);
   }
 
   return convertedJson;

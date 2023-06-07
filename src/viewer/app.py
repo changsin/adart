@@ -160,10 +160,23 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         selected_shape = call_frontend(im, image_index)
         with col5:
             if selected_shape:
+                logger.info(f"***Received {selected_shape}")
                 scaled_shape = process_selected_shape(selected_shape)
-                # present 3 columns for the selected shape
-                selected_shape_id = selected_shape['shape_id']
-                key = f"{selected_shape_id}_{is_second_viewer}"
+                if scaled_shape is None:
+                    return image_index
+
+                selected_shape_id = scaled_shape["shape_id"]
+                im_selected_shape = im.get_shape_by_id(selected_shape_id)
+                if scaled_shape.get("verification_result") or im_selected_shape.get("verification_result"):
+                    verification_result_dict = scaled_shape.get("verification_result")
+                    im.set_review(selected_shape_id,
+                                  verification_result_dict["error_code"],
+                                  verification_result_dict.get("comment", None))
+                    save(image_index, im)
+
+                # # present 3 columns for the selected shape
+                # selected_shape_id = selected_shape['shape_id']
+                # key = f"{selected_shape_id}_{is_second_viewer}"
 
                 # # thumbnail image
                 # with col1:
@@ -181,35 +194,35 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
                 # verification result
                 # with col4:
-                default_index = 0
-                verification_result = im.get_shape_by_id(selected_shape_id)['verification_result']
-                if verification_result:
-                    error_code = verification_result['error_code']
-                    default_index = error_codes.index(error_code)
-
-                comment = ""
-                st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-                select_label = st.selectbox("Error",
-                                            error_codes,
-                                            key=f"error_{selected_shape_id}_{key}",
-                                            index=default_index)
-                if select_label:
-                    if not verification_result:
-                        verification_result = dict()
-                    default_comment = verification_result.get('comment', "")
-                    comment = st.text_input("", default_comment, key={key},
-                                            label_visibility="collapsed")
-
-                # save the verification result
-                im.set_review(selected_shape_id, select_label, comment)
-
-                if verification_result and verification_result['error_code'] == 'Untagged':
-                    delete_shape = st.button("Delete", key=key)
-                    if delete_shape:
-                        im.remove_shape(selected_shape)
-                        logger.info(f"Deleted {selected_shape}")
-
-                save(image_index, im)
+                # default_index = 0
+                # verification_result = im.get_shape_by_id(selected_shape_id)['verification_result']
+                # if verification_result:
+                #     error_code = verification_result['error_code']
+                #     default_index = error_codes.index(error_code)
+                #
+                # comment = ""
+                # st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
+                # select_label = st.selectbox(":red[Error]",
+                #                             error_codes,
+                #                             key=f"error_{selected_shape_id}_{key}",
+                #                             index=default_index)
+                # if select_label:
+                #     if not verification_result:
+                #         verification_result = dict()
+                #     default_comment = verification_result.get('comment', "")
+                #     comment = st.text_input("", default_comment, key={key},
+                #                             label_visibility="collapsed")
+                #
+                # # save the verification result
+                # im.set_review(selected_shape_id, select_label, comment)
+                #
+                # if verification_result and verification_result['error_code'] == 'Untagged':
+                #     delete_shape = st.button(":red[Delete]", key=key)
+                #     if delete_shape:
+                #         im.remove_shape(selected_shape)
+                #         logger.info(f"Deleted {selected_shape}")
+                #
+                # save(image_index, im)
 
         return image_index
 
@@ -227,6 +240,15 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         # if shape_id is new, it's an untagged label
         if not im.get_shape_by_id(selected_shape_id):
             im.add_shape(scaled_shape)
+
+        # if deleted in the frontend, delete here too
+        attributes = scaled_shape.get("attributes")
+        if attributes:
+            status = attributes.get("status")
+            if status and status == "DELETED":
+                im.remove_shape(scaled_shape)
+                logger.info(f"DELETED {scaled_shape}")
+                return None
 
         return scaled_shape
 
