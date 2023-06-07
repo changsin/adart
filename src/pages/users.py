@@ -35,6 +35,8 @@ def select_user(is_sidebar=True):
         if selected_user_id_name:
             user_id, email, = selected_user_id_name.split('-', maxsplit=1)
             return users_info.get_user_by_id(int(user_id))
+    else:
+        st.warning("Please create a user first")
 
 
 def list_users():
@@ -56,7 +58,7 @@ def create_user():
         password = st.text_input("**Password:**", type="password")
         full_name = st.text_input("**Full Name:**")
         description = st.text_area("**Description**")
-        is_active = st.checkbox("Is active?", False)
+        is_active = st.checkbox("Is active?", True)
         group_id = st.radio("Group", USER_TYPES)
         phone = st.text_input("**Phone number:**")
 

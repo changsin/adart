@@ -36,6 +36,7 @@ class ApiLocal(ApiBase):
         users_info = UsersInfo.get_users_info()
         selected_user = users_info.get_user_by_id(user_id)
         users_info.users.remove(selected_user)
+        users_info.num_count = len(users_info.users)
         users_info.save()
         return selected_user.to_json()
 
