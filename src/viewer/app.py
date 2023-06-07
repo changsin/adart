@@ -25,14 +25,6 @@ logger = get_logger(__name__)
 
 DEFAULT_SHAPE_COLOR = "magenta"
 
-# Custom CSS to reduce the gap between the top of the browser and the first control
-custom_css = """
-<style>
-.label-container .main .block-container {
-    padding-top: 0;
-}
-</style>
-"""
 
 def _display_type_attributes(selected_shape: dict, key="1"):
     shape_type = selected_shape["shapeType"]
@@ -145,7 +137,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         col1, col2, col3, col4, col5 = st.columns([1, 6, 1, 1, 1])
         with col1:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label=":blue[:arrow_backward:]", on_click=previous_image)
+            st.button(label=":arrow_backward:", on_click=previous_image)
 
         with col2:
             st.markdown('<div class="label-container">', unsafe_allow_html=True)
@@ -159,11 +151,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
         with col3:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label=":blue[:arrow_forward:]", on_click=next_image)
+            st.button(label=":arrow_forward:", on_click=next_image)
 
         with col4:
             st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-            st.button(label=":blue[**Save**]", on_click=refresh)
+            st.button(label="**Save**", on_click=refresh)
 
         selected_shape = call_frontend(im, image_index)
         with col5:
@@ -197,7 +189,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
                 comment = ""
                 st.markdown('<div class="label-container"></div>', unsafe_allow_html=True)
-                select_label = st.selectbox(":red[Error]",
+                select_label = st.selectbox("Error",
                                             error_codes,
                                             key=f"error_{selected_shape_id}_{key}",
                                             index=default_index)
@@ -212,7 +204,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
                 im.set_review(selected_shape_id, select_label, comment)
 
                 if verification_result and verification_result['error_code'] == 'Untagged':
-                    delete_shape = st.button(":red[Delete]", key=key)
+                    delete_shape = st.button("Delete", key=key)
                     if delete_shape:
                         im.remove_shape(selected_shape)
                         logger.info(f"Deleted {selected_shape}")
@@ -267,8 +259,6 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
 
     # call the frontend
     if not is_second_viewer:
-        # Apply custom CSS
-        st.markdown(custom_css, unsafe_allow_html=True)
         image_index = viewer_menu(im)
 
 

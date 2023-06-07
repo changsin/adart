@@ -40,24 +40,26 @@ def main():
 
 if __name__ == '__main__':
     st.set_page_config(page_title="Adart", layout="wide")
-    st.markdown(
-        """
-        <style>
-        .stApp {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0px;
-            border: 1px solid #ccc;
-            top: 5px solid #333;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    # st.markdown(
+    #     """
+    #     <style>
+    #     .stApp {
+    #         max-width: 1600px;
+    #         margin: 0 auto;
+    #         padding: 0px;
+    #         border: 1px solid #ccc;
+    #         top: 5px solid #333;
+    #         border-radius: 5px;
+    #         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    #     }
+    #     </style>
+    #     """,
+    #     unsafe_allow_html=True,
+    # )
+
+
     def add_logo(logo_path, width, height):
-    #"""Read and return a resized logo"""
+        """Read and return a resized logo"""
         logo = Image.open(logo_path)
         modified_logo = logo.resize((width, height))
         return modified_logo

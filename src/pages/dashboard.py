@@ -142,15 +142,18 @@ def dashboard():
     df_projects = preprocess_projects_info(projects_info)
 
     if df_projects is not None:
-        grouped_tasks = df_tasks.groupby("project_id").sum().reset_index()
-        df_projects = pd.merge(df_projects,
-                               grouped_tasks[["project_id", "data_count", "object_count", "error_count"]],
-                               left_on="id", right_on="project_id", how="left")
+        if df_tasks is not None:
+            grouped_tasks = df_tasks.groupby("project_id").sum().reset_index()
+            df_projects = pd.merge(df_projects,
+                                   grouped_tasks[["project_id", "data_count", "object_count", "error_count"]],
+                                   left_on="id", right_on="project_id", how="left")
 
-        df_projects = calculate_task_counts(df_projects, df_tasks)
-        df_projects = calculate_percentage_done(df_projects)
-        results_df = format_results_df(df_projects)
-        render_projects_table(results_df)
+            df_projects = calculate_task_counts(df_projects, df_tasks)
+            df_projects = calculate_percentage_done(df_projects)
+            results_df = format_results_df(df_projects)
+            render_projects_table(results_df)
+        else:
+            render_projects_table(df_projects)
 
     if df_tasks is not None:
         render_tasks_table(df_tasks)
