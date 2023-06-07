@@ -53,18 +53,18 @@ def main():
 
     username = st.session_state.get("username")
     user = get_user_by_email(username)
+    if user:
+        menu = user_menu
+        if user.group_id == UserType.ADMINISTRATOR.value:
+            menu = admin_menu
+        elif user.group_id == UserType.REVIEWER.value:
+            menu = reviewer_menu
 
-    menu = user_menu
-    if user.group_id == UserType.ADMINISTRATOR.value:
-        menu = admin_menu
-    elif user.group_id == UserType.REVIEWER.value:
-        menu = reviewer_menu
-
-    # Create a sidebar with menu options
-    selected_action = st.sidebar.selectbox("Go to page", list(menu.keys()))
-    if selected_action:
-        # Call the selected method based on the user's selection
-        menu[selected_action]()
+        # Create a sidebar with menu options
+        selected_action = st.sidebar.selectbox("Go to page", list(menu.keys()))
+        if selected_action:
+            # Call the selected method based on the user's selection
+            menu[selected_action]()
 
 
 if __name__ == '__main__':

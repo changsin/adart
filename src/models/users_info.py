@@ -105,17 +105,10 @@ class UsersInfo:
 
     @staticmethod
     def get_users_info() -> 'UsersInfo':
-        # TODO: later, get the users_info from an actual server
         users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
         json_users = utils.from_file(users_filename, "{\"num_count\": 0, \"users\":[]}")
 
         return UsersInfo.from_json(json_users)
-        # users = list()
-        # if json_users:
-        # for json_user in json_users:
-        #     user_info = User.from_json(json_user)
-        #     users.append(user_info)
-        # return users
 
 
 @attr.s(slots=True, frozen=False)

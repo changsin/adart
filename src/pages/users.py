@@ -48,6 +48,8 @@ def list_users():
     users_info = UsersInfo.from_json(users_info_dict)
     if users_info and users_info.num_count > 0:
         df_users = pd.DataFrame(users_info.to_json()[USERS])
+        # Remove the "password" column
+        df_users = df_users.drop("password", axis=1)
         st.dataframe(df_users)
 
 

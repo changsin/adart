@@ -33,7 +33,9 @@ def api_target() -> ApiBase:
 
 
 def get_user_by_email(email: str) -> User:
-    return User.from_json(api_target().get_user_by_email(email))
+    user_dict = api_target().get_user_by_email(email)
+    if user_dict:
+        return User.from_json(user_dict)
 
 
 def get_project_pointers() -> ProjectPointers:
@@ -220,6 +222,7 @@ def logout():
 
 
 def is_authenticated():
+    # TODO: later, check if the token is expired
     return st.session_state.get('token')
 
 

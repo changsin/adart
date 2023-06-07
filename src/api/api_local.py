@@ -1,24 +1,26 @@
 import os
 from datetime import timedelta
-from .api_base import ApiBase
-from .security import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    verify_password,
-    get_password_hash,
-    create_access_token
-)
+
 import src.common.utils as utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     JSON_EXT,
     PROJECTS,
     TASKS,
+    UserType,
     USERS,
 )
+from src.common.logger import get_logger
 from src.models.projects_info import Project, ProjectPointers
 from src.models.tasks_info import Task, TaskPointers
 from src.models.users_info import User, UsersInfo
-from src.common.logger import get_logger
+from .api_base import ApiBase
+from .security import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    create_access_token,
+    get_password_hash,
+    verify_password,
+)
 
 logger = get_logger(__name__)
 
@@ -27,6 +29,23 @@ class ApiLocal(ApiBase):
     @staticmethod
     def get_access_token(login_url, username, password) -> str:
         api_local = ApiLocal(login_url, None)
+
+        users_filename = os.path.join(ADQ_WORKING_FOLDER, USERS + JSON_EXT)
+        if not os.path.exists(users_filename):
+            super_user = User(id=0,
+                              email=username,
+                              full_name=username,
+                              is_active=True,
+                              group_id=UserType.ADMINISTRATOR.value,
+                              is_superuser=True)
+            new_user_dict = super_user.to_json()
+            new_user_dict['password'] = get_password_hash(password)
+            response = api_local.create_user(new_user_dict)
+            if response:
+                logger.info(f"Super user ({username}) created")
+            else:
+                logger.warning(f"Create user {username}) failed with {response}")
+
         user_dict = api_local.get_user_by_email(username)
 
         if user_dict and user_dict.get("email") == username:
@@ -56,9 +75,10 @@ class ApiLocal(ApiBase):
 
     def get_user_by_email(self, email) -> dict:
         users_info = UsersInfo.get_users_info()
-        current_user = users_info.get_user_by_email(email)
-        if current_user:
-            return current_user.to_json()
+        if users_info.num_count > 0:
+            current_user = users_info.get_user_by_email(email)
+            if current_user:
+                return current_user.to_json()
 
     def delete_user(self, user_id: int) -> dict:
         users_info = UsersInfo.get_users_info()
