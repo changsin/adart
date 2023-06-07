@@ -154,7 +154,7 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
     converted_anno_files = []
     if labels_format_type == CVAT_XML:
         for idx, anno_file in enumerate(saved_anno_filenames):
-            converted_filename = os.path.join(save_folder, f"converted-{idx}.json")
+            converted_filename = os.path.join(save_folder, f"anno-{idx}.json")
 
             reader = CVATReader()
             logger.info(f"parsing {anno_file}")
@@ -163,7 +163,7 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
             data_labels.save(converted_filename)
             converted_anno_files.append(converted_filename)
     else:
-        converted_filename = os.path.join(save_folder, f"converted-{0}.json")
+        converted_filename = os.path.join(save_folder, f"anno-{0}.json")
         if labels_format_type == STRADVISION_XML:
             reader = StVisionReader()
             parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
@@ -330,6 +330,7 @@ def add_data_tasks(selected_project: Project):
                 selected_project.task_total_count += len(converted_anno_filenames)
                 selected_project.data_total_count += data_total_count
                 api_target().update_project(selected_project.to_json())
+
             elif saved_data_filenames:
                 data_count = len(saved_data_filenames)
                 new_task = Task(name=f"{task_name}-{0}",
