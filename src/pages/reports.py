@@ -323,35 +323,6 @@ def show_label_metrics():
                 if collapse_table:
                     st.table_overlap_areas([])  # Empty table to collapse the view
 
-
-        # if dimensions:
-        #     df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
-        #                                  columns=['filename', 'width', 'height', 'class'])
-        #     chart_dimensions = alt.Chart(df_dimensions).mark_circle().encode(
-        #         x='width',
-        #         y='height',
-        #         color='class',
-        #         tooltip=['class', 'width', 'height', 'filename']
-        #         ).properties(
-        #             title="Label Dimensions"
-        #         )
-        #
-        #     # make the chart interactive
-        #     chart_dimensions = chart_dimensions.interactive()
-        #     chart_dimensions = chart_dimensions.properties(
-        #         width=600,
-        #         height=400
-        #     ).add_selection(
-        #         alt.selection_interval(bind='scales', encodings=['x', 'y'])
-        #     ).add_selection(
-        #         alt.selection(type='interval', bind='scales', encodings=['x', 'y'])
-        #     )
-        #
-        #     if chart_dimensions:
-        #         display_chart(selected_project.id, "dimensions", chart_dimensions)
-
-        #Using Plotly
-
         # if dimensions:
         #     df_dimensions = pd.DataFrame([(k, *t) for k, v in dimensions.items() for t in v],
         #                                  columns=['filename', 'width', 'height', 'class'])
