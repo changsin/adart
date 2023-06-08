@@ -147,7 +147,12 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     # Display the plot
     #st.plotly_chart(chart_brightness)
 
-    return chart_aspect_ratios, chart_brightness
+    #Making the tables from the charts
+    table_brightness = pd.DataFrame(df_brightness.values, columns=["brightness", "count"])
+    table_aspect_ratios = pd.DataFrame(df_aspect_ratios.values, columns=["aspect ratio", "count"])
+
+
+    return chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness 
 
 
 @st.cache_data
@@ -176,12 +181,28 @@ def plot_file_sizes(df_file_info: pd.DataFrame):
     # return chart
 
     #Redoing the chart using plotly
-    chart = px.histogram(df_file_info, x='size', nbins=50,
-                       title='File Size Distribution',
-                       labels={'size': 'File Size (bytes)', 'count': 'Count'},
-                       hover_data=['size'])
+    # chart = px.histogram(df_file_info, x='size', nbins=50,
+    #                    title='File Size Distribution',
+    #                    labels={'size': 'File Size (bytes)', 'count': 'Count'},
+    #                    hover_data=['size'])
 
-    chart.update_layout(width=600, height=400, hovermode='closest')
+    #chart.update_layout(width=600, height=400, hovermode='closest')
+
+    # Create the histogram figure using plotly graph objects
+    chart = go.Figure(data=[go.Histogram(x=df_file_info['size'])])
+
+    # Configure the layout of the figure
+    chart.update_layout(
+        title='File Size Distribution',
+        xaxis_title='File Size (bytes)',
+        yaxis_title='Count',
+        bargap=0.1,
+    )
+
+    # Add a range slider to the x-axis
+    chart.update_layout(xaxis=dict(range=[df_file_info['size'].min(), df_file_info['size'].max()]),
+                      xaxis_rangeslider_visible=False)
+
 
     # Display the plot
     #st.plotly_chart(chart)
@@ -246,13 +267,29 @@ def plot_file_info(title: str, files_dict: dict):
                              title='Created Time')
 
     chart_ctime.update_layout(width=600, height=400, hovermode='closest')
+    chart_ctime.update_xaxes(rangeselector=dict(buttons=list([
+        dict(count=1, label="1m", step="month", stepmode="backward"),
+        dict(count=6, label="6m", step="month", stepmode="backward"),
+        dict(count=1, label="YTD", step="year", stepmode="todate"),
+        dict(count=1, label="1y", step="year", stepmode="backward"),
+        dict(step="all")
+    ])), rangeslider=dict(visible=False))
+
 
     # Display the plot
     #st.plotly_chart(chart_ctime)
 
     chart_sizes = plot_file_sizes(df_ctime)
+    df_size = df_ctime.assign(file=file_info_dict.keys())
 
-    return chart_ctime, chart_sizes
+    #if you needed size separately
+    #df_size['size'] = df_ctime['size'].astype(str)
+
+    #Making the tables from the charts
+    table_ctime = pd.DataFrame(df_ctime.values, columns=["Create Date", "Time", "Size", "Count"])
+    #table_chart_sizes = pd.DataFrame(df_size, columns=["File Size", "count"])
+
+    return chart_ctime, chart_sizes, table_ctime
 
 
 @st.cache_data
@@ -333,11 +370,19 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     # Add selection interaction
     for field in selection:
         chart.data[0].update({field: True})
+    # Create the table using Pandas DataFrame
+    table = pd.DataFrame(data_dict.items(), columns=[x_label, y_label])
 
-    # Display the plot
-    #st.plotly_chart(chart)
 
-    return chart
+    col_chart, col_table = st.columns(2)
+
+    #with col_chart:
+        #st.plotly_chart(chart)
+
+    #with col_table:
+    #    st.table(table)
+
+    return chart, table
 
 
 # def display_chart(project_id, name, chart, column=None):
@@ -346,35 +391,59 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
 #     else:
 #         st.altair_chart(chart, use_container_width=True)
 
-def display_chart(project_id, name, chart, column=None):
+# Original code
+# def display_chart(project_id, name, chart, column=None):
+#     if column:
+#         column.plotly_chart(chart, use_container_width=True)
+#     else:
+#         st.plotly_chart(chart, use_container_width=True)
+#
+#     # save to the session_state for later use
+#     charts = dict()
+#     if st.session_state.get(constants.CHARTS):
+#         charts = st.session_state[constants.CHARTS]
+#     else:
+#         st.session_state[constants.CHARTS] = charts
+#
+#     if charts.get(project_id):
+#         charts[project_id][name] = chart
+#     else:
+#         charts.setdefault(project_id, {})[name] = chart
+
+#Version with the tables saved too
+def display_chart(project_id, name, chart, table, column=None):
     if column:
         column.plotly_chart(chart, use_container_width=True)
     else:
         st.plotly_chart(chart, use_container_width=True)
 
-    # save to the session_state for later use
-    charts = dict()
-    if st.session_state.get(constants.CHARTS):
-        charts = st.session_state[constants.CHARTS]
-    else:
-        st.session_state[constants.CHARTS] = charts
+    # Clear the session_state
+    #st.session_state["project_data"] = {}
+    # Save chart and table to the session_state for later use
+    session_state = st.session_state.setdefault("project_data", {})
+    charts = session_state.setdefault(project_id, {}).setdefault("charts", {})
+    charts[name] = chart
 
-    if charts.get(project_id):
-        charts[project_id][name] = chart
-    else:
-        charts.setdefault(project_id, {})[name] = chart
-
+    if table is not None:
+        tables = session_state.setdefault(project_id, {}).setdefault("tables", {})
+        tables[name] = table
 
 # Create a function to save all charts in the SessionState object
 def show_download_charts_button(project_id):
-    if not st.session_state.get(constants.CHARTS):
+    if not st.session_state.get("project_data"):
         st.text("No chart was saved")
         return
 
-    charts = st.session_state[constants.CHARTS]
-    if not charts.get(project_id):
+    project_data = st.session_state["project_data"]
+    if not project_data.get(project_id):
         st.text("Nothing here")
         return
+
+    charts = project_data[project_id].get("charts", {})
+    tables = project_data[project_id].get("tables", {})
+
+    charts_list = list(charts.values()) if charts else []
+    tables_list = list(tables.values()) if tables else []
 
     # combined_chart = alt.concat(*charts[project_id].values(), columns=len(charts[project_id]))
     # # Create a temporary file
@@ -398,14 +467,59 @@ def show_download_charts_button(project_id):
     #         disabled=download_disabled
     #     )
 
-    charts_list = [*charts[project_id].values()]
+    #charts_list = [*charts[project_id].values()]
+    #charts_list = list(charts.values())
+    #tables_list = list(tables.values())
 
-    # Create a temporary file
+
+
+
+
+    # # Create a temporary file Original Download charts button
+    # combined_filename = f"{project_id}.combined_charts.pdf"
+    # full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
+    #
+    # # Create a PDF document
+    # with PdfPages(full_path) as pdf:
+    #     # Save each chart as a separate page in the PDF
+    #     for i, chart in enumerate(charts_list):
+    #         # Save the chart as a PNG image
+    #         image_path = f"{project_id}_chart_{i}.png"
+    #         image_full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), image_path)
+    #         chart.write_image(image_full_path, format='png')
+    #
+    #         # Add the image to the PDF page
+    #         fig = plt.figure(figsize=(8, 6))
+    #         img = plt.imread(image_full_path)
+    #         plt.imshow(img)
+    #         plt.axis('off')
+    #         pdf.savefig(fig)
+    #         plt.close()
+    #
+    #         # Remove the temporary image file
+    #         os.remove(image_full_path)
+    #
+    # download_disabled = not os.path.exists(full_path)
+    #
+    # # Add download button
+    # with open(full_path, 'rb') as f:
+    #     file_bytes = f.read()
+    #     st.download_button(
+    #         label='Download combined chart',
+    #         data=file_bytes,
+    #         file_name=combined_filename,
+    #         mime='application/pdf',
+    #         disabled=download_disabled
+    #     )
+
+
+    #New Download charts or table button
+    # Create a temporary file for the combined charts
     combined_filename = f"{project_id}.combined_charts.pdf"
-    full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
+    combined_full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
 
-    # Create a PDF document
-    with PdfPages(full_path) as pdf:
+    # Create a PDF document for the combined charts
+    with PdfPages(combined_full_path) as pdf:
         # Save each chart as a separate page in the PDF
         for i, chart in enumerate(charts_list):
             # Save the chart as a PNG image
@@ -424,15 +538,71 @@ def show_download_charts_button(project_id):
             # Remove the temporary image file
             os.remove(image_full_path)
 
-    download_disabled = not os.path.exists(full_path)
+    # Check if the combined charts PDF file exists
+    combined_download_disabled = not os.path.exists(combined_full_path)
 
-    # Add download button
-    with open(full_path, 'rb') as f:
-        file_bytes = f.read()
-        st.download_button(
-            label='Download combined chart',
-            data=file_bytes,
-            file_name=combined_filename,
-            mime='application/pdf',
-            disabled=download_disabled
-        )
+    # Dropdown button to select the download option
+    download_option = st.selectbox(
+        "Download Chart Data:",
+        options=["Combined Charts (PDF)", "Data as CSV", "Data as Excel"]
+    )
+
+    if download_option == "Combined Charts (PDF)":
+        # Add download button for the combined charts
+        with open(combined_full_path, 'rb') as f:
+            file_bytes = f.read()
+            st.download_button(
+                label='Download combined chart',
+                data=file_bytes,
+                file_name=combined_filename,
+                mime='application/pdf',
+                disabled=combined_download_disabled
+            )
+    elif download_option == "Chart Data as CSV":
+        # Check if tables_list contains any tables
+        if tables_list:
+            # Iterate through each table and save it as a separate CSV file
+            for i, (table_name, table) in enumerate(tables.items()):
+                # Check if table is a DataFrame and has data
+                if isinstance(table, pd.DataFrame) and not table.empty:
+                    csv_filename = f"{project_id}_data_{table_name}.csv"
+                    csv_full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), csv_filename)
+                    table.to_csv(csv_full_path, index=False)
+                    with open(csv_full_path, 'rb') as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label=f'Download {table_name} as CSV',
+                            data=file_bytes,
+                            file_name=csv_filename,
+                            mime='text/csv'
+                        )
+                else:
+                    st.text(f"No data available to save as CSV for table {table_name}.")
+        else:
+            st.text("No table available to save as CSV.")
+    elif download_option == "Chart Data as Excel":
+        if tables_list:
+            table = tables_list  # Assuming you want to save the first table
+            excel_filename = f"{project_id}_data.xlsx"
+            excel_full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), excel_filename)
+
+            # Create a new Excel writer object
+            with pd.ExcelWriter(excel_full_path, engine='openpyxl') as writer:
+                # Iterate through each table and save it as a separate sheet
+                for i, table in enumerate(tables_list):
+                    # Check if table is a DataFrame
+                    if isinstance(table, pd.DataFrame):
+                        sheet_name = f"Table_{i + 1}"
+                        table.to_excel(writer, sheet_name=sheet_name, index=False)
+
+            with open(excel_full_path, 'rb') as f:
+                file_bytes = f.read()
+                st.download_button(
+                    label='Download data as Excel',
+                    data=file_bytes,
+                    file_name=excel_filename,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+        else:
+            st.text("No table available to save as Excel.")
+

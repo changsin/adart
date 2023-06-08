@@ -103,6 +103,15 @@ if __name__ == '__main__':
     if username:
         st.sidebar.header(username)
 
+    #def add_logo(logo_path, width, height):
+    #"""Read and return a resized logo"""
+    #    logo = Image.open(logo_path)
+    #    modified_logo = logo.resize((width, height))
+    #    return modified_logo
+
+    #resources_dir = "resources"
+    #my_logo = add_logo(logo_path=os.path.join(resources_dir, 'ADaRT_blue.png'), width=350, height=150)
+    #st.sidebar.image(my_logo)
     if not os.path.exists(ADQ_WORKING_FOLDER):
         os.mkdir(ADQ_WORKING_FOLDER)
 
@@ -111,3 +120,5 @@ if __name__ == '__main__':
     else:
         main()
         logout()
+
+
