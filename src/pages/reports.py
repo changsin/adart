@@ -16,6 +16,8 @@ import dash
 from dash import Dash
 import dash_core_components as dcc
 import dash_html_components as html
+from src.common import constants, utils
+from collections import OrderedDict
 
 
 
@@ -102,24 +104,51 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     overlap_areas = dict()
     dimensions = dict()
     errors = dict()
+    error_columns = set()
+    class_columns = set()
+
+    image_table_data = {
+        'filename': [],
+        'total_classes': [],
+        'class_names': []
+    }
+
     for label_file, data_labels in label_objects_dict.items():
-        logger.info(f"get_label_metrics {label_file} {data_labels}")
+        logger.info("outputting the label file dict")
+        logger.info(f"get_label_objects_dict {label_file} ")
+        logger.info("output label file dict finished")
+
         for image in data_labels.images:
             count = len(image.objects)
+            class_names = set()
+            error_counts = dict()
+            class_counts = dict()  # Track class counts per image
+
             for ob_id1 in range(count):
                 object_cur = image.objects[ob_id1]
                 label = object_cur.label
+                class_names.add(label)
+                class_counts[label] = class_counts.get(label, 0) + 1
                 if class_labels.get(label):
                     class_labels[label] += 1
                 else:
                     class_labels[label] = 1
+                class_columns.add(label)
 
                 if object_cur.verification_result:
                     error_code = object_cur.verification_result['error_code']
+                    logger.info(f"This is the error code{error_code}")
                     if errors.get(error_code):
                         errors[error_code] += 1
                     else:
                         errors[error_code] = 1
+
+                    if error_counts.get(error_code):
+                        error_counts[error_code] += 1
+                    else:
+                        error_counts[error_code] = 1
+
+                    error_columns.add(error_code)
 
                 if not object_cur.points:
                     logger.warn("empty points in {}".format(object_cur.label))
@@ -137,7 +166,6 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
 
                 for ob_id2 in range(ob_id1 + 1, count):
                     if not image.objects[ob_id2].points:
-                        logger.warn("empty points in {}".format(image.objects[ob_id2].label))
                         continue
 
                     xtl2, ytl2, xbr2, ybr2 = DataLabels.Object.get_bounding_rectangle(image.objects[ob_id2])
@@ -146,14 +174,57 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     overlap_area, max_area = calculate_overlapping_rect(rect1, rect2)
 
                     if overlap_area > 0:
-                        overlap_percent = format(overlap_area/max_area, '.2f')
+                        overlap_percent = format(overlap_area / max_area, '.2f')
                         overlap_percent = float(overlap_percent) * 100
                         if overlap_areas.get(overlap_percent):
                             overlap_areas[overlap_percent] += 1
                         else:
                             overlap_areas[overlap_percent] = 1
 
-    return class_labels, overlap_areas, dimensions, errors
+            image_table_data['filename'].append(image.name)
+            image_table_data['total_classes'].append(len(class_names))
+            image_table_data['class_names'].append(", ".join(class_names))
+
+            # Add class columns dynamically
+            for label in class_columns:
+                if label not in image_table_data:
+                    image_table_data[label] = [class_counts.get(label, 0)]
+                else:
+                    image_table_data[label].append(class_counts.get(label, 0))
+            # Add error columns dynamically
+            for error_code in error_columns:
+                if error_code not in image_table_data:
+                    image_table_data[error_code] = [error_counts.get(error_code, 0)]
+                else:
+                    image_table_data[error_code].append(error_counts.get(error_code, 0))
+
+            
+
+    # Make sure all arrays have the same length
+    max_length = max(len(value) for value in image_table_data.values())
+    logger.info(f"this is the max length{max_length}")
+
+    for key, value in image_table_data.items():
+        if len(value) < max_length:
+            #logger.info(f"array has less numbers{value}")
+            image_table_data[key].extend([0] * (max_length - len(value)))
+    # Add missing error columns with 0 count
+    error_names = ['Mis-tagged', 'Untagged', 'Over-tagged', 'Range_error', 'Attributes_error']
+
+    for error_code in error_names:
+        if error_code not in image_table_data:
+            image_table_data[error_code] = [0] * len(image_table_data['filename'])
+
+    image_table = pd.DataFrame(image_table_data)
+    # Check if all values in each row are 0 and delete the row
+    image_table = image_table.loc[~(image_table == 0).all(axis=1)]
+    return class_labels, overlap_areas, dimensions, errors, image_table
+
+
+
+
+
+    #return class_labels, overlap_areas, dimensions, errors, image_table
 
 
 def triangle_area(vertices):
@@ -220,7 +291,7 @@ def show_label_metrics():
             st.warning("No label files")
             return
 
-        class_labels, overlap_areas, dimensions, errors = get_label_metrics(label_files)
+        class_labels, overlap_areas, dimensions, errors, image_table = get_label_metrics(label_files)
 
         chart_errors, table_errors = plot_chart("Error Count", "error", "count", errors)
         if chart_errors:
@@ -377,8 +448,8 @@ def show_label_metrics():
             chart_dimensions.update_layout(width=600, height=400)
 
 
-            chart_dimensions.update_traces(hoverinfo="none", hovertemplate=None)
-            logger.info(f"Chart dinemsions was made *****")
+            #chart_dimensions.update_traces(hoverinfo="none", hovertemplate=None)
+            logger.info(f"Chart dimensions was made *****")
 
             # Convert the chart to a Dash Graph component
             graph_dimensions = dcc.Graph(figure=chart_dimensions)
@@ -458,12 +529,57 @@ def show_label_metrics():
             #app.run_server(debug=True)
             if chart_dimensions:
                 display_chart(selected_project.id, "dimensions", chart_dimensions, table_dimensions)
+            
 
-
-
+        image_table = image_table[ list(image_table.columns)]
         show_download_charts_button(selected_project.id)
+        logger.info(f"Project ID{selected_project.name}")
+        dir_name = selected_project.name
+        logger.info(f"Project ID{dir_name}")
 
+        # Create download dropdown button for Excel or CSV file
+        download_label = "Download the Combined Error Data Statistics"
+        download_options = ["CSV", "Excel"]
+        download_format = st.selectbox(download_label, download_options)
+        project_folder = os.path.join(os.getcwd(), str(dir_name))
 
+        # Check if the project folder exists
+        if not os.path.exists(project_folder):
+            # Create the project folder if it doesn't exist
+            os.makedirs(project_folder)
+
+        if download_format == "CSV":
+            csv_filename = f"{selected_project.name}_data.csv"
+            csv_full_path = os.path.join(project_folder, csv_filename)
+
+            with open(csv_full_path, "w", newline="") as f:
+                image_table.to_csv(f, index=False)
+
+            with open(csv_full_path, "rb") as f:
+                file_bytes = f.read()
+                st.download_button(
+                    label="Download CSV",
+                    data=file_bytes,
+                    file_name=csv_filename,
+                    mime="text/csv"
+                )
+        elif download_format == "Excel":
+            excel_filename = f"{selected_project.name}_data.xlsx"
+            excel_full_path = os.path.join(project_folder, excel_filename)
+            #excel_full_path = os.path.join(os.getcwd(), excel_filename)
+
+            # Create a new Excel writer object
+            with pd.ExcelWriter(excel_full_path, engine="openpyxl") as writer:
+                image_table.to_excel(writer, index=False, header=True)
+
+            with open(excel_full_path, "rb") as f:
+                file_bytes = f.read()
+                st.download_button(
+                    label="Download Excel",
+                    data=file_bytes,
+                    file_name=excel_filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
 def main():
     # Clear the sidebar
     st.sidebar.empty()

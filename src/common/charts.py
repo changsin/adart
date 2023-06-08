@@ -181,12 +181,28 @@ def plot_file_sizes(df_file_info: pd.DataFrame):
     # return chart
 
     #Redoing the chart using plotly
-    chart = px.histogram(df_file_info, x='size', nbins=50,
-                       title='File Size Distribution',
-                       labels={'size': 'File Size (bytes)', 'count': 'Count'},
-                       hover_data=['size'])
+    # chart = px.histogram(df_file_info, x='size', nbins=50,
+    #                    title='File Size Distribution',
+    #                    labels={'size': 'File Size (bytes)', 'count': 'Count'},
+    #                    hover_data=['size'])
 
-    chart.update_layout(width=600, height=400, hovermode='closest')
+    #chart.update_layout(width=600, height=400, hovermode='closest')
+
+    # Create the histogram figure using plotly graph objects
+    chart = go.Figure(data=[go.Histogram(x=df_file_info['size'])])
+
+    # Configure the layout of the figure
+    chart.update_layout(
+        title='File Size Distribution',
+        xaxis_title='File Size (bytes)',
+        yaxis_title='Count',
+        bargap=0.1,
+    )
+
+    # Add a range slider to the x-axis
+    chart.update_layout(xaxis=dict(range=[df_file_info['size'].min(), df_file_info['size'].max()]),
+                      xaxis_rangeslider_visible=False)
+
 
     # Display the plot
     #st.plotly_chart(chart)
@@ -251,6 +267,14 @@ def plot_file_info(title: str, files_dict: dict):
                              title='Created Time')
 
     chart_ctime.update_layout(width=600, height=400, hovermode='closest')
+    chart_ctime.update_xaxes(rangeselector=dict(buttons=list([
+        dict(count=1, label="1m", step="month", stepmode="backward"),
+        dict(count=6, label="6m", step="month", stepmode="backward"),
+        dict(count=1, label="YTD", step="year", stepmode="todate"),
+        dict(count=1, label="1y", step="year", stepmode="backward"),
+        dict(step="all")
+    ])), rangeslider=dict(visible=False))
+
 
     # Display the plot
     #st.plotly_chart(chart_ctime)
@@ -519,7 +543,7 @@ def show_download_charts_button(project_id):
 
     # Dropdown button to select the download option
     download_option = st.selectbox(
-        "Download Option:",
+        "Download Chart Data:",
         options=["Combined Charts (PDF)", "Data as CSV", "Data as Excel"]
     )
 
@@ -534,7 +558,7 @@ def show_download_charts_button(project_id):
                 mime='application/pdf',
                 disabled=combined_download_disabled
             )
-    elif download_option == "Data as CSV":
+    elif download_option == "Chart Data as CSV":
         # Check if tables_list contains any tables
         if tables_list:
             # Iterate through each table and save it as a separate CSV file
@@ -556,7 +580,7 @@ def show_download_charts_button(project_id):
                     st.text(f"No data available to save as CSV for table {table_name}.")
         else:
             st.text("No table available to save as CSV.")
-    elif download_option == "Data as Excel":
+    elif download_option == "Chart Data as Excel":
         if tables_list:
             table = tables_list  # Assuming you want to save the first table
             excel_filename = f"{project_id}_data.xlsx"
