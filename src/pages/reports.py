@@ -148,6 +148,10 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         error_counts[error_code] = 1
 
                     error_columns.add(error_code)
+                else:
+                    errors = dict()
+                    error_counts = dict()
+                    error_columns = set()
 
                 if not object_cur.points:
                     logger.warn("empty points in {}".format(object_cur.label))
@@ -291,9 +295,9 @@ def show_label_metrics():
             return
 
         class_labels, overlap_areas, dimensions, errors, image_table = get_label_metrics(label_files)
-
-        chart_errors, table_errors = plot_chart("Error Count", "error", "count", errors)
-        if chart_errors:
+        
+        if errors:
+            chart_errors, table_errors = plot_chart("Error Count", "error", "count", errors)
             display_chart(selected_project.id, "error_count", chart_errors, table_errors)
             show_table = st.button("Show Table", key="show_table1")
             if show_table:
@@ -301,6 +305,8 @@ def show_label_metrics():
                 collapse_table = st.button("Collapse Table", key="collapse_table1")
                 if collapse_table:
                     st.table_errors([])  # Empty table to collapse the view
+        else:
+            st.write("No errors were created.")
         chart_class_count, table_class = plot_chart("Class Count", "class", "count", class_labels)
         if chart_class_count:
             display_chart(selected_project.id, "class_count", chart_class_count, table_class)
