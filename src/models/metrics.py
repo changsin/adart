@@ -97,7 +97,7 @@ def plot_image_clusters(project_id: str, title: str, filenames: list, images: li
     # Add selection and interaction
     chart.update_xaxes(scaleanchor="y", scaleratio=1)
     chart.update_yaxes(scaleratio=1)
-    chart.update_traces(selected_marker=dict(color='white', size=60))
+    chart.update_traces(selected_marker=dict(color='red', size=6))
 
     # Display the plot
     st.plotly_chart(chart)
