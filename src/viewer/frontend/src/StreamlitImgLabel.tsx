@@ -19,7 +19,6 @@ import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
 import {displayAttributes} from "./shapes/shape-attributes"
-import { Tooltip } from "react-tooltip";
 
 const StreamlitImgLabel = (props: ComponentProps) => {
     const [mode, setMode] = useState<string>("light")
@@ -228,6 +227,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             }
             setSelectedShape(updatedShape);
             sendSelectedShape(updatedShape);
+            if (canvas) {
+                canvas.renderAll();
+            }
         }
     }
           
@@ -384,146 +386,159 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     }, [])
 
     return (
-        <div style={{ display: 'flex' }}>
-          <div>
-            <TransformWrapper disabled={isInteractingWithBox}>
-              <TransformComponent>
-                <canvas
-                  id="c"
-                  className={mode === 'dark' ? styles.dark : ''}
-                  width={canvasWidth}
-                  height={canvasHeight}
-                />
-              </TransformComponent>
-            </TransformWrapper>
-          </div>
-      
-          <div className={mode === 'dark' ? styles.dark : ''}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <button onClick={addBoxHandler}>Untagged</button>
-              <button onClick={removeBoxHandler}>Delete</button>
-              <button onClick={resetHandler}>Reset</button>
-              <button onClick={clearHandler}>Clear all</button>
-            </div>
-            <div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={opacity * 100}
-                onChange={handleOpacityChange}
-              />
-              Label Opacity
-            </div>
-            <div>
-                <input
-                type="checkbox"
-                checked={selectAllClassLabels}
-                onChange={toggleSelectAllClassLabels}
-                />
-                Select All Shapes
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Expandable labels */}
-            {Array.from(new Set(labels)).map((label) => {
-                const labelCount = labels.filter((l) => l === label).length;
-                const labelText = `${label} (${labelCount})`;
-                const isExpanded = expandedLabels.includes(label);
-                const isClassLabelChecked = checkedClassLabels.includes(label);
+        <div>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <div style={{ flexGrow: 1 }}>
+                    <TransformWrapper disabled={isInteractingWithBox}>
+                    <TransformComponent>
+                        <canvas
+                        id="c"
+                        className={mode === 'dark' ? styles.dark : ''}
+                        width={canvasWidth}
+                        height={canvasHeight}
+                        />
+                    </TransformComponent>
+                    </TransformWrapper>
+                </div>
+                <div style={{ marginLeft: '10px' }}>
+                    <div>
+                        <input
+                        type="checkbox"
+                        checked={selectAllClassLabels}
+                        onChange={toggleSelectAllClassLabels}
+                        />
+                        Select All Shapes
+                    </div>
+                    <div>
+                        {/* Expandable labels */}
+                        {Array.from(new Set(labels)).map((label) => {
+                            const labelCount = labels.filter((l) => l === label).length;
+                            const labelText = `${label} (${labelCount})`;
+                            const isExpanded = expandedLabels.includes(label);
+                            const isClassLabelChecked = checkedClassLabels.includes(label);
 
-                return (
-                <div key={label}>
-                    <label
-                    style={{ marginRight: '10px', cursor: 'pointer' }}
-                    onClick={() => handleExpandLabel(label)}
-                    >
-                    <strong>{isExpanded ? '-' : '+'}</strong> {labelText}
-                    </label>
-                    {isExpanded && (
-                    <div style={{ marginLeft: '20px' }}>
-                    {/* Class label */}
-                        {labelCount > 1 && (
-                            <label style={{ marginRight: '10px' }}>
-                                <input
-                                type="checkbox"
-                                checked={isClassLabelChecked}
-                                onChange={() => handleClassLabelToggle(label)}
-                                />
-                                Select All
-                            </label>
-                        )}
-                        {/* Individual labels */}
-                        {shapesInternal.map((l, index) => {
-                            if (l.label === label) {
-                                return (
+                            return (
+                            <div key={label}>
                                 <label
-                                    key={`${label}-${l.shape_id}`}
-                                    style={{ marginRight: '10px' }}
+                                style={{ marginRight: '10px', cursor: 'pointer' }}
+                                onClick={() => handleExpandLabel(label)}
                                 >
-                                    <input
-                                    type="checkbox"
-                                    checked={checkedIndividualLabels.includes(`${l.label}-${l.shape_id}`)}
-                                    onChange={() => handleIndividualLabelToggle(`${l.label}-${l.shape_id}`)}
-                                    />
-                                    {l.label}-{l.shape_id}
+                                <strong>{isExpanded ? '-' : '+'}</strong> {labelText}
                                 </label>
-                                );
-                            }
-                            return null;
+                                {isExpanded && (
+                                <div style={{ marginLeft: '20px' }}>
+                                {/* Class label */}
+                                    {labelCount > 1 && (
+                                        <label style={{ marginRight: '10px' }}>
+                                            <input
+                                            type="checkbox"
+                                            checked={isClassLabelChecked}
+                                            onChange={() => handleClassLabelToggle(label)}
+                                            />
+                                            Select All
+                                        </label>
+                                    )}
+                                    {/* Individual labels */}
+                                    {shapesInternal.map((l, index) => {
+                                        if (l.label === label) {
+                                            return (
+                                            <label
+                                                key={`${label}-${l.shape_id}`}
+                                                style={{ marginRight: '10px' }}
+                                            >
+                                                <input
+                                                type="checkbox"
+                                                checked={checkedIndividualLabels.includes(`${l.label}-${l.shape_id}`)}
+                                                onChange={() => handleIndividualLabelToggle(`${l.label}-${l.shape_id}`)}
+                                                />
+                                                {l.label}-{l.shape_id}
+                                            </label>
+                                            );
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+                                )}
+                            </div>
+                            );
                         })}
                     </div>
-                    )}
+                    <div>
+                        {selectedShape && (
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <label>
+                                    {selectedShape.label}
+                                </label>
+                                <pre>{displayAttributes(selectedShape)}</pre>
+                                <label>
+                                    Error:
+                                    <select
+                                        value={verificationResult?.error_code ?? ''}
+                                        onChange={(e) => {
+                                            const errorCodeValue = e.target.value as string;
+                                            setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
+                                            ...prevVerificationResult,
+                                            error_code: errorCodeValue !== '' ? errorCodeValue : '',
+                                            comment: prevVerificationResult?.comment !== undefined ? prevVerificationResult?.comment : ''
+                                            }));
+                                        }}
+                                    >
+                                    <option value="">None</option>
+                                    <option value={ErrorType.DVE_MISS[1]}>{ErrorType.DVE_MISS[1]}</option>
+                                    <option value={ErrorType.DVE_UNTAG[1]}>{ErrorType.DVE_UNTAG[1]}</option>
+                                    <option value={ErrorType.DVE_OVER[1]}>{ErrorType.DVE_OVER[1]}</option>
+                                    <option value={ErrorType.DVE_RANGE[1]}>{ErrorType.DVE_RANGE[1]}</option>
+                                    <option value={ErrorType.DVE_ATTR[1]}>{ErrorType.DVE_ATTR[1]}</option>
+                                    </select>
+                                </label>
+                                <label>
+                                <input
+                                    type="text"
+                                    value={verificationResult?.comment ?? ''}
+                                    onChange={(e) => {
+                                        const commentValue = e.target?.value as string;
+                                        setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
+                                            ...prevVerificationResult,
+                                            error_code: prevVerificationResult?.error_code !== undefined ? prevVerificationResult?.error_code : '',
+                                            comment: commentValue
+                                        }));
+                                    }}
+                                    placeholder={verificationResult?.comment ? '' : 'Comment...'}
+                                    />
+                                </label>
+                                <div>
+                                    <button onClick={() => onSetVerificationResult(verificationResult)}>
+                                    Set Error
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                );
-            })}
             </div>
-            {selectedShape && (
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <label>
-                        {selectedShape.label}
-                    </label>
-                    <pre>{displayAttributes(selectedShape)}</pre>
-                    <label>
-                        Error:
-                        <select
-                            value={verificationResult?.error_code ?? ''}
-                            onChange={(e) => {
-                                const errorCodeValue = e.target.value as string;
-                                setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
-                                ...prevVerificationResult,
-                                error_code: errorCodeValue !== '' ? errorCodeValue : '',
-                                comment: prevVerificationResult?.comment !== undefined ? prevVerificationResult?.comment : ''
-                                }));
-                            }}
-                        >
-                        <option value="">None</option>
-                        <option value={ErrorType.DVE_MISS[1]}>{ErrorType.DVE_MISS[1]}</option>
-                        <option value={ErrorType.DVE_UNTAG[1]}>{ErrorType.DVE_UNTAG[1]}</option>
-                        <option value={ErrorType.DVE_OVER[1]}>{ErrorType.DVE_OVER[1]}</option>
-                        <option value={ErrorType.DVE_RANGE[1]}>{ErrorType.DVE_RANGE[1]}</option>
-                        <option value={ErrorType.DVE_ATTR[1]}>{ErrorType.DVE_ATTR[1]}</option>
-                        </select>
-                    </label>
-                    <label>
-                    <input
-                        type="text"
-                        value={verificationResult?.comment ?? ''}
-                        onChange={(e) => {
-                            const commentValue = e.target?.value as string;
-                            setVerificationResult((prevVerificationResult: VerificationResult | null): VerificationResult | null => ({
-                                ...prevVerificationResult,
-                                error_code: prevVerificationResult?.error_code !== undefined ? prevVerificationResult?.error_code : '',
-                                comment: commentValue
-                            }));
-                        }}
-                        placeholder={verificationResult?.comment ? '' : 'Comment...'}
-                        />
-                    </label>
-                    <button onClick={() => onSetVerificationResult(verificationResult)}>
-                    Set Error
-                    </button>
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <div style={{ marginBottom: '10px' }}>
+                    <button onClick={addBoxHandler} title="Mark Untagged object">Untagged</button>
                 </div>
-                )}
+                <div style={{ marginBottom: '10px' }}>
+                    <button onClick={removeBoxHandler} title="Delete Untagged label">Delete</button>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                    <button onClick={resetHandler}>Reset</button>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                    <button onClick={clearHandler}>Clear all</button>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                    <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={opacity * 100}
+                        onChange={handleOpacityChange}
+                    />
+                    Label Opacity
+                </div>
             </div>
         </div>
     );
