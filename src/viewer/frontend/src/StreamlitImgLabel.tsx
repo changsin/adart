@@ -34,6 +34,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
 
     const [shapesInternal, setShapesInternal] = useState<ShapeProps[]>(shapes);
     const [checkedClassLabels, setCheckedClassLabels] = useState<string[]>([]);
+    const [selectAllClassLabels, setSelectAllClassLabels] = useState(false);
     const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
     const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>(shapesInternal
         .filter((shape) => (shape.verification_result !== null) || (shape.label === 'spline') || (shape.label === 'VP'))
@@ -92,8 +93,25 @@ const StreamlitImgLabel = (props: ComponentProps) => {
             return updatedClassLabels;
           }
         });
-      };
-      
+    };
+
+    const toggleSelectAllClassLabels = () => {
+        setSelectAllClassLabels(!selectAllClassLabels);
+        if (!selectAllClassLabels) {
+            const classLabels = shapesInternal.map(
+                (shape) => `${shape.label}`
+            );
+            const individualLabels = shapesInternal.map(
+                (shape) => `${shape.label}-${shape.shape_id}`
+            );
+            setCheckedClassLabels(classLabels);
+            setCheckedIndividualLabels(individualLabels);
+        } else {
+            setCheckedClassLabels([]);
+            setCheckedIndividualLabels([]);
+        }
+    };
+
     const handleOpacityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const opacityValue = Number(event.target.value) / 100;
         setOpacity(opacityValue);
@@ -396,6 +414,14 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 onChange={handleOpacityChange}
               />
               Label Opacity
+            </div>
+            <div>
+                <input
+                type="checkbox"
+                checked={selectAllClassLabels}
+                onChange={toggleSelectAllClassLabels}
+                />
+                Select All Shapes
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
             {/* Expandable labels */}
