@@ -125,6 +125,7 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
 
             for ob_id1 in range(count):
                 object_cur = image.objects[ob_id1]
+                #logger.info(f"This is the error code when no verification resut{object_cur}")
                 label = object_cur.label
                 class_names.add(label)
                 class_counts[label] = class_counts.get(label, 0) + 1
@@ -148,11 +149,12 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         error_counts[error_code] = 1
 
                     error_columns.add(error_code)
-                else:
-                    errors = dict()
-                    error_counts = dict()
-                    error_columns = set()
-
+                #else:
+                    #errors = dict()
+                    #error_counts = dict()
+                    #error_columns = set()
+                
+        
                 if not object_cur.points:
                     logger.warn("empty points in {}".format(object_cur.label))
                     continue
@@ -202,7 +204,12 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     image_table_data[error_code].append(error_counts.get(error_code, 0))
 
             
+    required_keys = ['Mis-tagged', 'Untagged', 'Over-tagged', 'Range_error', 'Attributes_error']
 
+    for key in required_keys:
+        if key not in errors:
+            errors[key] = ['0']
+    logger.info(f"This is the real final error code final{errors}")
     # Make sure all arrays have the same length
     max_length = max(len(value) for value in image_table_data.values())
     logger.info(f"this is the max length{max_length}")
@@ -375,7 +382,7 @@ def show_label_metrics():
             # Generate thumbnails
             project_folder = selected_project.dir_name
             thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
-            logger.info(f"{project_folder} {thumbnail_filenames}")
+            #logger.info(f"{project_folder} {thumbnail_filenames}")
 
             thumbnails = []
 

@@ -7,6 +7,10 @@ import pandas as pd
 import streamlit as st
 
 from src.common import constants, utils
+from src.common.logger import get_logger
+
+
+from PIL import Image
 
 import plotly.graph_objects as go
 import plotly.express as px
@@ -15,6 +19,9 @@ import plotly.io as pio
 import plotly.subplots as sp
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+
+logger = get_logger(__name__)
+
 
 @st.cache_data
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
@@ -363,7 +370,8 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     else:
         chart = px.bar(data_frame=data, x=x_label, y=y_label, color=x_label,
                        hover_data=[x_label, y_label], title=title)
-
+        
+        
     # Configure the layout
     chart.update_layout(width=600, height=400, hovermode='closest')
 
@@ -374,7 +382,7 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     table = pd.DataFrame(data_dict.items(), columns=[x_label, y_label])
 
 
-    col_chart, col_table = st.columns(2)
+    #col_chart, col_table = st.columns(2)
 
     #with col_chart:
         #st.plotly_chart(chart)
@@ -544,7 +552,7 @@ def show_download_charts_button(project_id):
     # Dropdown button to select the download option
     download_option = st.selectbox(
         "Download Chart Data:",
-        options=["Combined Charts (PDF)", "Data as CSV", "Data as Excel"]
+        options=["Combined Charts (PDF)", "Chart Data as CSV", "Chart Data as Excel"]
     )
 
     if download_option == "Combined Charts (PDF)":
