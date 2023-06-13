@@ -116,7 +116,6 @@ def select_task(project_id: int, label="Select task") -> Task:
         st.markdown("**No task is created!**")
 
 
-
 def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
     os.makedirs(output_folder, exist_ok=True)
 

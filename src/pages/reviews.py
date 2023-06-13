@@ -8,6 +8,7 @@ from PIL import Image
 import src.viewer.app as app
 from src.common.constants import SUPPORTED_IMAGE_FILE_EXTENSIONS
 from src.common.logger import get_logger
+from src.common.utils import get_window_size
 from src.common.utils import (
     glob_files,
     load_images
@@ -63,6 +64,12 @@ def review_images():
 
 def review_task():
     selected_project = select_project(is_sidebar=True)
+
+    window_width, window_height = get_window_size()
+
+    # set the window_width before calling the viewer
+    # because window size is not immediately reflected when loading the image.
+    st.session_state["window_width"] = window_width
 
     if selected_project:
         selected_task = select_task(selected_project.id)

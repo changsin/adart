@@ -14,16 +14,17 @@ from src.common.constants import (
     BoundaryType2R,
     TypeRoadMarkerQ
 )
+from src.common.logger import get_logger
 from src.models.data_labels import DataLabels
 from src.models.tasks_info import Task
 from src.viewer import st_img_label
 from src.viewer.image_manager import ImageManager
-from src.common.logger import get_logger
-from src.common.utils import get_window_size
 
 logger = get_logger(__name__)
 
 DEFAULT_SHAPE_COLOR = "magenta"
+min_width = 700
+max_width = 1000
 
 
 def _display_type_attributes(selected_shape: dict, key="1"):
@@ -78,9 +79,15 @@ def _display_type_attributes(selected_shape: dict, key="1"):
 
 def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_all_types()):
     def save(image_index: int, im: ImageManager):
-        data_labels.images[image_index] = im.to_data_labels_image()
-        data_labels.save(selected_task.anno_file_name)
+        image_to_save = im.to_data_labels_image()
 
+        curr_image = data_labels.images[image_index]
+        if curr_image.name == image_to_save.name:
+            data_labels.images[image_index] = image_to_save
+        else:
+            data_labels.save_image(image_to_save)
+
+        data_labels.save(selected_task.anno_file_name)
         selected_task.error_count = data_labels.get_verification_result_sum()
         selected_task.save()
 
@@ -227,10 +234,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         return image_index
 
     def call_frontend(im: ImageManager, image_index: int) -> dict:
-        window_width, window_height = get_window_size()
-        logger.info(f"window_width, window_height: {window_width}, {window_height}")
-        max_width = window_width * 0.8 if window_width > 0 else 700
-        min_width = window_width * 0.65 if window_width > 0 else 700
+        window_width = st.session_state.get("window_width", 700)
+        logger.info(f"window_width: {window_width}")
+        max_width = window_width * 0.7 if window_width > 700 else 700
+        min_width = window_width * 0.6 if window_width > 700 else 700
+        logger.info(f"min_width, max_width = {min_width}, {max_width}")
         resized_img = im.resizing_img(min_width=min_width, max_width=max_width)
         resized_shapes = im.get_downscaled_shapes()
         shape_color = _pick_color(resized_shapes[0].get('label'), DEFAULT_SHAPE_COLOR)
