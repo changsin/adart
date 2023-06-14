@@ -72,6 +72,7 @@ def update_data_project(selected_project: Project):
             selected_project.name = name
             selected_project.description = description
             response = api_target().update_project(selected_project.to_json())
+            logger.info(f"New Selected Projectttt {selected_project}")
             logger.info(response)
             st.write("Project {} updated".format(name))
 

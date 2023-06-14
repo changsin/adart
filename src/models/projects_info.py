@@ -6,12 +6,15 @@ from abc import ABC
 import attr
 
 import src.common.utils as utils
+from src.common.logger import get_logger
+
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     PROJECT,
     PROJECTS,
     JSON_EXT
 )
+logger = get_logger(__name__)
 
 
 @attr.s(slots=True, frozen=False)
@@ -86,7 +89,7 @@ class Project(ABC):
         if not os.path.exists(project_folder):
             os.mkdir(project_folder)
 
-        filename = os.path.join(project_folder, f"{PROJECT}-{self.id}.{JSON_EXT}")
+        filename = os.path.join(project_folder, f"{PROJECT}-{self.id}{JSON_EXT}")
         utils.to_file(json.dumps(self,
                                  default=utils.default, indent=2),
                       filename)
@@ -246,6 +249,7 @@ class ProjectPointers:
                                          name=project.name,
                                          dir_name=project.dir_name)
         self.project_pointers.append(project_pointer)
+        logger.info(f"This is the project pointerrrrrrr{project_pointer}")
 
     def get_next_project_id(self) -> int:
         if len(self.project_pointers) == 0:
@@ -266,15 +270,21 @@ class ProjectPointers:
     def update_project(self, project_to_update: Project):
         if len(self.project_pointers) > 0:
             index_to_update = None
+            #logger.info(f"Index to Updateeeeee{index}")
             for index, project_pointer in enumerate(self.project_pointers):
+                logger.info(f"Index to Updateeeeee{index}")
+                logger.info(f"NEW index{project_pointer.id}")
+                logger.info(f"NEW index{project_to_update.id}")
                 if project_pointer.id == project_to_update.id:
                     index_to_update = index
+                    logger.info(f"Index Updateddd{index_to_update}")
                     break
 
             project_pointer_to_update = ProjectPointer(id=project_to_update.id,
                                                        name=project_to_update.name,
                                                        dir_name=project_to_update.dir_name)
             self.project_pointers[index_to_update] = project_pointer_to_update
+            self.save()
 
     def save(self):
         if not os.path.exists(ADQ_WORKING_FOLDER):
