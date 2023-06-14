@@ -30,6 +30,13 @@ class DataLabels:
         json_data = json.dumps(self.to_json(), default=utils.default, ensure_ascii=False, indent=2)
         utils.to_file(json_data, filename)
 
+    def save_image(self, image_to_save: 'DataLabels.Image'):
+        for idx, image in enumerate(self.images):
+            if image.name == image_to_save.name:
+                self.images[idx] = image_to_save
+                break
+        logger.error(f"Cannot find a matching image {image_to_save}")
+
     def get_class_labels(self):
         """
         :return: all class labels

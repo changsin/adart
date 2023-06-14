@@ -160,6 +160,12 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
 
 
     return chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness 
+    #Making the tables from the charts
+    table_brightness = pd.DataFrame(df_brightness.values, columns=["brightness", "count"])
+    table_aspect_ratios = pd.DataFrame(df_aspect_ratios.values, columns=["aspect ratio", "count"])
+
+
+    return chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness 
 
 
 @st.cache_data
