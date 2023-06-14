@@ -79,14 +79,24 @@ def plot_image_clusters(project_id: str, title: str, filenames: list, images: li
     #)
 
 
-    # Define a color sequence for the clusters
-    color_sequence = ['rgb(31, 119, 180)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)',
-                  'rgb(148, 103, 189)', 'rgb(140, 86, 75)', 'rgb(227, 119, 194)', 'rgb(127, 127, 127)',
-                  'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
+    # Define a color scheme dictionary for the clusters
+    color_scheme = {
+        'Cluster 1': 'rgb(31, 119, 180)',
+        'Cluster 2': 'rgb(255, 127, 14)',
+        'Cluster 3': 'rgb(44, 160, 44)',
+        'Cluster 4': 'rgb(214, 39, 40)',
+        'Cluster 5': 'rgb(148, 103, 189)',
+        'Cluster 6': 'rgb(140, 86, 75)',
+        'Cluster 7': 'rgb(227, 119, 194)',
+        'Cluster 8': 'rgb(127, 127, 127)',
+        'Cluster 9': 'rgb(188, 189, 34)',
+        'Cluster 10': 'rgb(23, 190, 207)'
+}
+
     # Create scatter plot using Plotly
     chart = px.scatter(df, x='PC1', y='PC2', color='Cluster',
-                 title=title, hover_data=['Filename', 'Cluster'],
-                 color_discrete_sequence=color_sequence)
+                    title=title, hover_data=['Filename', 'Cluster'],
+                    color_continuous_scale='Viridis')
 
     # Set plot title
     chart.update_layout(title=title)

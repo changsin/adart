@@ -9,7 +9,6 @@ import streamlit as st
 from src.common import constants, utils
 from src.common.logger import get_logger
 
-
 from PIL import Image
 
 import plotly.graph_objects as go
@@ -21,7 +20,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
 logger = get_logger(__name__)
-
 
 @st.cache_data
 def plot_aspect_ratios_brightness(title: str, files_dict: dict):
@@ -158,15 +156,7 @@ def plot_aspect_ratios_brightness(title: str, files_dict: dict):
     table_brightness = pd.DataFrame(df_brightness.values, columns=["brightness", "count"])
     table_aspect_ratios = pd.DataFrame(df_aspect_ratios.values, columns=["aspect ratio", "count"])
 
-
     return chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness 
-    #Making the tables from the charts
-    table_brightness = pd.DataFrame(df_brightness.values, columns=["brightness", "count"])
-    table_aspect_ratios = pd.DataFrame(df_aspect_ratios.values, columns=["aspect ratio", "count"])
-
-
-    return chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness 
-
 
 @st.cache_data
 def plot_file_sizes(df_file_info: pd.DataFrame):
@@ -216,12 +206,10 @@ def plot_file_sizes(df_file_info: pd.DataFrame):
     chart.update_layout(xaxis=dict(range=[df_file_info['size'].min(), df_file_info['size'].max()]),
                       xaxis_rangeslider_visible=False)
 
-
     # Display the plot
     #st.plotly_chart(chart)
 
     return chart
-
 
 @st.cache_data
 def plot_file_info(title: str, files_dict: dict):
@@ -288,7 +276,6 @@ def plot_file_info(title: str, files_dict: dict):
         dict(step="all")
     ])), rangeslider=dict(visible=False))
 
-
     # Display the plot
     #st.plotly_chart(chart_ctime)
 
@@ -303,7 +290,6 @@ def plot_file_info(title: str, files_dict: dict):
     #table_chart_sizes = pd.DataFrame(df_size, columns=["File Size", "count"])
 
     return chart_ctime, chart_sizes, table_ctime
-
 
 @st.cache_data
 def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_type="bar"):
@@ -387,7 +373,6 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     # Create the table using Pandas DataFrame
     table = pd.DataFrame(data_dict.items(), columns=[x_label, y_label])
 
-
     #col_chart, col_table = st.columns(2)
 
     #with col_chart:
@@ -397,7 +382,6 @@ def plot_chart(title: str, x_label: str, y_label: str, data_dict: dict, chart_ty
     #    st.table(table)
 
     return chart, table
-
 
 # def display_chart(project_id, name, chart, column=None):
 #     if column:
@@ -488,7 +472,6 @@ def show_download_charts_button(project_id):
 
 
 
-
     # # Create a temporary file Original Download charts button
     # combined_filename = f"{project_id}.combined_charts.pdf"
     # full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), combined_filename)
@@ -525,7 +508,6 @@ def show_download_charts_button(project_id):
     #         mime='application/pdf',
     #         disabled=download_disabled
     #     )
-
 
     #New Download charts or table button
     # Create a temporary file for the combined charts
@@ -581,6 +563,10 @@ def show_download_charts_button(project_id):
                 if isinstance(table, pd.DataFrame) and not table.empty:
                     csv_filename = f"{project_id}_data_{table_name}.csv"
                     csv_full_path = os.path.join(constants.ADQ_WORKING_FOLDER, str(project_id), csv_filename)
+
+                    if os.path.exists(csv_full_path):
+                        os.remove(csv_full_path)  # Remove the existing file
+
                     table.to_csv(csv_full_path, index=False)
                     with open(csv_full_path, 'rb') as f:
                         file_bytes = f.read()
@@ -619,4 +605,3 @@ def show_download_charts_button(project_id):
                 )
         else:
             st.text("No table available to save as Excel.")
-

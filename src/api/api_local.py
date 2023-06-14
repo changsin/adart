@@ -14,6 +14,8 @@ from src.common.logger import get_logger
 from src.models.projects_info import Project, ProjectPointers
 from src.models.tasks_info import Task, TaskPointers
 from src.models.users_info import User, UsersInfo
+from src.common.logger import get_logger
+
 from .api_base import ApiBase
 from .security import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -126,10 +128,12 @@ class ApiLocal(ApiBase):
     def update_project(self, project_dict: dict) -> dict:
         project_pointers = ProjectPointers.from_json(self.list_project_pointers())
         project_to_update = project_pointers.get_project_by_id(project_dict["id"])
+        logger.info(f"New project pointersssssss {project_to_update}")
         project_to_update.name = project_dict["name"]
         project_to_update.description = project_dict["description"]
         project_to_update.save()
         project_pointers.update_project(project_to_update)
+        logger.info(f"New project pointersssssss {project_pointers}")
         return project_dict
 
     def list_task_pointers(self, project_id: int = -1) -> dict:

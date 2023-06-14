@@ -559,7 +559,7 @@ def show_label_metrics():
 
         image_table = image_table[ list(image_table.columns)]
         show_download_charts_button(selected_project.id)
-        logger.info(f"Project ID{selected_project.name}")
+        logger.info(f"Project ID{selected_project.name}this is the name")
         dir_name = selected_project.name
         logger.info(f"Project ID{dir_name}")
 
@@ -567,8 +567,10 @@ def show_label_metrics():
         download_label = "Download the Combined Error Data Statistics"
         download_options = ["CSV", "Excel"]
         download_format = st.selectbox(download_label, download_options)
-        project_folder = os.path.join(os.getcwd(), str(dir_name))
-
+        if " " in dir_name:
+            dir_name = dir_name.replace(" ", "_")
+        project_folder = os.path.join(os.getcwd(),str(dir_name))
+        logger.info(f"the os.path.join thing:{selected_project}end of name")
         # Check if the project folder exists
         if not os.path.exists(project_folder):
             # Create the project folder if it doesn't exist
@@ -576,7 +578,11 @@ def show_label_metrics():
 
         if download_format == "CSV":
             csv_filename = f"{selected_project.name}_data.csv"
+            logger.info(f"Project folder exists:{project_folder}{csv_filename}")
             csv_full_path = os.path.join(project_folder, csv_filename)
+
+            if os.path.exists(csv_full_path):
+                os.remove(csv_full_path)  # Remove the existing file
 
             with open(csv_full_path, "w", newline="") as f:
                 image_table.to_csv(f, index=False)
