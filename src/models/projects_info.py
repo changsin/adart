@@ -249,7 +249,6 @@ class ProjectPointers:
                                          name=project.name,
                                          dir_name=project.dir_name)
         self.project_pointers.append(project_pointer)
-        logger.info(f"This is the project pointerrrrrrr{project_pointer}")
 
     def get_next_project_id(self) -> int:
         if len(self.project_pointers) == 0:
@@ -270,14 +269,9 @@ class ProjectPointers:
     def update_project(self, project_to_update: Project):
         if len(self.project_pointers) > 0:
             index_to_update = None
-            #logger.info(f"Index to Updateeeeee{index}")
             for index, project_pointer in enumerate(self.project_pointers):
-                logger.info(f"Index to Updateeeeee{index}")
-                logger.info(f"NEW index{project_pointer.id}")
-                logger.info(f"NEW index{project_to_update.id}")
                 if project_pointer.id == project_to_update.id:
                     index_to_update = index
-                    logger.info(f"Index Updateddd{index_to_update}")
                     break
 
             project_pointer_to_update = ProjectPointer(id=project_to_update.id,

@@ -39,9 +39,7 @@ def load_thumbnail(file_path):
 
 def show_images(project_folder):
     thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
-    logger.info(f"thumbnail files {thumbnail_filenames}")
 
-    # logger.info(f"{project_folder} {thumbnail_filenames}")
     # Define the number of columns
     num_columns = 5
 
@@ -151,7 +149,6 @@ def load_label_thumbnails(data_folder: str, data_labels: DataLabels, label_thumb
         for label_image in data_labels.images:
             image_filename = os.path.join(data_folder, label_image.name)
             image = Image.open(image_filename)
-            logger.info(f"Label Image name {image}")
             for idx, obj in enumerate(label_image.objects):
                 thumbnail_name = os.path.join(label_thumbnail_folder,
                                               f"{obj.label}-{idx}-{label_image.name}")
@@ -177,16 +174,13 @@ def detect_label_anomalies(selected_project):
     label_thumbnails = []
     thumbnail_names = []
     if label_files_dict:
-        logger.info(label_files_dict)
         data_folder = os.path.join(selected_project.dir_name, "data")
         label_thumbnail_folder = os.path.join(selected_project.dir_name, "label_thumbnails")
 
         for project_folder, label_files in label_files_dict.items():
             for task_idx, label_file in enumerate(label_files):
                 st.write(f"Analyzing class labels for task {task_idx}")
-                logger.info(os.path.join(project_folder, label_file))
                 data_labels = DataLabels.load(os.path.join(project_folder, label_file))
-                logger.info(f"looking into {data_folder} {label_thumbnail_folder}")
                 thumbnails, names = load_label_thumbnails(data_folder, data_labels, label_thumbnail_folder)
 
                 if thumbnails:
@@ -207,7 +201,6 @@ def detect_label_anomalies(selected_project):
 
 def show_image_clusters(selected_project):
     data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
-    logger.info(f"data files {data_files}")
     # Preprocess and cluster images
     images = load_images(data_files["."])
     if len(images) < 5:
