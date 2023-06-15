@@ -52,7 +52,6 @@ def create_data_project():
                                        description=description
                                        ).to_json()
             response = api_target().create_project(new_project_dict)
-            logger.info(response)
             st.write("Project {} created".format(name))
 
 
@@ -72,7 +71,6 @@ def update_data_project(selected_project: Project):
             selected_project.name = name
             selected_project.description = description
             response = api_target().update_project(selected_project.to_json())
-            logger.info(response)
             st.write("Project {} updated".format(name))
 
 

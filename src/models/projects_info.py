@@ -6,12 +6,15 @@ from abc import ABC
 import attr
 
 import src.common.utils as utils
+from src.common.logger import get_logger
+
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     PROJECT,
     PROJECTS,
     JSON_EXT
 )
+logger = get_logger(__name__)
 
 
 @attr.s(slots=True, frozen=False)
@@ -86,7 +89,7 @@ class Project(ABC):
         if not os.path.exists(project_folder):
             os.mkdir(project_folder)
 
-        filename = os.path.join(project_folder, f"{PROJECT}-{self.id}.{JSON_EXT}")
+        filename = os.path.join(project_folder, f"{PROJECT}-{self.id}{JSON_EXT}")
         utils.to_file(json.dumps(self,
                                  default=utils.default, indent=2),
                       filename)
@@ -275,6 +278,7 @@ class ProjectPointers:
                                                        name=project_to_update.name,
                                                        dir_name=project_to_update.dir_name)
             self.project_pointers[index_to_update] = project_pointer_to_update
+            self.save()
 
     def save(self):
         if not os.path.exists(ADQ_WORKING_FOLDER):

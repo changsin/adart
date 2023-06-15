@@ -39,7 +39,7 @@ def load_thumbnail(file_path):
 
 def show_images(project_folder):
     thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
-    # logger.info(f"{project_folder} {thumbnail_filenames}")
+
     # Define the number of columns
     num_columns = 5
 
@@ -60,6 +60,7 @@ def review_images():
     selected_project = select_project(is_sidebar=True)
     if selected_project:
         show_images(selected_project.dir_name)
+        logger.info(f"selected project dir name {selected_project.dir_name} ")
 
 
 def review_task():
@@ -173,16 +174,13 @@ def detect_label_anomalies(selected_project):
     label_thumbnails = []
     thumbnail_names = []
     if label_files_dict:
-        logger.info(label_files_dict)
         data_folder = os.path.join(selected_project.dir_name, "data")
         label_thumbnail_folder = os.path.join(selected_project.dir_name, "label_thumbnails")
 
         for project_folder, label_files in label_files_dict.items():
             for task_idx, label_file in enumerate(label_files):
                 st.write(f"Analyzing class labels for task {task_idx}")
-                logger.info(os.path.join(project_folder, label_file))
                 data_labels = DataLabels.load(os.path.join(project_folder, label_file))
-                logger.info(f"looking into {data_folder} {label_thumbnail_folder}")
                 thumbnails, names = load_label_thumbnails(data_folder, data_labels, label_thumbnail_folder)
 
                 if thumbnails:

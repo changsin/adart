@@ -20,6 +20,20 @@ from src.common import constants, utils
 from collections import OrderedDict
 
 
+import io
+from PIL import Image
+import plotly.graph_objects as go
+import os.path
+import numpy as np
+import base64
+import dash
+from dash import Dash
+from dash import dcc
+from dash import html
+from src.common import constants, utils
+from collections import OrderedDict
+
+
 
 from src.common.charts import (
     display_chart,
@@ -51,9 +65,6 @@ def show_file_metrics():
         data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
         #chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               #data_files)
-        #logger.info(selected_project)
-        #data_files = get_data_files(selected_project.dir_name)
-        #if data_files:
         chart_files_ctime, chart_file_sizes, table_files_ctime = plot_file_info("Data files info", data_files)
 
         col1, col2 = st.columns(2)
@@ -113,9 +124,6 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     }
 
     for label_file, data_labels in label_objects_dict.items():
-        logger.info("outputting the label file dict")
-        logger.info(f"get_label_objects_dict {label_file} ")
-        logger.info("output label file dict finished")
 
         for image in data_labels.images:
             count = len(image.objects)
@@ -136,7 +144,6 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
 
                 if object_cur.verification_result:
                     error_code = object_cur.verification_result['error_code']
-                    logger.info(f"This is the error code{error_code}")
                     if errors.get(error_code):
                         errors[error_code] += 1
                     else:
@@ -148,11 +155,12 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                         error_counts[error_code] = 1
 
                     error_columns.add(error_code)
-                else:
-                    errors = dict()
-                    error_counts = dict()
-                    error_columns = set()
-
+                #else:
+                    #errors = dict()
+                    #error_counts = dict()
+                    #error_columns = set()
+                
+        
                 if not object_cur.points:
                     logger.warn("empty points in {}".format(object_cur.label))
                     continue
@@ -202,14 +210,16 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
                     image_table_data[error_code].append(error_counts.get(error_code, 0))
 
             
+    required_keys = ['Mis-tagged', 'Untagged', 'Over-tagged', 'Range_error', 'Attributes_error']
 
+    for key in required_keys:
+        if key not in errors:
+            errors[key] = ['0']
     # Make sure all arrays have the same length
     max_length = max(len(value) for value in image_table_data.values())
-    logger.info(f"this is the max length{max_length}")
 
     for key, value in image_table_data.items():
         if len(value) < max_length:
-            #logger.info(f"array has less numbers{value}")
             image_table_data[key].extend([0] * (max_length - len(value)))
     # Add missing error columns with 0 count
     error_names = ['Mis-tagged', 'Untagged', 'Over-tagged', 'Range_error', 'Attributes_error']
@@ -289,7 +299,6 @@ def show_label_metrics():
     selected_project = select_project()
     if selected_project:
         label_files = get_label_files(selected_project)
-        # logger.info(label_files)
         if not label_files:
             st.warning("No label files")
             return
@@ -375,7 +384,6 @@ def show_label_metrics():
             # Generate thumbnails
             project_folder = selected_project.dir_name
             thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
-            logger.info(f"{project_folder} {thumbnail_filenames}")
 
             thumbnails = []
 
@@ -454,7 +462,6 @@ def show_label_metrics():
 
 
             #chart_dimensions.update_traces(hoverinfo="none", hovertemplate=None)
-            logger.info(f"Chart dimensions was made *****")
 
             # Convert the chart to a Dash Graph component
             graph_dimensions = dcc.Graph(figure=chart_dimensions)
@@ -463,7 +470,6 @@ def show_label_metrics():
             app.layout = html.Div(children=[
                 graph_dimensions
             ])
-            logger.info(f"App layout done *****")
 
             #dash_app_html = app.to_html()
             app.debug = True
@@ -473,7 +479,6 @@ def show_label_metrics():
             #st.title('Dash Plot')
 
             #st.components.v1.html(app.index())
-            #logger.info(f"App loading done *****")
 
             #end Dash version
 
@@ -538,16 +543,15 @@ def show_label_metrics():
 
         image_table = image_table[ list(image_table.columns)]
         show_download_charts_button(selected_project.id)
-        logger.info(f"Project ID{selected_project.name}")
         dir_name = selected_project.name
-        logger.info(f"Project ID{dir_name}")
 
         # Create download dropdown button for Excel or CSV file
         download_label = "Download the Combined Error Data Statistics"
         download_options = ["CSV", "Excel"]
         download_format = st.selectbox(download_label, download_options)
-        project_folder = os.path.join(os.getcwd(), str(dir_name))
-
+        if " " in dir_name:
+            dir_name = dir_name.replace(" ", "_")
+        project_folder = os.path.join(os.getcwd(),str(dir_name))
         # Check if the project folder exists
         if not os.path.exists(project_folder):
             # Create the project folder if it doesn't exist
@@ -556,6 +560,9 @@ def show_label_metrics():
         if download_format == "CSV":
             csv_filename = f"{selected_project.name}_data.csv"
             csv_full_path = os.path.join(project_folder, csv_filename)
+
+            if os.path.exists(csv_full_path):
+                os.remove(csv_full_path)  # Remove the existing file
 
             with open(csv_full_path, "w", newline="") as f:
                 image_table.to_csv(f, index=False)
