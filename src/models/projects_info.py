@@ -96,6 +96,7 @@ class Project(ABC):
 
     @staticmethod
     def from_json(json_dict: dict):
+        logger.info(f"{json_dict}")
         return Project(
             id=json_dict.get("id", -1),
             name=json_dict["name"],
@@ -291,7 +292,7 @@ class ProjectPointers:
     @staticmethod
     def load(project_id) -> Project:
         project_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
-        project_filename = os.path.join(project_folder, f"{PROJECT}-{project_id}.{JSON_EXT}")
+        project_filename = os.path.join(project_folder, f"{PROJECT}-{project_id}{JSON_EXT}")
 
         json_data = utils.from_file(project_filename)
         return Project.from_json(json_data)

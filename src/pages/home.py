@@ -57,14 +57,12 @@ def get_tasks_info():
 
 def select_project(is_sidebar=True) -> Project:
     projects_pointers = get_project_pointers()
-    logger.info(f"Project Points areeeeee {projects_pointers}")
     if len(projects_pointers.project_pointers) > 0:
         df_projects = pd.DataFrame([project_pointer.to_json()
                                     for project_pointer in projects_pointers.project_pointers])
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
-        logger.info(f"There are the optionsss{df_project_id_names}")
         # set an empty string as the default selection - no action
         options.append("")
         if is_sidebar:
@@ -124,9 +122,7 @@ def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="t
     os.makedirs(output_folder, exist_ok=True)
 
     thumbnail_filenames = []
-    logger.info(f"folder path weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee{folder_path}")
     for filename in os.listdir(folder_path):
-        #logger.info(f"folder path{folder_path}")
         if any(filename.endswith(ext) for ext in SUPPORTED_IMAGE_FILE_EXTENSIONS):
             image_path = os.path.join(folder_path, filename)
             output_path = os.path.join(output_folder, filename)
@@ -152,16 +148,13 @@ def get_data_files(folder, is_thumbnails=False):
     data_files = dict()
     data_folder = os.path.join(folder, "data")
     thumbnails_folder = os.path.join(folder, "thumbnails")
-    logger.info(f"thumbnails folder{thumbnails_folder}")
 
     if is_thumbnails:
         if not os.path.exists(thumbnails_folder):
             generate_thumbnails(data_folder, output_folder=thumbnails_folder)
         else:
-            logger.info(f"thumbnails folder{thumbnails_folder}")
             entries = os.scandir(thumbnails_folder)
             if not any(entries):
-                logger.info(f"thumbnails folder{thumbnails_folder}")
                 generate_thumbnails(data_folder, output_folder=thumbnails_folder)
 
         data_folder = thumbnails_folder
