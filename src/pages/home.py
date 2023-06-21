@@ -57,21 +57,18 @@ def get_tasks_info():
 
 def select_project(is_sidebar=True) -> Project:
     projects_pointers = get_project_pointers()
-    logger.info(f"Project Points areeeeee {projects_pointers}")
     if len(projects_pointers.project_pointers) > 0:
         df_projects = pd.DataFrame([project_pointer.to_json()
                                     for project_pointer in projects_pointers.project_pointers])
         df_project_id_names = df_projects[["id", "name"]]
         options = ["{}-{}".format(project_id, name)
                    for project_id, name in df_project_id_names[["id", "name"]].values.tolist()]
-        logger.info(f"There are the optionsss{df_project_id_names}")
         # set an empty string as the default selection - no action
         options.append("")
         if is_sidebar:
             selected_project = st.sidebar.selectbox("Select project",
                                                     options=options,
                                                     index=len(options) - 1)
-            #Writing the name of the Project as a title on the main page
             st.title(f"Project: {selected_project}")
 
         else:
@@ -119,14 +116,11 @@ def select_task(project_id: int, label="Select task") -> Task:
         st.markdown("**No task is created!**")
 
 
-
 def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
     os.makedirs(output_folder, exist_ok=True)
 
     thumbnail_filenames = []
-    logger.info(f"folder path weeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee{folder_path}")
     for filename in os.listdir(folder_path):
-        #logger.info(f"folder path{folder_path}")
         if any(filename.endswith(ext) for ext in SUPPORTED_IMAGE_FILE_EXTENSIONS):
             image_path = os.path.join(folder_path, filename)
             output_path = os.path.join(output_folder, filename)
