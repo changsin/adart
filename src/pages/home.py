@@ -69,7 +69,6 @@ def select_project(is_sidebar=True) -> Project:
             selected_project = st.sidebar.selectbox("Select project",
                                                     options=options,
                                                     index=len(options) - 1)
-            #Writing the name of the Project as a title on the main page
             st.title(f"Project: {selected_project}")
 
         else:
@@ -115,7 +114,6 @@ def select_task(project_id: int, label="Select task") -> Task:
             return tasks_info.get_task_by_id(int(task_id))
     else:
         st.markdown("**No task is created!**")
-
 
 
 def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="thumbnails"):
