@@ -277,6 +277,8 @@ def add_data_tasks(selected_project: Project):
         selected_file_types = st.selectbox("**Image file types**",
                                            options,
                                            index=len(options) - 1)
+        saved_data_filenames = ()
+        converted_anno_filenames = ()
         uploaded_data_files = st.file_uploader("Upload data files",
                                                selected_file_types,
                                                accept_multiple_files=True)
@@ -297,7 +299,8 @@ def add_data_tasks(selected_project: Project):
                                                            project_folder,
                                                            saved_data_filenames,
                                                            saved_anno_filenames)
-
+        else:
+            submitted2 = st.form_submit_button("Add only Images")
         submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
             data_total_count = 0
@@ -353,6 +356,34 @@ def add_data_tasks(selected_project: Project):
                 st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
             else:
                 st.warning("Please upload files")
+        if submitted2:
+            data_total_count = 0
+            task_pointers = get_task_pointers(selected_project.id)
+
+            new_task_id = task_pointers.get_next_task_id()
+
+            if saved_data_filenames:
+                data_count = len(saved_data_filenames)
+                new_task = Task(name=f"{task_name}-{0}",
+                                project_id=selected_project.id,
+                                dir_name=project_folder,
+                                anno_file_name=None,
+                                state_id=TaskState.DVS_NEW.value,
+                                state_name=TaskState.DVS_NEW.description,
+                                data_count=data_count,
+                                object_count=0)
+                data_total_count += data_count
+                #response = api_target().create_task(new_task.to_json())
+                #logger.info(response)
+                #st.write(f"Task {response['id']} {response['name']} created")
+
+                selected_project.task_total_count += 1
+                selected_project.data_total_count += data_total_count
+                api_target().update_project(selected_project.to_json())
+
+                st.markdown("### Task ({}) ({}) with just images added to Project ({})".format(new_task_id, task_name, selected_project.id))
+            else:
+                st.warning("Please upload images")   
 
 
 def delete_task():

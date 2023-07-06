@@ -96,6 +96,7 @@ class Project(ABC):
 
     @staticmethod
     def from_json(json_dict: dict):
+        logger.info(f"{json_dict}")
         return Project(
             id=json_dict.get("id", -1),
             name=json_dict["name"],

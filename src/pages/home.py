@@ -146,16 +146,13 @@ def get_data_files(folder, is_thumbnails=False):
     data_files = dict()
     data_folder = os.path.join(folder, "data")
     thumbnails_folder = os.path.join(folder, "thumbnails")
-    logger.info(f"thumbnails folder{thumbnails_folder}")
 
     if is_thumbnails:
         if not os.path.exists(thumbnails_folder):
             generate_thumbnails(data_folder, output_folder=thumbnails_folder)
         else:
-            logger.info(f"thumbnails folder{thumbnails_folder}")
             entries = os.scandir(thumbnails_folder)
             if not any(entries):
-                logger.info(f"thumbnails folder{thumbnails_folder}")
                 generate_thumbnails(data_folder, output_folder=thumbnails_folder)
 
         data_folder = thumbnails_folder

@@ -82,13 +82,23 @@ def create_user():
                 phone=phone,
                 description=description,
                 password=password_hash)
-            new_user_dict = new_user.to_json()
-            new_user_dict['password'] = password
-            response = api_target().create_user(new_user_dict)
-            if response:
-                st.markdown(f"### User ({full_name}) ({email}) created")
+            users_info_dict = api_target().list_users()
+            users_info = UsersInfo.from_json(users_info_dict)
+            # Check if the username already exists
+            existing_usernames = [user.email for user in users_info.users]
+            logger.info(f"Here are the usernames{existing_usernames}")
+            if new_user.email in existing_usernames:
+                st.markdown(f"### User ({full_name}) ({email}) already exists")
             else:
-                st.warning(f"### Create user ({new_user}) ({email}) failed with {response}")
+                # Add the new user to the list
+                
+                new_user_dict = new_user.to_json()
+                new_user_dict['password'] = password
+                response = api_target().create_user(new_user_dict)
+                if response:
+                    st.markdown(f"### User ({full_name}) ({email}) created")
+                else:
+                    st.warning(f"### Create user ({new_user}) ({email}) failed with {response}")
 
 
 def update_user():

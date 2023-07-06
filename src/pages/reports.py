@@ -227,6 +227,15 @@ def get_label_metrics(label_files_dict: dict) -> (dict, dict, dict, dict):
     for error_code in error_names:
         if error_code not in image_table_data:
             image_table_data[error_code] = [0] * len(image_table_data['filename'])
+    # Check if the last 5 columns are in the desired order
+    last_columns = list(image_table_data.keys())[-5:]
+    if not last_columns == error_names:
+    # Rearrange the columns to ensure the desired order
+        for column in error_names:
+            if column in image_table_data:
+                image_table_data[column] = image_table_data.pop(column)
+            else:
+                image_table_data[column] = 0
 
     image_table = pd.DataFrame(image_table_data)
     # Check if all values in each row are 0 and delete the row
