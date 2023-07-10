@@ -5,8 +5,9 @@ import os
 import attr
 
 import src.common.utils as utils
-from src.common.logger import get_logger
+from src.converters.reader_base import CONVERT_ID, CONVERT_VERSION
 from src.models.adq_labels import AdqLabels
+from src.common.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -75,6 +76,24 @@ class DataLabels:
         )
 
     @staticmethod
+    def from_image_filenames(image_filenames: list):
+        """
+        creates DataLabels object from image filenames with empty labels.
+        :param image_filenames:
+        :return:
+        """
+        images = []
+        for idx, filename in enumerate(image_filenames):
+            images.append(DataLabels.Image.from_filename(filename, image_id=str(idx)))
+
+        return DataLabels(
+            twconverted=CONVERT_ID,
+            mode="annotation",
+            template_version=CONVERT_VERSION,
+            images=images
+        )
+
+    @staticmethod
     def load(filename: str) -> 'DataLabels':
         """
         :param filename: label filename
@@ -140,7 +159,6 @@ class DataLabels:
                 class_labels.add(obj.label)
             return class_labels
 
-
         def get_class_label_stats(self):
             class_labels = dict()
             for obj in self.objects:
@@ -169,6 +187,16 @@ class DataLabels:
                 width=int(adq_image.width),
                 height=int(adq_image.height),
                 objects=[DataLabels.Object.from_adq_object(obj) for obj in adq_image.objects])
+
+        @staticmethod
+        def from_filename(filename, image_id='0'):
+            width, height = utils.get_dimension(filename)
+            return DataLabels.Image(
+                image_id=image_id,
+                name=os.path.basename(filename),
+                width=width,
+                height=height
+            )
 
     @attr.s(slots=True, frozen=False)
     class Object:

@@ -251,7 +251,7 @@ class TaskPointer:
     name = attr.ib(validator=attr.validators.instance_of(str))
     project_id = attr.ib(validator=attr.validators.instance_of(int))
     dir_name = attr.ib(validator=attr.validators.instance_of(str))
-    anno_file_name = attr.ib(validator=attr.validators.instance_of(str))
+    anno_file_name = attr.ib(default=None)
 
     def __iter__(self):
         yield from {

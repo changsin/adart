@@ -241,7 +241,7 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         logger.info(f"min_width, max_width = {min_width}, {max_width}")
         resized_img = im.resizing_img(min_width=min_width, max_width=max_width)
         resized_shapes = im.get_downscaled_shapes()
-        shape_color = _pick_color(resized_shapes[0].get('label'), DEFAULT_SHAPE_COLOR)
+        shape_color = DEFAULT_SHAPE_COLOR
 
         return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
                             key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
@@ -273,10 +273,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         return color_dict.get(label, default_color)
 
     # Load up the image and the labels
-    data_labels = DataLabels.load(selected_task.anno_file_name)
-    if not data_labels:
-        st.warning("Data labels are empty")
-        return
+    if selected_task.anno_file_name:
+        data_labels = DataLabels.load(selected_task.anno_file_name)
+        if not data_labels:
+            st.warning("Data labels are empty")
+            return
 
     # set session states
     image_filenames = [os.path.join("data", image.name) for image in data_labels.images]

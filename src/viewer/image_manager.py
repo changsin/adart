@@ -37,7 +37,7 @@ class ImageManager:
     Manages the image object - basically translating between DataLabel shapes and frontend shapes
 
     Args:
-        image_folder(str): the image folder.
+        image_filename(str): the image filename.
         data_label_image(DataLabels.Image): parsed image labels object
     """
 

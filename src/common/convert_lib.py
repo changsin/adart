@@ -80,7 +80,7 @@ def from_yolo_txt(img_annof_relation: str, anno_files: list, image_files: list, 
         image_filename = os.path.join(image_dir, image_filename)
         cur_img['name'] = os.path.basename(image_filename)
 
-        width, height = utils.get_resolution(image_filename)
+        width, height = utils.get_dimension(image_filename)
         cur_img['width'] = int(width)
         cur_img['height'] = int(height)
 
@@ -125,7 +125,7 @@ def from_gpr_json(img_annof_relation: str, anno_file_list: list, target_folder: 
 
         image_dir = os.path.dirname(os.path.dirname(anno_json_file))
         image_filename = os.path.join(image_dir, cur_img['name'])
-        width, height = utils.get_resolution(image_filename)
+        width, height = utils.get_dimension(image_filename)
 
         cur_img['width'] = int(width)
         cur_img['height'] = int(height)

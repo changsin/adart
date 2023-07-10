@@ -290,6 +290,7 @@ def add_data_tasks(selected_project: Project):
 
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
 
+        converted_anno_filenames = None
         project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
         if uploaded_label_files:
             saved_anno_filenames = _save_uploaded_files(uploaded_label_files, selected_project.id, "labels")
@@ -301,58 +302,62 @@ def add_data_tasks(selected_project: Project):
         submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
             data_total_count = 0
-            task_pointers = get_task_pointers(selected_project.id)
+            if not uploaded_data_files and not uploaded_label_files:
+                st.warning("Please upload files")
+                return
 
-            new_task_id = task_pointers.get_next_task_id()
+            if not converted_anno_filenames:
+                anno_filename = f"anno-{0}.json"
+                data_labels_file = DataLabels.from_image_filenames(saved_data_filenames)
+                data_labels_file.save(anno_filename)
+                converted_anno_filenames = [anno_filename]
 
-            if converted_anno_filenames:
-                for idx, converted_filename in enumerate(converted_anno_filenames):
-                    data_labels = DataLabels.load(converted_filename)
-                    data_count = len(data_labels.images)
-                    object_count = sum(len(image.objects) for image in data_labels.images)
+            for idx, converted_filename in enumerate(converted_anno_filenames):
+                data_labels = DataLabels.load(converted_filename)
+                data_count = len(data_labels.images)
+                object_count = sum(len(image.objects) for image in data_labels.images)
 
-                    moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
-                    shutil.move(converted_filename, moved_converted_filename)
+                moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
+                shutil.move(converted_filename, moved_converted_filename)
 
-                    new_task = Task(name=f"{task_name}-{idx}",
-                                    project_id=selected_project.id,
-                                    dir_name=project_folder,
-                                    anno_file_name=moved_converted_filename,
-                                    state_id=TaskState.DVS_NEW.value,
-                                    state_name=TaskState.DVS_NEW.description,
-                                    data_count=data_count,
-                                    object_count=object_count)
-                    data_total_count += data_count
-                    response = api_target().create_task(new_task.to_json())
-                    logger.info(response)
-                    st.write(f"Task {response['id']} {response['name']} created")
-
-                selected_project.task_total_count += len(converted_anno_filenames)
-                selected_project.data_total_count += data_total_count
-                api_target().update_project(selected_project.to_json())
-
-            elif saved_data_filenames:
-                data_count = len(saved_data_filenames)
-                new_task = Task(name=f"{task_name}-{0}",
+                new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,
                                 dir_name=project_folder,
-                                anno_file_name=None,
+                                anno_file_name=moved_converted_filename,
                                 state_id=TaskState.DVS_NEW.value,
                                 state_name=TaskState.DVS_NEW.description,
                                 data_count=data_count,
-                                object_count=0)
+                                object_count=object_count)
                 data_total_count += data_count
                 response = api_target().create_task(new_task.to_json())
                 logger.info(response)
                 st.write(f"Task {response['id']} {response['name']} created")
 
-                selected_project.task_total_count += 1
-                selected_project.data_total_count += data_total_count
-                api_target().update_project(selected_project.to_json())
+            selected_project.task_total_count += len(converted_anno_filenames)
+            selected_project.data_total_count += data_total_count
+            api_target().update_project(selected_project.to_json())
 
-                st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
-            else:
-                st.warning("Please upload files")
+            # elif saved_data_filenames:
+            #     data_count = len(saved_data_filenames)
+            #     converted_anno_filenames = DataLabels.from_image_filenames(saved_data_filenames)
+            #     new_task = Task(name=f"{task_name}-{0}",
+            #                     project_id=selected_project.id,
+            #                     dir_name=project_folder,
+            #                     anno_file_name=converted_anno_filenames,
+            #                     state_id=TaskState.DVS_NEW.value,
+            #                     state_name=TaskState.DVS_NEW.description,
+            #                     data_count=data_count,
+            #                     object_count=0)
+            #     data_total_count += data_count
+            #     response = api_target().create_task(new_task.to_json())
+            #     logger.info(response)
+            #     st.write(f"Task {response['id']} {response['name']} created")
+            #
+            #     selected_project.task_total_count += 1
+            #     selected_project.data_total_count += data_total_count
+            #     api_target().update_project(selected_project.to_json())
+            #
+            #     st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
 def delete_task():
@@ -365,15 +370,8 @@ def delete_task():
         delete_confirmed = st.sidebar.button("Are you sure you want to delete the task ({}) of project ({}-{})?"
                                              .format(selected_task.id, selected_project.id, selected_project.name))
         if delete_confirmed:
-            tasks_info = get_tasks_info()
-            tasks_info.remove(selected_task)
+            api_target().delete_task(selected_task.id)
 
-            task_folder_to_delete = os.path.join(ADQ_WORKING_FOLDER,
-                                                 str(selected_project.id),
-                                                 str(selected_task.id))
-            if os.path.exists(task_folder_to_delete):
-                shutil.rmtree(task_folder_to_delete)
-            tasks_info.save()
             st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))
 
 

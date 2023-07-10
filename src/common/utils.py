@@ -100,7 +100,7 @@ def step_size(value):
         return 100.0
 
 
-def get_resolution(filename: str) -> (int, int):
+def get_dimension(filename: str) -> (int, int):
     with Image.open(filename) as img:
         # Get the width and height of the image
         width, height = img.size

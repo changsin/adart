@@ -161,6 +161,19 @@ class ApiLocal(ApiBase):
         new_task.save()
         return new_task.to_json()
 
+    def delete_task(self, task_id: int) -> dict:
+        task_pointers = TaskPointers.from_json(self.list_task_pointers())
+
+        for task_pointer in task_pointers.task_pointers:
+            if task_pointer.id == task_id:
+                task_filename = os.path.join(task_pointer.dir_name, f"task-{task_id}.json")
+                os.remove(task_filename)
+
+                task_pointers.task_pointers.remove(task_pointer)
+        task_pointers.save()
+
+        return task_pointers.to_json()
+
     def list_annotation_errors(self, limit=100) -> list:
         return [
             {"name": "Mis-tagged", "code": "DVE_MISS", "description": None, "is_default": True, "id": 1},
