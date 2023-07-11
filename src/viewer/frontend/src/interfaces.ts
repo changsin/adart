@@ -9,6 +9,10 @@ export interface SplinePoint extends Point {
   r: number;
 }
 
+export interface KeyPoint extends Point {
+  z: number;
+}
+
 export interface BoxPoint extends Point {
   w: number;
   h: number;

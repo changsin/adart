@@ -55,9 +55,9 @@ class LabelOnReader(ReaderBase):
                 if annotation_dict.get("POLYGON"):
                     object_dict['type'] = 'polygon'
                     object_dict['points'] = LabelOnReader._parse_polygon_points(annotation_dict.get("POLYGON"))
-                elif annotation_dict.get("KEYPOINT"):
+                elif annotation_dict.get("KEYPOINTS"):
                     object_dict['type'] = 'keypoint'
-                    object_dict['points'] = LabelOnReader._parse_key_points(annotation_dict.get("KEYPOINT"))
+                    object_dict['points'] = LabelOnReader._parse_key_points(annotation_dict.get("KEYPOINTS"))
 
                 objects_list.append(object_dict)
 

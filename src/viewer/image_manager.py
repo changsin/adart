@@ -121,6 +121,19 @@ class ImageManager:
                 shape['points'] = points
                 shape['shapeType'] = label_object.type
 
+            elif label_object.type == 'keypoint':
+                points = []
+                for point in label_object.points:
+                    x, y, z = point
+                    point_dict = dict()
+                    point_dict['x'] = x
+                    point_dict['y'] = y
+                    point_dict['z'] = z
+                    points.append(point_dict)
+
+                shape['points'] = points
+                shape['shapeType'] = label_object.type
+
             converted_shapes.append(shape)
 
         self._shapes = converted_shapes
@@ -142,6 +155,10 @@ class ImageManager:
             for point in shape['points']:
                 x, y = point['x'], point['y']
                 converted_points.append((x, y))
+        elif shape['shapeType'] == 'keypoint':
+            for point in shape['points']:
+                x, y, z = point['x'], point['y'], point['z']
+                converted_points.append((x, y, z))
 
         converted_shape['points'] = converted_points
         converted_shape['type'] = shape['shapeType']
@@ -230,6 +247,14 @@ class ImageManager:
                 scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
                 scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
                 scaled_points.append(scaled_point)
+        elif shape['shapeType'] == 'keypoint':
+            scaled_points = []
+            for point in shape['points']:
+                scaled_point = dict()
+                scaled_point['x'] = int(point['x'] * self._resized_ratio_w)
+                scaled_point['y'] = int(point['y'] * self._resized_ratio_h)
+                scaled_point['z'] = point['z']
+                scaled_points.append(scaled_point)
 
         scaled_shape['points'] = scaled_points
         # logger.info(f"shape: {shape} -> scaled_shape: {scaled_shape} ratio_w: {self._resized_ratio_w} ratio_h: {self._resized_ratio_h}")
@@ -277,6 +302,14 @@ class ImageManager:
                 resized_point = dict()
                 resized_point['x'] = point['x'] / self._resized_ratio_w
                 resized_point['y'] = point['y'] / self._resized_ratio_h
+                resized_points.append(resized_point)
+        elif shape['shapeType'] == 'keypoint':
+            resized_points = []
+            for point in shape['points']:
+                resized_point = dict()
+                resized_point['x'] = point['x'] / self._resized_ratio_w
+                resized_point['y'] = point['y'] / self._resized_ratio_h
+                resized_point['z'] = point['z']
                 resized_points.append(resized_point)
 
         resized_shape['points'] = resized_points

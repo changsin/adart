@@ -15,6 +15,7 @@ import {
     VerificationResult
 } from "./interfaces";
 import { Box } from "./shapes/box"
+import { Keypoint } from "./shapes/keypoint"
 import { Polygon, VanishingPoint } from "./shapes/polygon"
 import { Spline } from "./shapes/spline"
 import { sendSelectedShape } from "./streamlit-utils"
@@ -189,6 +190,8 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
                     } else if (shape.shapeType === "VP") {
                         VanishingPoint({ shape, color: color, opacity, canvas });
+                    } else if (shape.shapeType === "keypoint") {
+                        Keypoint({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
                     } else {
                         console.warn(`Invalid shape "${shape}" specified". Skipping...`);
                         return;
