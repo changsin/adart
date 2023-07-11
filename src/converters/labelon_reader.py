@@ -10,12 +10,22 @@ logger = get_logger(__name__)
 
 class LabelOnReader(ReaderBase):
     @staticmethod
-    def _parse_points(polygon_points: list) -> list:
+    def _parse_polygon_points(polygon_points: list) -> list:
         coordinates = []
         for i in range(0, len(polygon_points), 2):
             x = polygon_points[i]
             y = polygon_points[i + 1]
             coordinates.append((x, y))
+        return coordinates
+
+    @staticmethod
+    def _parse_key_points(points: list) -> list:
+        coordinates = []
+        for i in range(0, len(points), 3):
+            x = points[i]
+            y = points[i + 1]
+            z = points[i + 2]
+            coordinates.append((x, y, z))
         return coordinates
 
     def parse(self, label_files, data_files=None):
@@ -41,10 +51,13 @@ class LabelOnReader(ReaderBase):
 
             for annotation_dict in annotations:
                 object_dict = dict()
+                object_dict['label'] = annotation_dict.get("CATEGORY_NAME")
                 if annotation_dict.get("POLYGON"):
-                    object_dict['label'] = 'polygon'
                     object_dict['type'] = 'polygon'
-                    object_dict['points'] = LabelOnReader._parse_points(annotation_dict.get("POLYGON"))
+                    object_dict['points'] = LabelOnReader._parse_polygon_points(annotation_dict.get("POLYGON"))
+                elif annotation_dict.get("KEYPOINT"):
+                    object_dict['type'] = 'keypoint'
+                    object_dict['points'] = LabelOnReader._parse_key_points(annotation_dict.get("KEYPOINT"))
 
                 objects_list.append(object_dict)
 
