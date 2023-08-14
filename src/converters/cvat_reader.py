@@ -1,11 +1,11 @@
 import xml.etree.ElementTree as ET
 
-from .reader_base import ReaderBase
+from .base_reader import BaseReader
 
 BO_SHAPE_TYPES = ['box', 'polygon', 'polyline', 'points', 'face', 'body', 'leftHand', 'rightHand']
 
 
-class CVATReader(ReaderBase):
+class CVATReader(BaseReader):
     def parse(self, label_files, data_files=None):
         super().parse(label_files, data_files)
 

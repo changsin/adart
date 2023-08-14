@@ -4,7 +4,7 @@ CONVERT_ID = "96E7D8C8-44E4-4055-8487-85B3208E51A2"
 CONVERT_VERSION = "0.1"
 
 
-class ReaderBase(ABC):
+class BaseReader(ABC):
     def __init__(self):
         self.data_labels_dict = {}
 

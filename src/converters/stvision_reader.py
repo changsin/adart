@@ -1,10 +1,10 @@
 import os
 import xml.etree.ElementTree as ET
 
-from .reader_base import ReaderBase
+from .base_reader import BaseReader
 
 
-class StVisionReader(ReaderBase):
+class StVisionReader(BaseReader):
     @staticmethod
     def _parse_points(element: ET.Element) -> list:
         points = []

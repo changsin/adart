@@ -5,7 +5,7 @@ import os
 import attr
 
 import src.common.utils as utils
-from src.converters.reader_base import CONVERT_ID, CONVERT_VERSION
+from src.converters.base_reader import CONVERT_ID, CONVERT_VERSION
 from src.models.adq_labels import AdqLabels
 from src.common.logger import get_logger
 

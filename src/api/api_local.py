@@ -155,11 +155,16 @@ class ApiLocal(ApiBase):
         task_pointers = TaskPointers.from_json(self.list_task_pointers())
 
         new_task = Task.from_json(new_task_dict)
-        new_task.id = task_pointers.get_next_task_id()
+        if not new_task_dict.get('id'):
+            new_task.id = task_pointers.get_next_task_id()
         task_pointers.add(new_task)
         task_pointers.save()
         new_task.save()
         return new_task.to_json()
+
+    def get_next_task_id(self) -> int:
+        task_pointers = TaskPointers.from_json(self.list_task_pointers())
+        return task_pointers.get_next_task_id()
 
     def delete_task(self, task_id: int) -> dict:
         task_pointers = TaskPointers.from_json(self.list_task_pointers())
