@@ -152,11 +152,11 @@ def sample_data(selected_project: Project, data_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, saved_anno_filenames, task_id):
+def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, saved_anno_filenames):
     converted_anno_files = []
     if labels_format_type == CVAT_XML:
         for idx, anno_file in enumerate(saved_anno_filenames):
-            converted_filename = os.path.join(save_folder, f"anno-{task_id}-{idx}.json")
+            converted_filename = os.path.join(save_folder, f"anno-{idx}.json")
 
             reader = CVATReader()
             logger.info(f"parsing {anno_file}")
@@ -165,7 +165,7 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
             data_labels.save(converted_filename)
             converted_anno_files.append(converted_filename)
     else:
-        converted_filename = os.path.join(save_folder, f"anno-{task_id}.json")
+        converted_filename = os.path.join(save_folder, f"anno-{0}.json")
         if labels_format_type == STRADVISION_XML:
             reader = StVisionReader()
             parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
@@ -310,12 +310,10 @@ def add_data_tasks(selected_project: Project):
                 st.warning("Please upload files")
                 return
 
-            next_task_id = api_target().get_next_task_id()
             converted_anno_filenames = _convert_anno_files(labels_format_type,
                                                            project_folder,
                                                            saved_data_filenames,
-                                                           saved_anno_filenames,
-                                                           next_task_id)
+                                                           saved_anno_filenames)
 
             if not converted_anno_filenames:
                 anno_filename = f"anno-{0}.json"

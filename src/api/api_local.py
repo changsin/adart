@@ -155,8 +155,10 @@ class ApiLocal(ApiBase):
         task_pointers = TaskPointers.from_json(self.list_task_pointers())
 
         new_task = Task.from_json(new_task_dict)
-        if not new_task_dict.get('id'):
+        # if not assigned, create one
+        if new_task_dict.get('id') == -1:
             new_task.id = task_pointers.get_next_task_id()
+
         task_pointers.add(new_task)
         task_pointers.save()
         new_task.save()

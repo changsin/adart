@@ -1,4 +1,4 @@
-from .reader_base import ReaderBase
+from .base_reader import BaseReader
 from src.common.utils import from_file
 
 from src.common.logger import get_logger
@@ -8,7 +8,7 @@ SHAPE_TYPES = ['KEYPOINTS', 'POLYGON']
 logger = get_logger(__name__)
 
 
-class LabelOnReader(ReaderBase):
+class LabelOnReader(BaseReader):
     @staticmethod
     def _parse_polygon_points(polygon_points: list) -> list:
         coordinates = []
