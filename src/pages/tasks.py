@@ -14,6 +14,7 @@ from src.common.constants import (
     CVAT_XML,
     GPR_JSON,
     STRADVISION_XML,
+    LABEL_ON_JSON,
     SUPPORTED_IMAGE_FILE_EXTENSIONS,
     SUPPORTED_LABEL_FILE_EXTENSIONS,
     SUPPORTED_LABEL_FORMATS,
@@ -24,6 +25,7 @@ from src.common.convert_lib import (
 from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
 from src.converters.stvision_reader import StVisionReader
+from src.converters.labelon_reader import LabelOnReader
 from src.models.adq_labels import AdqLabels
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
@@ -173,6 +175,11 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
             converted_filename = from_gpr_json("11", saved_anno_filenames, save_folder)
         elif labels_format_type == YOLO_V5_TXT:
             converted_filename = from_yolo_txt("11", saved_anno_filenames, saved_data_filenames, save_folder)
+        elif labels_format_type == LABEL_ON_JSON:
+            reader = LabelOnReader()
+            parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
+            data_labels = DataLabels.from_json(parsed_dict)
+            data_labels.save(converted_filename)
 
         converted_anno_files.append(converted_filename)
 
