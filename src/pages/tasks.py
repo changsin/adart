@@ -26,6 +26,7 @@ from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
 from src.converters.stvision_reader import StVisionReader
 from src.converters.labelon_reader import LabelOnReader
+from src.converters.project85_writer import Project85Writer
 from src.models.adq_labels import AdqLabels
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
@@ -384,6 +385,32 @@ def delete_task():
             st.markdown("## Deleted task {} {}".format(selected_task.id, selected_task.name))
 
 
+def convert_task():
+    selected_project = select_project(is_sidebar=True)
+    if not selected_project:
+        return
+
+    selected_task = select_task(selected_project.id)
+    if selected_task:
+        options = ["Project85"]
+        selected_format = st.selectbox("**convert to**",
+                                       options,
+                                       index=len(options) - 1)
+        convert_confirmed = st.button("Are you sure you want to covert the task ({}) of project ({}-{})?"
+                                     .format(selected_task.id, selected_project.id, selected_project.name))
+        if convert_confirmed:
+            if selected_format == "Project85":
+                project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+                to_save_folder = os.path.join(project_folder, "converted")
+                if not os.path.exists(to_save_folder):
+                    os.mkdir(to_save_folder)
+
+                writer = Project85Writer()
+                converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.json")
+                writer.write(selected_task.anno_file_name, converted_filename)
+
+                st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
+
 def main():
     # Clear the sidebar
     st.sidebar.empty()
@@ -396,6 +423,7 @@ def main():
         "Assign Tasks": lambda: assign_tasks(),
         "Change Status": lambda: change_status(),
         "Delete Task": lambda: delete_task(),
+        "Convert Task": lambda: convert_task(),
     }
 
     # Create a sidebar with menu options

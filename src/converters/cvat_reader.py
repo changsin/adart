@@ -6,6 +6,22 @@ BO_SHAPE_TYPES = ['box', 'polygon', 'polyline', 'points', 'face', 'body', 'leftH
 
 
 class CVATReader(BaseReader):
+
+    def _parse_element(self, element):
+        if len(element) == 0:
+            return element.text
+        result = {}
+        for child in element:
+            child_data = self._parse_element(child)
+            if child.tag in result:
+                if type(result[child.tag]) is list:
+                    result[child.tag].append(child_data)
+                else:
+                    result[child.tag] = [result[child.tag], child_data]
+            else:
+                result[child.tag] = child_data
+        return result
+
     def parse(self, label_files, data_files=None):
         super().parse(label_files, data_files)
 
@@ -69,6 +85,11 @@ class CVATReader(BaseReader):
 
                 image_dict['objects'] = objects_list
                 images.append(image_dict)
+
+            el_meta_data = root_info.find('meta')
+            if el_meta_data:
+                meta_data_dict = self._parse_element(el_meta_data)
+                self.data_labels_dict['meta_data'] = meta_data_dict
 
             self.data_labels_dict['images'] = images
         return self.data_labels_dict

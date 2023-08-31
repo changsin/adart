@@ -18,13 +18,15 @@ class DataLabels:
     mode = attr.ib(default="annotation", validator=attr.validators.instance_of(str))
     template_version = attr.ib(default="0.1", validator=attr.validators.instance_of(str))
     images = attr.ib(default=[], validator=attr.validators.instance_of(list))
+    meta_data = attr.ib(default=None)
 
     def to_json(self):
         return {
             "twconverted": self.twconverted,
             "mode": self.mode,
             "template_version": self.template_version,
-            "images": self.images
+            "images": self.images,
+            "meta_data": self.meta_data
         }
 
     def save(self, filename: str):
@@ -63,7 +65,8 @@ class DataLabels:
             twconverted=json_dict['twconverted'],
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
-            images=[DataLabels.Image.from_json(json_image) for json_image in json_dict['images']]
+            images=[DataLabels.Image.from_json(json_image) for json_image in json_dict['images']],
+            meta_data=json_dict["meta_data"]
         )
 
     @staticmethod
@@ -72,7 +75,8 @@ class DataLabels:
             twconverted=adq_labels.twconverted,
             mode=adq_labels.mode,
             template_version=adq_labels.template_version,
-            images=[DataLabels.Image.from_adq_image(image) for image in adq_labels.images]
+            images=[DataLabels.Image.from_adq_image(image) for image in adq_labels.images],
+            meta_data=adq_labels.meta_data
         )
 
     @staticmethod

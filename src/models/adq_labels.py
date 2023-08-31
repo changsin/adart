@@ -7,6 +7,7 @@ class AdqLabels:
     mode = attr.ib(default="annotation", validator=attr.validators.instance_of(str))
     template_version = attr.ib(default="0.1", validator=attr.validators.instance_of(str))
     images = attr.ib(default=[], validator=attr.validators.instance_of(list))
+    meta_data = attr.ib(default=None)
 
     # {
     #     "mode": "annotation",
@@ -19,7 +20,8 @@ class AdqLabels:
             "twconverted": self.twconverted,
             "mode": self.mode,
             "template_version": self.template_version,
-            "images": self.images
+            "images": self.images,
+            "meta_data": self.meta_data
         }
 
     @staticmethod
@@ -28,7 +30,8 @@ class AdqLabels:
             twconverted=json_dict['twconverted'],
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
-            images=[AdqLabels.Image.from_json(json_image) for json_image in json_dict['images']]
+            images=[AdqLabels.Image.from_json(json_image) for json_image in json_dict['images']],
+            meta_data=json_dict['meta_data']
         )
 
     @attr.s(slots=True, frozen=False)
