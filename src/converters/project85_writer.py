@@ -1,10 +1,11 @@
-from .base_writer import BaseWriter
-
-
 import json
+import os.path
+from pathlib import Path
+
 import src.common.utils as utils
 from src.common.logger import get_logger
 from src.models.data_labels import DataLabels
+from .base_writer import BaseWriter
 
 logger = get_logger(__name__)
 
@@ -14,43 +15,73 @@ class Project85Writer(BaseWriter):
         super().__init__()
         self.categories = dict()
 
-    def _parse_classes(self, meta_data_dict: dict):
-        class_tokens = None
+    @staticmethod
+    def _get_value(meta_data_dict: dict, search_str: str):
+        cur_dict = meta_data_dict
+        level_name_tokens = search_str.split('/')
+        for token in level_name_tokens:
+            cur_dict = cur_dict.get(token)
 
-        attributes = meta_data_dict.get('task').get('labels').get('label').get('attributes')
-        if attributes:
-            logger.info(attributes)
-            values = attributes.get('attribute').get('values')
-            if values:
-                class_tokens = values.split('\n')
+        return cur_dict
 
-        if class_tokens is None:
-            return None
+    @staticmethod
+    def _get_class_attribute_name(meta_data_dict: dict):
+        search_str = "task/labels/label/attributes/attribute/name"
+        return Project85Writer._get_value(meta_data_dict, search_str)
 
-        classes = []
-        for idx, clazz in enumerate(class_tokens):
-            category_dict = dict()
-            category_dict['id'] = idx
-            category_dict['name'] = clazz
-            category_dict['supercategory'] = ""
+    def _parse_class_names(self, meta_data_dict: dict):
+        search_str = "task/labels/label/attributes/attribute/values"
+        values = Project85Writer._get_value(meta_data_dict, search_str)
+        if values:
+            class_tokens = str(values).split('\n')
 
-            classes.append(category_dict)
-            self.categories[clazz] = idx
+            if class_tokens is None:
+                return None
 
-        return classes
+            classes = []
+            for idx, clazz in enumerate(class_tokens):
+                category_dict = dict()
+                category_dict['id'] = idx
+                category_dict['name'] = clazz
+                # category_dict['supercategory'] = ""
+
+                classes.append(category_dict)
+                self.categories[clazz] = idx
+
+            return classes
 
     def write(self, file_in: str, file_out: str) -> None:
         data_labels = DataLabels.load(file_in)
 
         converted_json = dict()
 
-        if data_labels.meta_data:
-            converted_json["categories"] = self._parse_classes(data_labels.meta_data)
+        licenses = []
+        default_license = dict()
+        default_license["name"] = "MIT"
+        default_license["id"] = 0
+        default_license["url"] = ""
 
-        converted_images = []
-        converted_annotations = []
-        annotation_id = 0
+        licenses.append(default_license)
+
+        converted_json["licenses"] = licenses
+
+        info_dict = dict()
+        info_dict["date_created"] = Project85Writer._get_value(data_labels.meta_data, "task/created")
+        info_dict["description"] = Project85Writer._get_value(data_labels.meta_data, "task/project")
+
+        converted_json["info"] = info_dict
+
+        if data_labels.meta_data:
+            converted_json["categories"] = self._parse_class_names(data_labels.meta_data)
+
+        # TODO: this does not seem to be right for the attribute name
+        class_attribute_name = Project85Writer._get_class_attribute_name(data_labels.meta_data)
+
         for image in data_labels.images:
+            converted_images = []
+            converted_annotations = []
+            annotation_id = 0
+
             converted_image = dict()
             converted_image["id"] = image.image_id
             converted_image["width"] = image.width
@@ -64,8 +95,7 @@ class Project85Writer(BaseWriter):
                     annotation = dict()
                     annotation["id"] = annotation_id
                     annotation["image_id"] = image.image_id
-                    # TODO: this does not seem to be right for the attribute name
-                    class_name = anno_object.attributes['university']
+                    class_name = anno_object.attributes[class_attribute_name]
                     annotation["category_id"] = self.categories[class_name]
                     annotation_id += 1
 
@@ -73,11 +103,16 @@ class Project85Writer(BaseWriter):
 
                     converted_annotations.append(annotation)
 
-        converted_json["images"] = converted_images
-        converted_json["annotations"] = converted_annotations
+            converted_json["images"] = converted_images
+            converted_json["annotations"] = converted_annotations
 
-        logger.info(converted_json)
-        json_data = json.dumps(converted_json, default=utils.default, ensure_ascii=False, indent=2)
-        utils.to_file(json_data, file_out)
+            logger.info(converted_json)
+            json_data = json.dumps(converted_json, default=utils.default, ensure_ascii=False, indent=2)
+
+            image_filename_stem = Path(image.name).stem
+
+            output_filename = os.path.join(os.path.dirname(file_out),
+                                           image_filename_stem + ".json")
+            utils.to_file(json_data, output_filename)
 
 

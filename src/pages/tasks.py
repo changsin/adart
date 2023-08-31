@@ -24,9 +24,9 @@ from src.common.convert_lib import (
     from_yolo_txt)
 from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
-from src.converters.stvision_reader import StVisionReader
 from src.converters.labelon_reader import LabelOnReader
 from src.converters.project85_writer import Project85Writer
+from src.converters.stvision_reader import StVisionReader
 from src.models.adq_labels import AdqLabels
 from src.models.data_labels import DataLabels
 from src.models.projects_info import Project
@@ -401,7 +401,7 @@ def convert_task():
         if convert_confirmed:
             if selected_format == "Project85":
                 project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-                to_save_folder = os.path.join(project_folder, "converted")
+                to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
                 if not os.path.exists(to_save_folder):
                     os.mkdir(to_save_folder)
 
@@ -410,6 +410,7 @@ def convert_task():
                 writer.write(selected_task.anno_file_name, converted_filename)
 
                 st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
+
 
 def main():
     # Clear the sidebar
