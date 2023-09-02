@@ -66,7 +66,7 @@ class DataLabels:
             mode=json_dict['mode'],
             template_version=json_dict['template_version'],
             images=[DataLabels.Image.from_json(json_image) for json_image in json_dict['images']],
-            meta_data=json_dict["meta_data"]
+            meta_data=json_dict["meta_data"] if json_dict.get("meta_data") else None
         )
 
     @staticmethod

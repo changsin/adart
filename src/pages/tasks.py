@@ -11,7 +11,8 @@ import streamlit as st
 from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
-    CVAT_XML,
+    CVAT_BOX_XML,
+    BO_3D_JSON,
     GPR_JSON,
     STRADVISION_XML,
     LABEL_ON_JSON,
@@ -153,11 +154,12 @@ def sample_data(selected_project: Project, data_labels_dict: dict, df_sample_cou
     return sampled
 
 
-def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, saved_anno_filenames):
+def _convert_anno_files(labels_format_type, save_file_stem, saved_data_filenames, saved_anno_filenames):
     converted_anno_files = []
-    if labels_format_type == CVAT_XML:
+    save_folder = os.path.dirname(save_file_stem)
+    if labels_format_type == CVAT_BOX_XML:
         for idx, anno_file in enumerate(saved_anno_filenames):
-            converted_filename = os.path.join(save_folder, f"anno-{idx}.json")
+            converted_filename = f"{save_file_stem}-{idx}.json"
 
             reader = CVATReader()
             logger.info(f"parsing {anno_file}")
@@ -166,7 +168,7 @@ def _convert_anno_files(labels_format_type, save_folder, saved_data_filenames, s
             data_labels.save(converted_filename)
             converted_anno_files.append(converted_filename)
     else:
-        converted_filename = os.path.join(save_folder, f"anno-{0}.json")
+        converted_filename = f"{save_file_stem}.json"
         if labels_format_type == STRADVISION_XML:
             reader = StVisionReader()
             parsed_dict = reader.parse(saved_anno_filenames, saved_data_filenames)
@@ -258,14 +260,14 @@ def add_tasks():
         add_data_tasks(selected_project)
 
 
-def _save_uploaded_files(uploaded_files, project_id, sub_folder):
-    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
-    if not os.path.exists(project_folder):
-        os.mkdir(project_folder)
+def _save_uploaded_files(uploaded_files, sub_folders_str: str):
+    to_save_folder = ADQ_WORKING_FOLDER
 
-    to_save_folder = os.path.join(project_folder, sub_folder)
-    if not os.path.exists(to_save_folder):
-        os.mkdir(to_save_folder)
+    sub_folders = sub_folders_str.split("/")
+    for sub_folder in sub_folders:
+        to_save_folder = os.path.join(to_save_folder, sub_folder)
+        if not os.path.exists(to_save_folder):
+            os.mkdir(to_save_folder)
 
     saved_filenames = []
     for file in uploaded_files:
@@ -278,31 +280,26 @@ def _save_uploaded_files(uploaded_files, project_id, sub_folder):
 
 
 def add_data_tasks(selected_project: Project):
-
     with st.form("Add Data Task"):
         task_name = st.text_input("**Task Name:**")
-        options = [SUPPORTED_IMAGE_FILE_EXTENSIONS]
-        saved_data_filenames = None
-        converted_anno_filenames = None
-        selected_file_types = st.selectbox("**Image file types**",
-                                           options,
-                                           index=len(options) - 1)
-        uploaded_data_files = st.file_uploader("Upload data files",
-                                               selected_file_types,
-                                               accept_multiple_files=True)
 
-        uploaded_label_files = st.file_uploader("Upload label files",
-                                                SUPPORTED_LABEL_FILE_EXTENSIONS,
+        # Users can upload either image files only or label files only
+        selected_file_types = st.selectbox("**Image file types**", [SUPPORTED_IMAGE_FILE_EXTENSIONS],
+                                           index=len([SUPPORTED_IMAGE_FILE_EXTENSIONS]) - 1)
+        uploaded_data_files = st.file_uploader("Upload data files", selected_file_types, accept_multiple_files=True)
+        uploaded_label_files = st.file_uploader("Upload label files", SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                 accept_multiple_files=True)
-
-        if uploaded_data_files:
-            saved_data_filenames = _save_uploaded_files(uploaded_data_files, selected_project.id, "data")
-
         labels_format_type = st.selectbox("**Choose format:**", SUPPORTED_LABEL_FORMATS)
 
-        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+        saved_data_filenames = None
+
+        if uploaded_data_files:
+            saved_data_filenames = _save_uploaded_files(uploaded_data_files,
+                                                        f"{selected_project.id}/data")
+
         if uploaded_label_files:
-            saved_anno_filenames = _save_uploaded_files(uploaded_label_files, selected_project.id, "labels")
+            saved_anno_filenames = _save_uploaded_files(uploaded_label_files,
+                                                        f"{selected_project.id}/labels")
 
         submitted = st.form_submit_button("Add Data Tasks")
         if submitted:
@@ -311,24 +308,41 @@ def add_data_tasks(selected_project: Project):
                 st.warning("Please upload files")
                 return
 
-            converted_anno_filenames = _convert_anno_files(labels_format_type,
-                                                           project_folder,
-                                                           saved_data_filenames,
-                                                           saved_anno_filenames)
+            project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+            convert_file_stem = os.path.join(project_folder, "anno")
+            converted_anno_filenames = []
 
-            if not converted_anno_filenames:
-                anno_filename = f"anno-{0}.json"
+            if uploaded_label_files:
+                converted_anno_filenames = _convert_anno_files(labels_format_type,
+                                                               convert_file_stem,
+                                                               saved_data_filenames,
+                                                               saved_anno_filenames)
+            else:
+                # if no label files are uploaded, create an empty label file
+                anno_filename = f"{convert_file_stem}.json"
                 data_labels_file = DataLabels.from_image_filenames(saved_data_filenames)
                 data_labels_file.save(anno_filename)
-                converted_anno_filenames = [anno_filename]
+                converted_anno_filenames.append(anno_filename)
 
-            for idx, converted_filename in enumerate(converted_anno_filenames):
-                data_labels = DataLabels.load(converted_filename)
+            # now create tasks
+            for idx, converted_anno_filename in enumerate(converted_anno_filenames):
+                data_labels = DataLabels.load(converted_anno_filename)
                 data_count = len(data_labels.images)
                 object_count = sum(len(image.objects) for image in data_labels.images)
 
-                moved_converted_filename = os.path.join(project_folder, os.path.basename(converted_filename))
-                shutil.move(converted_filename, moved_converted_filename)
+                next_task_id = api_target().get_next_task_id()
+                task_folder = os.path.join(project_folder, f"{next_task_id}")
+                moved_converted_filename = os.path.join(task_folder,
+                                                        os.path.basename(converted_anno_filename))
+                if not os.path.exists(os.path.dirname(moved_converted_filename)):
+                    os.mkdir(os.path.dirname(moved_converted_filename))
+                    os.mkdir(os.path.join(task_folder, "data"))
+
+                shutil.move(converted_anno_filename, moved_converted_filename)
+                for image in data_labels.images:
+                    cur_data_filename = os.path.join(project_folder, "data", image.name)
+                    target_filename = os.path.join(task_folder, "data", image.name)
+                    shutil.move(cur_data_filename, target_filename)
 
                 new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,
@@ -346,28 +360,6 @@ def add_data_tasks(selected_project: Project):
             selected_project.task_total_count += len(converted_anno_filenames)
             selected_project.data_total_count += data_total_count
             api_target().update_project(selected_project.to_json())
-
-            # elif saved_data_filenames:
-            #     data_count = len(saved_data_filenames)
-            #     converted_anno_filenames = DataLabels.from_image_filenames(saved_data_filenames)
-            #     new_task = Task(name=f"{task_name}-{0}",
-            #                     project_id=selected_project.id,
-            #                     dir_name=project_folder,
-            #                     anno_file_name=converted_anno_filenames,
-            #                     state_id=TaskState.DVS_NEW.value,
-            #                     state_name=TaskState.DVS_NEW.description,
-            #                     data_count=data_count,
-            #                     object_count=0)
-            #     data_total_count += data_count
-            #     response = api_target().create_task(new_task.to_json())
-            #     logger.info(response)
-            #     st.write(f"Task {response['id']} {response['name']} created")
-            #
-            #     selected_project.task_total_count += 1
-            #     selected_project.data_total_count += data_total_count
-            #     api_target().update_project(selected_project.to_json())
-            #
-            #     st.markdown("### Task ({}) ({}) added to Project ({})".format(new_task_id, task_name, selected_project.id))
 
 
 def delete_task():
@@ -392,24 +384,35 @@ def convert_task():
 
     selected_task = select_task(selected_project.id)
     if selected_task:
-        options = ["Project85"]
-        selected_format = st.selectbox("**convert to**",
-                                       options,
-                                       index=len(options) - 1)
-        convert_confirmed = st.button("Are you sure you want to covert the task ({}) of project ({}-{})?"
-                                     .format(selected_task.id, selected_project.id, selected_project.name))
-        if convert_confirmed:
-            if selected_format == "Project85":
-                project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-                to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
-                if not os.path.exists(to_save_folder):
-                    os.mkdir(to_save_folder)
 
-                writer = Project85Writer()
-                converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.json")
-                writer.write(selected_task.anno_file_name, converted_filename)
+        with st.form("Convert"):
+            saved_cuboid_filenames = []
+            uploaded_cuboid_files = st.file_uploader("Upload cuboid files",
+                                                     SUPPORTED_LABEL_FILE_EXTENSIONS,
+                                                     accept_multiple_files=True)
 
-                st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
+            if uploaded_cuboid_files:
+                saved_cuboid_filenames = _save_uploaded_files(uploaded_cuboid_files,
+                                                              f"{selected_project.id}/{selected_task.id}/cuboid")
+
+            options = ["Project85"]
+            selected_format = st.selectbox("**Convert to**",
+                                           options,
+                                           index=len(options) - 1)
+            convert_confirmed = st.form_submit_button("Convert the task ({}) of project ({}-{})?"
+                                         .format(selected_task.id, selected_project.id, selected_project.name))
+            if convert_confirmed:
+                if selected_format == "Project85":
+                    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+                    to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
+                    if not os.path.exists(to_save_folder):
+                        os.mkdir(to_save_folder)
+
+                    writer = Project85Writer()
+                    converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.json")
+                    writer.write(selected_task.anno_file_name, converted_filename)
+
+                    st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
 
 
 def main():

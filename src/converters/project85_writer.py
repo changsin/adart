@@ -6,6 +6,7 @@ import src.common.utils as utils
 from src.common.logger import get_logger
 from src.models.data_labels import DataLabels
 from .base_writer import BaseWriter
+from src.common.constants import SUPPORTED_LABEL_FILE_EXTENSIONS
 
 logger = get_logger(__name__)
 
@@ -53,6 +54,13 @@ class Project85Writer(BaseWriter):
     def write(self, file_in: str, file_out: str) -> None:
         data_labels = DataLabels.load(file_in)
 
+        project_folder = os.path.dirname(file_in)
+        cuboid_folder = os.path.join(project_folder, "cuboid")
+        cuboid_filenames = utils.glob_files(cuboid_folder, SUPPORTED_LABEL_FILE_EXTENSIONS)
+        cuboid_filenames.sort()
+        logger.info("#################")
+        logger.info(cuboid_filenames)
+
         converted_json = dict()
 
         licenses = []
@@ -77,7 +85,7 @@ class Project85Writer(BaseWriter):
         # TODO: this does not seem to be right for the attribute name
         class_attribute_name = Project85Writer._get_class_attribute_name(data_labels.meta_data)
 
-        for image in data_labels.images:
+        for idx, image in enumerate(data_labels.images):
             converted_images = []
             converted_annotations = []
             annotation_id = 0
@@ -106,7 +114,13 @@ class Project85Writer(BaseWriter):
             converted_json["images"] = converted_images
             converted_json["annotations"] = converted_annotations
 
-            logger.info(converted_json)
+            logger.info(f"## idx is {idx}")
+            cuboid_filename = cuboid_filenames[idx]
+            cuboid_labels = utils.from_file(cuboid_filename)
+
+            # logger.info(cuboid_labels)
+            # logger.info(converted_json)
+
             json_data = json.dumps(converted_json, default=utils.default, ensure_ascii=False, indent=2)
 
             image_filename_stem = Path(image.name).stem

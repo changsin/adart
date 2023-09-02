@@ -37,8 +37,8 @@ def load_thumbnail(file_path):
         return image.copy()
 
 
-def show_images(project_folder):
-    thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
+def show_images(project_id):
+    thumbnail_filenames = get_data_files(project_id, is_thumbnails=True)
 
     # Define the number of columns
     num_columns = 5
@@ -59,7 +59,7 @@ def show_images(project_folder):
 def review_images():
     selected_project = select_project(is_sidebar=True)
     if selected_project:
-        show_images(selected_project.dir_name)
+        show_images(selected_project.id)
         logger.info(f"selected project dir name {selected_project.dir_name} ")
 
 
@@ -200,7 +200,7 @@ def detect_label_anomalies(selected_project):
 
 
 def show_image_clusters(selected_project):
-    data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+    data_files = get_data_files(selected_project.id, is_thumbnails=True)
     # Preprocess and cluster images
     images = load_images(data_files["."])
     if len(images) < 5:

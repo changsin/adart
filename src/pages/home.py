@@ -136,32 +136,39 @@ def generate_thumbnails(folder_path, thumbnail_size=(128, 128), output_folder="t
     return thumbnail_filenames
 
 
-def get_data_files(folder, is_thumbnails=False):
+def get_data_files(project_id, is_thumbnails=False):
     """
     returns a diction of data_filenames or thumbnails
-    :param folder: folder name
+    :param project_id: project id
     :param is_thumbnails: returns thumbnails if true
     :return: data_files by default; returns thumbnails if true
     """
     data_files = dict()
-    data_folder = os.path.join(folder, "data")
-    thumbnails_folder = os.path.join(folder, "thumbnails")
-    logger.info(f"thumbnails folder{thumbnails_folder}")
+    tasks_info = get_tasks_info()
+    project_tasks = tasks_info.get_tasks_by_project_id(project_id)
 
-    if is_thumbnails:
-        if not os.path.exists(thumbnails_folder):
-            generate_thumbnails(data_folder, output_folder=thumbnails_folder)
-        else:
+    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(project_id))
+
+    data_filenames = []
+    for task in project_tasks:
+        data_folder = os.path.join(project_folder, str(task.id), "data")
+
+        if is_thumbnails:
+            thumbnails_folder = os.path.join(project_folder, str(task.id), "thumbnails")
             logger.info(f"thumbnails folder{thumbnails_folder}")
-            entries = os.scandir(thumbnails_folder)
-            if not any(entries):
-                logger.info(f"thumbnails folder{thumbnails_folder}")
+            if not os.path.exists(thumbnails_folder):
                 generate_thumbnails(data_folder, output_folder=thumbnails_folder)
+            else:
+                logger.info(f"thumbnails folder{thumbnails_folder}")
+                entries = os.scandir(thumbnails_folder)
+                if not any(entries):
+                    logger.info(f"thumbnails folder{thumbnails_folder}")
+                    generate_thumbnails(data_folder, output_folder=thumbnails_folder)
 
-        data_folder = thumbnails_folder
-    
-    data_filenames = utils.glob_files(data_folder,
-                                      SUPPORTED_IMAGE_FILE_EXTENSIONS)
+            data_folder = thumbnails_folder
+
+        data_filenames.extend(utils.glob_files(data_folder,
+                                               SUPPORTED_IMAGE_FILE_EXTENSIONS))
     data_filenames.sort()
     data_files["."] = data_filenames
 
@@ -174,11 +181,12 @@ def get_label_files(selected_project: Project):
     tasks = tasks_info.get_tasks_by_project_id(selected_project.id)
     if tasks and len(tasks) > 0:
         anno_files = []
-        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
         for task in tasks:
             if task.anno_file_name:
-                anno_files.append(os.path.basename(task.anno_file_name))
+                task_anno_filename = os.path.join(str(task.id), os.path.basename(task.anno_file_name))
+                anno_files.append(task_anno_filename)
 
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
         label_files[project_folder] = anno_files
     return label_files
 

@@ -87,9 +87,14 @@ def delete_project():
 
             # Then all the tasks
             task_pointers = get_task_pointers()
-            for task_pointer in task_pointers.task_pointers:
+            logger.info(task_pointers.task_pointers)
+            for idx, task_pointer in enumerate(task_pointers.task_pointers):
+                logger.info(f"Checking {idx} {task_pointer}")
                 if task_pointer.project_id == selected_project.id:
+                    logger.info(f"Removing {task_pointer}")
                     task_pointers.task_pointers.remove(task_pointer)
+                    logger.info(f"Removed {task_pointer}")
+                    st.info(f"Removed {task_pointer}")
             task_pointers.save()
 
             # Finally delete the project itself

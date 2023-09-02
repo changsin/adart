@@ -62,7 +62,7 @@ def show_file_metrics():
     selected_project = select_project()
     if selected_project:
 
-        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+        data_files = get_data_files(selected_project.id, is_thumbnails=True)
         #chart_aspect_ratios, chart_brightness = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               #data_files)
         chart_files_ctime, chart_file_sizes, table_files_ctime = plot_file_info("Data files info", data_files)
@@ -93,7 +93,7 @@ def show_file_metrics():
 def show_image_metrics():
     selected_project = select_project()
     if selected_project:
-        data_files = get_data_files(selected_project.dir_name, is_thumbnails=True)
+        data_files = get_data_files(selected_project.id, is_thumbnails=True)
         chart_aspect_ratios, chart_brightness, table_aspect_ratios, table_brightness  = plot_aspect_ratios_brightness("### Aspect ratios",
                                                                               data_files)
         col1, col2 = st.columns(2)
@@ -299,6 +299,7 @@ def show_label_metrics():
     selected_project = select_project()
     if selected_project:
         label_files = get_label_files(selected_project)
+        logger.info(label_files)
         if not label_files:
             st.warning("No label files")
             return
@@ -382,8 +383,7 @@ def show_label_metrics():
             table_dimensions = df_dimensions
 
             # Generate thumbnails
-            project_folder = selected_project.dir_name
-            thumbnail_filenames = get_data_files(project_folder, is_thumbnails=True)
+            thumbnail_filenames = get_data_files(selected_project.id, is_thumbnails=True)
 
             thumbnails = []
 
