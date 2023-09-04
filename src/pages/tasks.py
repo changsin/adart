@@ -12,6 +12,7 @@ from src.common import utils
 from src.common.constants import (
     ADQ_WORKING_FOLDER,
     CVAT_BOX_XML,
+    HUMANF_SEG_JSON,
     BO_3D_JSON,
     GPR_JSON,
     STRADVISION_XML,
@@ -25,6 +26,7 @@ from src.common.convert_lib import (
     from_yolo_txt)
 from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
+from src.converters.humanf_seg_reader import HumanFReader
 from src.converters.labelon_reader import LabelOnReader
 from src.converters.project85_writer import Project85Writer
 from src.converters.stvision_reader import StVisionReader
@@ -165,6 +167,16 @@ def _convert_anno_files(labels_format_type, save_file_stem, saved_data_filenames
             logger.info(f"parsing {anno_file}")
             parsed_dict = reader.parse([anno_file], saved_data_filenames)
             data_labels = DataLabels.from_adq_labels(AdqLabels.from_json(parsed_dict))
+            data_labels.save(converted_filename)
+            converted_anno_files.append(converted_filename)
+    elif labels_format_type == HUMANF_SEG_JSON:
+        for idx, anno_file in enumerate(saved_anno_filenames):
+            converted_filename = f"{save_file_stem}-{idx}.json"
+
+            reader = HumanFReader()
+            logger.info(f"parsing {anno_file}")
+            parsed_dict = reader.parse([anno_file], saved_data_filenames)
+            data_labels = DataLabels.from_json(parsed_dict)
             data_labels.save(converted_filename)
             converted_anno_files.append(converted_filename)
     else:

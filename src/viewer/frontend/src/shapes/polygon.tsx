@@ -37,10 +37,23 @@ export const Polygon: React.FC<ShapeRenderProps> = ({ shape, color = 'purple', o
         return null;
     }
 
+    var rgbaColor = color;
+    // Extract the color attribute from the attributes list
+    const attributes = shape.attributes;
+    if (attributes && Array.isArray(attributes)) {
+        const colorAttribute = attributes.find(attribute => attribute.attribute_name === "color");
+        if (colorAttribute && colorAttribute.attribute_value) {
+            const color = colorAttribute.attribute_value;
+    
+            // Convert RGBA values to rgba CSS color string
+            rgbaColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a / 255})`;
+        }
+    }
+
     const { points, label } = shape
     const polygon = new fabric.Polygon(points, {
-        fill: color,
-        stroke: color,
+        fill: rgbaColor,
+        stroke: rgbaColor,
         opacity: opacity,
         strokeWidth: 1,
     });

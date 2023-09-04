@@ -51,8 +51,7 @@ def show_images(project_id):
             truncated_name = os.path.basename(file)[:20] + "..." if len(
                 os.path.basename(file)) > 20 else os.path.basename(file)
             if st.button(truncated_name, key=f'{truncated_name}_{i}'):
-                full_size_filename = os.path.join(project_folder, "data", os.path.basename(file))
-                full_size_image = Image.open(full_size_filename)
+                full_size_image = Image.open(file.replace("/thumbnail/", "/data/"))
                 st.image(full_size_image, caption="Full-size Image")
 
 

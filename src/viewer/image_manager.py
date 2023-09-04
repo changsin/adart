@@ -109,7 +109,7 @@ class ImageManager:
 
                 shape['points'] = points
                 shape['shapeType'] = label_object.type
-            elif label_object.type == 'polygon' or label_object.type == 'VP':
+            elif label_object.type == 'polygon' or label_object.type == 'segmentation' or label_object.type == 'VP':
                 points = []
                 for point in label_object.points:
                     x, y = point
@@ -151,7 +151,7 @@ class ImageManager:
             for point in shape['points']:
                 x, y, r = point['x'], point['y'], point['r']
                 converted_points.append((x, y, r))
-        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'segmentation' or shape['shapeType'] == 'VP':
             for point in shape['points']:
                 x, y = point['x'], point['y']
                 converted_points.append((x, y))
@@ -240,7 +240,7 @@ class ImageManager:
                 scaled_point['y'] = point['y'] * self._resized_ratio_h
                 scaled_point['r'] = point['r'] * self._resized_ratio_w
                 scaled_points.append(scaled_point)
-        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'segmentation' or shape['shapeType'] == 'VP':
             scaled_points = []
             for point in shape['points']:
                 scaled_point = dict()
@@ -296,7 +296,7 @@ class ImageManager:
 
                     resized_shape['attributes']['occlusions'] = resized_occlusions
 
-        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'VP':
+        elif shape['shapeType'] == 'polygon' or shape['shapeType'] == 'segmentation' or shape['shapeType'] == 'VP':
             resized_points = []
             for point in shape['points']:
                 resized_point = dict()

@@ -37,7 +37,9 @@ const StreamlitImgLabel = (props: ComponentProps) => {
     const [selectAllClassLabels, setSelectAllClassLabels] = useState(false);
     const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
     const [checkedIndividualLabels, setCheckedIndividualLabels] = useState<string[]>(shapesInternal
-        .filter((shape) => (shape.verification_result !== null) || (shape.label === 'spline') || (shape.label === 'VP'))
+        .filter((shape) => (shape.verification_result !== null) ||
+         (shape.shapeType === 'segmentation') ||
+         (shape.label === 'spline') || (shape.label === 'VP'))
         .map((shape) => `${shape.label}-${shape.shape_id}`));
 
     const updateShapes = (newShapes: ShapeProps[]) => {
@@ -183,15 +185,15 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                 if (checkedIndividualLabels.includes(`${shape.label}-${shape.shape_id}`)) {
                     let color = pickColor(shape);
                     if (shape.shapeType === "box") {
-                        Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                        Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
-                        Spline({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
-                    } else if (shape.shapeType === "polygon") {
-                        Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                        Spline({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
+                    } else if (shape.shapeType === "polygon" || shape.shapeType === "segmentation") {
+                        Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     } else if (shape.shapeType === "VP") {
                         VanishingPoint({ shape, color: color, opacity, canvas });
                     } else if (shape.shapeType === "keypoint") {
-                        Keypoint({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler,});
+                        Keypoint({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     } else {
                         console.warn(`Invalid shape "${shape}" specified". Skipping...`);
                         return;

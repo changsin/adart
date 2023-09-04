@@ -48,7 +48,7 @@ export interface ShapeProps {
   shape_id: number;
   label: string;
   points: BoxPoint[] | SplinePoint[] | Point[]
-  shapeType: "box" | "spline" | "boundary" | "polygon" | "VP";
+  shapeType: "box" | "spline" | "boundary" | "polygon" | "segmentation" | "VP";
   attributes: Attributes | null;
   verification_result: VerificationResult | null;
 }
