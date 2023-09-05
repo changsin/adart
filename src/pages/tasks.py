@@ -13,7 +13,6 @@ from src.common.constants import (
     ADQ_WORKING_FOLDER,
     CVAT_BOX_XML,
     HUMANF_SEG_JSON,
-    BO_3D_JSON,
     GPR_JSON,
     STRADVISION_XML,
     LABEL_ON_JSON,
@@ -26,6 +25,7 @@ from src.common.convert_lib import (
     from_yolo_txt)
 from src.common.logger import get_logger
 from src.converters.cvat_reader import CVATReader
+from src.converters.cvat_writer import CVATWriter
 from src.converters.humanf_seg_reader import HumanFReader
 from src.converters.labelon_reader import LabelOnReader
 from src.converters.project85_writer import Project85Writer
@@ -407,7 +407,7 @@ def convert_task():
                 saved_cuboid_filenames = _save_uploaded_files(uploaded_cuboid_files,
                                                               f"{selected_project.id}/{selected_task.id}/cuboid")
 
-            options = ["Project85"]
+            options = ["Project85", "CVAT XML"]
             selected_format = st.selectbox("**Convert to**",
                                            options,
                                            index=len(options) - 1)
@@ -422,6 +422,17 @@ def convert_task():
 
                     writer = Project85Writer()
                     converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.json")
+                    writer.write(selected_task.anno_file_name, converted_filename)
+
+                    st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
+                elif selected_format == "CVAT XML":
+                    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+                    to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
+                    if not os.path.exists(to_save_folder):
+                        os.mkdir(to_save_folder)
+
+                    writer = CVATWriter()
+                    converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.xml")
                     writer.write(selected_task.anno_file_name, converted_filename)
 
                     st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))

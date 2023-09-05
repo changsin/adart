@@ -35,8 +35,6 @@ class LabelOnReader(BaseReader):
         for image_id, label_file in enumerate(label_files):
             labels_dict = from_file(label_file)
 
-            logger.info(labels_dict)
-
             width = int(labels_dict['IMAGE']['WIDTH'])
             height = int(labels_dict['IMAGE']['HEIGHT'])
 
