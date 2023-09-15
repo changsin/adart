@@ -69,6 +69,7 @@ export const Polygon: React.FC<ShapeRenderProps> = ({ shape, color = 'purple', o
             top: currPoint.y,
             radius: 1,
             fill: "black",
+            opacity: opacity
         });
         keypoints.push(circle);
     }
