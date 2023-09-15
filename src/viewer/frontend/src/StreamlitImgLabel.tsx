@@ -188,6 +188,7 @@ const StreamlitImgLabel = (props: ComponentProps) => {
                         Box({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     } else if (shape.shapeType === "spline" || shape.shapeType === "boundary") {
                         Spline({ shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
+                    // } else if (shape.shapeType === "polygon" || shape.shapeType === "segmentation") {
                     } else if (shape.shapeType === "polygon" || shape.shapeType === "segmentation") {
                         Polygon({shape, color: color, opacity, canvas, onSelectHandler: onSelectShapeHandler});
                     } else if (shape.shapeType === "VP") {
