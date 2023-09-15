@@ -344,22 +344,28 @@ def add_data_tasks(selected_project: Project):
 
                 next_task_id = api_target().get_next_task_id()
                 task_folder = os.path.join(project_folder, f"{next_task_id}")
-                moved_converted_filename = os.path.join(task_folder,
+                moved_converted_anno_filename = os.path.join(task_folder,
                                                         os.path.basename(converted_anno_filename))
-                if not os.path.exists(os.path.dirname(moved_converted_filename)):
-                    os.mkdir(os.path.dirname(moved_converted_filename))
+                if not os.path.exists(os.path.dirname(moved_converted_anno_filename)):
+                    os.mkdir(os.path.dirname(moved_converted_anno_filename))
                     os.mkdir(os.path.join(task_folder, "data"))
 
-                shutil.move(converted_anno_filename, moved_converted_filename)
+                shutil.move(converted_anno_filename, moved_converted_anno_filename)
+
                 for image in data_labels.images:
                     cur_data_filename = os.path.join(project_folder, "data", image.name)
                     target_filename = os.path.join(task_folder, "data", image.name)
+                    if not os.path.exists(cur_data_filename):
+                        base_name = os.path.basename(cur_data_filename)
+                        real_name = str(base_name).replace(task_name, "")
+                        cur_data_filename = os.path.join(project_folder, "data", real_name)
+
                     shutil.move(cur_data_filename, target_filename)
 
                 new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,
                                 dir_name=project_folder,
-                                anno_file_name=moved_converted_filename,
+                                anno_file_name=moved_converted_anno_filename,
                                 state_id=TaskState.DVS_NEW.value,
                                 state_name=TaskState.DVS_NEW.description,
                                 data_count=data_count,

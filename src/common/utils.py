@@ -149,3 +149,15 @@ def get_window_size():
     window_width = st_js.st_javascript("window.outerWidth")
     window_height = st_js.st_javascript("window.outerHeight")
     return window_width, window_height
+
+
+def get_dict_value(meta_data_dict: dict, search_str: str):
+    cur_dict = meta_data_dict
+    level_name_tokens = search_str.split('/')
+    for token in level_name_tokens:
+        if isinstance(cur_dict, list):
+            cur_dict = cur_dict[0].get(token)
+        else:
+            cur_dict = cur_dict.get(token)
+
+    return cur_dict

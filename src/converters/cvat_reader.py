@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import src.common.utils as utils
 
 from .base_reader import BaseReader
 
@@ -31,6 +32,13 @@ class CVATReader(BaseReader):
             root_info = xml_structure.getroot()
             if root_info.tag != 'annotations':
                 raise Exception(label_file + 'is not a supported CVAT format.')
+
+            el_meta_data = root_info.find('meta')
+            if el_meta_data:
+                meta_data_dict = self._parse_element(el_meta_data)
+                self.data_labels_dict['meta_data'] = meta_data_dict
+
+            project_name = utils.get_dict_value(self.data_labels_dict['meta_data'], "task/name")
 
             images = list()
             el_images = root_info.findall('image')
@@ -85,11 +93,6 @@ class CVATReader(BaseReader):
 
                 image_dict['objects'] = objects_list
                 images.append(image_dict)
-
-            el_meta_data = root_info.find('meta')
-            if el_meta_data:
-                meta_data_dict = self._parse_element(el_meta_data)
-                self.data_labels_dict['meta_data'] = meta_data_dict
 
             self.data_labels_dict['images'] = images
         return self.data_labels_dict
