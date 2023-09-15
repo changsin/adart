@@ -1,4 +1,5 @@
 import copy
+import os.path
 
 import numpy as np
 from PIL import Image
@@ -44,7 +45,9 @@ class ImageManager:
     def __init__(self, image_filename: str, data_label_image: DataLabels.Image):
         """initiate module"""
         self._data_label_image = data_label_image
-        self._image = Image.open(image_filename)
+        self._image = None
+        if os.path.exists(image_filename):
+            self._image = Image.open(image_filename)
         # NB: note that the shapes should be all in the ShapeProps format defined in interfaces.tsx in the frontend
         self._shapes = []
         self._load_shapes()
@@ -206,6 +209,9 @@ class ImageManager:
         Returns:
             resized_img(PIL.Image): the resized image.
         """
+        if not self._image:
+            return
+
         resized_img = self._image.copy()
         if resized_img.width > max_width:
             ratio = min(max_height / resized_img.height, max_width / resized_img.width)

@@ -357,10 +357,12 @@ def add_data_tasks(selected_project: Project):
                     target_filename = os.path.join(task_folder, "data", image.name)
                     if not os.path.exists(cur_data_filename):
                         base_name = os.path.basename(cur_data_filename)
+                        # this hack is for project85
                         real_name = str(base_name).replace(task_name, "")
                         cur_data_filename = os.path.join(project_folder, "data", real_name)
 
-                    shutil.move(cur_data_filename, target_filename)
+                    if os.path.exists(cur_data_filename):
+                        shutil.move(cur_data_filename, target_filename)
 
                 new_task = Task(name=f"{task_name}-{idx}",
                                 project_id=selected_project.id,

@@ -243,8 +243,11 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         resized_shapes = im.get_downscaled_shapes()
         shape_color = DEFAULT_SHAPE_COLOR
 
-        return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
-                            key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
+        if resized_img:
+            return st_img_label(resized_img, shape_color=shape_color, shape_props=resized_shapes,
+                                key=f"{image_index}_2" if is_second_viewer else f"{image_index}_1")
+        else:
+            st.write("Image file not found")
 
     def process_selected_shape(selected_shape: dict):
         scaled_shape = im.upscale_shape(selected_shape)
