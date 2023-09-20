@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import zipfile
 from pathlib import Path
 
 import cv2
@@ -161,3 +162,13 @@ def get_dict_value(meta_data_dict: dict, search_str: str):
             cur_dict = cur_dict.get(token)
 
     return cur_dict
+
+
+# Function to zip a folder
+def zip_folder(folder_path, zip_filename):
+    with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, _, files in os.walk(folder_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                arcname = os.path.relpath(file_path, folder_path)
+                zipf.write(file_path, arcname)

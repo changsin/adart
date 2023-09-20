@@ -22,9 +22,11 @@ class Project85CsvReader(BaseReader):
         metadata_dict = dict()
 
         for csv_file in csv_files:
-            df = pd.read_csv(csv_file, header=None, names=METADATA_COLUMN_NAMES)
-            # Add a new column with the filename
-            logger.info(df)
+            df = pd.read_csv(csv_file, names=METADATA_COLUMN_NAMES)
+            # logger.info(df)
+
+            if len(df) > 1:
+                df = df.drop(0, axis=0).reset_index(drop=True)
 
             csv_filename = os.path.basename(csv_file)
 
@@ -33,6 +35,7 @@ class Project85CsvReader(BaseReader):
 
             # Remove the index key (0) from the dictionary
             df_dict = {k: v for k, v in df_dict.items() if k != 0}
+            # Add a new dictionary entry with the filename as the key
             metadata_dict[csv_filename] = df_dict
 
         return metadata_dict

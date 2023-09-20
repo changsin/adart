@@ -238,7 +238,6 @@ def main(selected_task: Task, is_second_viewer=False, error_codes=ErrorType.get_
         logger.info(f"window_width: {window_width}")
         max_width = window_width * 0.7 if window_width > 700 else 700
         min_width = window_width * 0.6 if window_width > 700 else 700
-        logger.info(f"min_width, max_width = {min_width}, {max_width}")
         resized_img = im.resizing_img(min_width=min_width, max_width=max_width)
         resized_shapes = im.get_downscaled_shapes()
         shape_color = DEFAULT_SHAPE_COLOR

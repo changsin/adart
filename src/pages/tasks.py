@@ -404,55 +404,61 @@ def convert_task():
 
     selected_task = select_task(selected_project.id)
     if selected_task:
+        project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
+        converted = False
 
         with st.form("Convert"):
-            saved_cuboid_filenames = []
             uploaded_cuboid_files = st.file_uploader("Upload cuboid files",
                                                      SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                      accept_multiple_files=True)
 
             if uploaded_cuboid_files:
-                saved_cuboid_filenames = _save_uploaded_files(uploaded_cuboid_files,
-                                                              f"{selected_project.id}/{selected_task.id}/cuboid")
+                _save_uploaded_files(uploaded_cuboid_files, f"{selected_project.id}/{selected_task.id}/cuboid")
 
             uploaded_meta_data_files = st.file_uploader("Upload meta data files",
                                                         ['csv'],
                                                         accept_multiple_files=True)
-            logger.info(uploaded_meta_data_files)
             if uploaded_meta_data_files:
-                logger.info(uploaded_meta_data_files)
-                saved_meta_data_filename = _save_uploaded_files(uploaded_meta_data_files,
-                                                                f"{selected_project.id}/{selected_task.id}/meta")
+                _save_uploaded_files(uploaded_meta_data_files, f"{selected_project.id}/{selected_task.id}/meta")
 
             options = ["Project85", "CVAT XML"]
             selected_format = st.selectbox("**Convert to**",
                                            options,
-                                           index=len(options) - 1)
+                                           index=0)
             convert_confirmed = st.form_submit_button("Convert the task ({}) of project ({}-{})?"
                                          .format(selected_task.id, selected_project.id, selected_project.name))
             if convert_confirmed:
+                writer = None
+                to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
+                if not os.path.exists(to_save_folder):
+                    os.mkdir(to_save_folder)
+
                 if selected_format == "Project85":
-                    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-                    to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
-                    if not os.path.exists(to_save_folder):
-                        os.mkdir(to_save_folder)
-
                     writer = Project85Writer()
-                    converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.json")
-                    writer.write(selected_task.anno_file_name, converted_filename)
-
-                    st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
                 elif selected_format == "CVAT XML":
-                    project_folder = os.path.join(ADQ_WORKING_FOLDER, str(selected_project.id))
-                    to_save_folder = os.path.join(project_folder, str(selected_task.id) + "_converted")
-                    if not os.path.exists(to_save_folder):
-                        os.mkdir(to_save_folder)
-
                     writer = CVATWriter()
-                    converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.xml")
-                    writer.write(selected_task.anno_file_name, converted_filename)
 
-                    st.markdown("## Converted task {} {}".format(selected_task.id, selected_task.name))
+                converted_filename = os.path.join(to_save_folder, f"converted-{selected_task.id}.xml")
+                writer.write(selected_task.anno_file_name, converted_filename)
+
+                # Make the zip file available for download
+                st.success(f"Converted task {selected_task.id} {selected_task.name}")
+                converted = True
+
+        if converted:
+            zip_filename = os.path.join(project_folder, f"{selected_task.name}.zip")
+            utils.zip_folder(to_save_folder, zip_filename)
+
+            download_filename = os.path.basename(zip_filename)
+            st.write(f"Downloading {download_filename}")
+            with open(zip_filename, 'rb') as f:
+                file_bytes = f.read()
+                st.download_button(
+                    label='Download converted files',
+                    data=file_bytes,
+                    file_name=download_filename,
+                    mime='application/zip'
+                )
 
 
 def main():
