@@ -415,6 +415,15 @@ def convert_task():
                 saved_cuboid_filenames = _save_uploaded_files(uploaded_cuboid_files,
                                                               f"{selected_project.id}/{selected_task.id}/cuboid")
 
+            uploaded_meta_data_files = st.file_uploader("Upload meta data files",
+                                                        ['csv'],
+                                                        accept_multiple_files=True)
+            logger.info(uploaded_meta_data_files)
+            if uploaded_meta_data_files:
+                logger.info(uploaded_meta_data_files)
+                saved_meta_data_filename = _save_uploaded_files(uploaded_meta_data_files,
+                                                                f"{selected_project.id}/{selected_task.id}/meta")
+
             options = ["Project85", "CVAT XML"]
             selected_format = st.selectbox("**Convert to**",
                                            options,

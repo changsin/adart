@@ -3,10 +3,11 @@ import os.path
 from pathlib import Path
 
 import src.common.utils as utils
+from src.common.constants import SUPPORTED_LABEL_FILE_EXTENSIONS
 from src.common.logger import get_logger
 from src.models.data_labels import DataLabels
 from .base_writer import BaseWriter
-from src.common.constants import SUPPORTED_LABEL_FILE_EXTENSIONS
+from .project85_csv_reader import Project85CsvReader
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,7 @@ class Project85Writer(BaseWriter):
     #         return classes
 
     def write(self, file_in: str, file_out: str) -> None:
-        def _create_converted_json():
+        def _create_converted_json(metadata_dict):
             """
             create the template for the converted json
             """
@@ -71,9 +72,10 @@ class Project85Writer(BaseWriter):
 
             licenses = []
             default_license = dict()
-            default_license["name"] = "MIT"
+            # TODO: hard-coding it for now
+            default_license["name"] = "blackolive"
             default_license["id"] = 0
-            default_license["url"] = ""
+            default_license["url"] = "https://bo.testworks.ai/"
 
             licenses.append(default_license)
 
@@ -82,6 +84,27 @@ class Project85Writer(BaseWriter):
             info_dict = dict()
             info_dict["description"] = utils.get_dict_value(data_labels.meta_data, "task/project")
             info_dict["date_created"] = utils.get_dict_value(data_labels.meta_data, "task/created")
+
+            if metadata_dict:
+                env_dict = dict()
+                env_dict["site"] = metadata_dict["site"]
+                env_dict["location"] = metadata_dict["location"]
+                env_dict["date"] = metadata_dict["date"]
+                env_dict["weather"] = metadata_dict["weather"]
+                env_dict["temperature"] = metadata_dict["temperature"]
+                env_dict["lumen"] = metadata_dict["lumen"]
+                # TODO: was "noise"
+                env_dict["decibel"] = metadata_dict["decibel"]
+                # TODO: was "material"
+                env_dict["floor_material"] = metadata_dict["floor"]
+                info_dict["env"] = env_dict
+
+                scenario_dict = dict()
+                scenario_dict["id"] = metadata_dict["scenario_id"]
+                scenario_dict["scenario_start_time"] = metadata_dict["scenario_start_time"]
+                scenario_dict["scenario_end_time"] = metadata_dict["scenario_end_time"]
+                scenario_dict["distance_traveled"] = metadata_dict["distance_traveled"]
+                info_dict["scenario"] = scenario_dict
 
             converted_json["info"] = info_dict
 
@@ -92,13 +115,24 @@ class Project85Writer(BaseWriter):
 
         data_labels = DataLabels.load(file_in)
 
-        project_folder = os.path.dirname(file_in)
-        cuboid_folder = os.path.join(project_folder, "cuboid")
+        task_folder = os.path.dirname(file_in)
+        cuboid_folder = os.path.join(task_folder, "cuboid")
         cuboid_filenames = utils.glob_files(cuboid_folder, SUPPORTED_LABEL_FILE_EXTENSIONS)
         cuboid_filenames.sort()
 
+        current_metadata_dict = None
+
+        meta_folder = os.path.join(task_folder, "meta")
+        metadata_filenames = utils.glob_files(meta_folder, ['csv'])
+        if len(metadata_filenames) > 0:
+            csv_reader = Project85CsvReader()
+            metadata_dict = csv_reader.parse(metadata_filenames)
+            logger.info(metadata_dict)
+            current_metadata_filename = os.path.basename(metadata_filenames[0])
+            current_metadata_dict = metadata_dict[current_metadata_filename]
+
         for idx, image in enumerate(data_labels.images):
-            converted_json = _create_converted_json()
+            converted_json = _create_converted_json(current_metadata_dict)
 
             # 1. images
             converted_images = []
@@ -150,15 +184,14 @@ class Project85Writer(BaseWriter):
             pc_image_dict["date_capture"] = utils.get_dict_value(data_labels.meta_data, "task/created")
             pc_images.append(pc_image_dict)
 
-            converted_json["pc_images"] = pc_images
+            converted_json["pcd_images"] = pc_images
 
             # 4. pc_annotations
             cuboid_anno_filename = os.path.join(cuboid_folder, "00" + filename_tokens[-1] + ".json")
+            converted_json["pcd_annotations"] = []
             if cuboid_anno_filename in cuboid_filenames:
                 cuboid_labels = utils.from_file(cuboid_anno_filename)
-                converted_json["pc_annotations"] = cuboid_labels
-            else:
-                converted_json["pc_annotations"] = []
+                converted_json["pcd_annotations"] = cuboid_labels
 
             # 5. write out the converted json to a file
             json_data = json.dumps(converted_json, default=utils.default, ensure_ascii=False, indent=2)
