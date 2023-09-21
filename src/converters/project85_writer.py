@@ -99,13 +99,6 @@ class Project85Writer(BaseWriter):
                 env_dict["floor_material"] = metadata_dict["floor"]
                 info_dict["env"] = env_dict
 
-                scenario_dict = dict()
-                scenario_dict["id"] = metadata_dict["scenario_id"]
-                scenario_dict["scenario_start_time"] = metadata_dict["scenario_start_time"]
-                scenario_dict["scenario_end_time"] = metadata_dict["scenario_end_time"]
-                scenario_dict["distance_traveled"] = metadata_dict["distance_traveled"]
-                info_dict["scenario"] = scenario_dict
-
             converted_json["info"] = info_dict
 
             if data_labels.meta_data:
@@ -142,9 +135,21 @@ class Project85Writer(BaseWriter):
             converted_image["height"] = image.height
             converted_image["file_name"] = image.name
 
+            # 1-1 Add scenario info if metadata are available
+            if current_metadata_dict:
+                scenario_dict = dict()
+                scenario_dict["id"] = current_metadata_dict["scenario_id"]
+                scenario_dict["start_time"] = current_metadata_dict["scenario_start_time"]
+                scenario_dict["end_time"] = current_metadata_dict["scenario_end_time"]
+                scenario_dict["distance_traveled"] = current_metadata_dict["distance_traveled"]
+                scenario_dict["len"] = len(data_labels.images)
+                scenario_dict["index"] = idx
+
+                converted_image["scenario"] = scenario_dict
+
             converted_images.append(converted_image)
 
-            # 2. annotations
+            # 2. Add annotations
             converted_annotations = []
             annotation_id = 0
             if image.objects:
@@ -169,22 +174,22 @@ class Project85Writer(BaseWriter):
             converted_json["images"] = converted_images
             converted_json["annotations"] = converted_annotations
 
-            # 3. pc_images
+            # 3. pcd_images
             # logger.info(f"## idx is {idx}/{len(cuboid_filenames)}")
             image_filename_stem = Path(image.name).stem
             filename_tokens = image_filename_stem.split('_')
             pcd_filename = Path(image.name).stem + ".pcd"
 
-            pc_images = []
+            pcd_images = []
 
-            pc_image_dict = dict()
-            pc_image_dict["id"] = int(image.image_id)
-            pc_image_dict["file_name"] = pcd_filename
-            pc_image_dict["license"] = 0
-            pc_image_dict["date_capture"] = utils.get_dict_value(data_labels.meta_data, "task/created")
-            pc_images.append(pc_image_dict)
+            pcd_image_dict = dict()
+            pcd_image_dict["id"] = int(image.image_id)
+            pcd_image_dict["file_name"] = pcd_filename
+            pcd_image_dict["license"] = 0
+            pcd_image_dict["date_capture"] = utils.get_dict_value(data_labels.meta_data, "task/created")
+            pcd_images.append(pcd_image_dict)
 
-            converted_json["pcd_images"] = pc_images
+            converted_json["pcd_images"] = pcd_images
 
             # 4. pc_annotations
             cuboid_anno_filename = os.path.join(cuboid_folder, "00" + filename_tokens[-1] + ".json")

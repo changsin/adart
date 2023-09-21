@@ -408,20 +408,20 @@ def convert_task():
         converted = False
 
         with st.form("Convert"):
-            uploaded_cuboid_files = st.file_uploader("Upload cuboid files",
+            uploaded_cuboid_files = st.file_uploader("**Upload 3D cuboid files**",
                                                      SUPPORTED_LABEL_FILE_EXTENSIONS,
                                                      accept_multiple_files=True)
 
             if uploaded_cuboid_files:
                 _save_uploaded_files(uploaded_cuboid_files, f"{selected_project.id}/{selected_task.id}/cuboid")
 
-            uploaded_meta_data_files = st.file_uploader("Upload meta data files",
+            uploaded_meta_data_files = st.file_uploader("**Upload meta data files**",
                                                         ['csv'],
                                                         accept_multiple_files=True)
             if uploaded_meta_data_files:
                 _save_uploaded_files(uploaded_meta_data_files, f"{selected_project.id}/{selected_task.id}/meta")
 
-            options = ["Project85", "CVAT XML"]
+            options = ["Project85 JSON", "CVAT XML"]
             selected_format = st.selectbox("**Convert to**",
                                            options,
                                            index=0)
@@ -433,7 +433,7 @@ def convert_task():
                 if not os.path.exists(to_save_folder):
                     os.mkdir(to_save_folder)
 
-                if selected_format == "Project85":
+                if selected_format == "Project85 JSON":
                     writer = Project85Writer()
                 elif selected_format == "CVAT XML":
                     writer = CVATWriter()
